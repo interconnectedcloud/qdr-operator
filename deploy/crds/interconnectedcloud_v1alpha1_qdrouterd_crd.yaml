@@ -9,6 +9,8 @@ spec:
     listKind: QdrouterdList
     plural: qdrouterds
     singular: qdrouterd
+    shoreNames:
+    - qdr
   scope: Namespaced
   version: v1alpha1
   subresources:
