@@ -1,0 +1,7 @@
+apiVersion: interconnectedcloud.github.io/v1alpha1
+kind: Qdrouterd
+metadata:
+  name: example-qdrouterd
+spec:
+  # Add fields here
+  size: 3
