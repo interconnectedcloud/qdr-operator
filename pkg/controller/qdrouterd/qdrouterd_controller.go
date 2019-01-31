@@ -7,6 +7,7 @@ import (
 	v1alpha1 "github.com/interconnectedcloud/qdrouterd-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/deployments"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/services"
+	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/configmaps"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/configs"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/selectors"
 	appsv1 "k8s.io/api/apps/v1"
@@ -69,6 +70,15 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	// Watch for changes to secondary resource ConfigMap and requeue the owner Qdrouterd
+	err = c.Watch(&source.Kind{Type: &corev1.ConfigMap{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1alpha1.Qdrouterd{},
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -107,9 +117,29 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 
 	requestCert := configs.SetQdrouterdDefaults(instance)
 
+    // Check if configmap already exists, if not create a new one
+    cfgmapFound := &corev1.ConfigMap{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, cfgmapFound)
+	if err != nil && errors.IsNotFound(err) {
+       // Define a new configmap
+       cfgmap := configmaps.NewConfigMapForCR(instance)
+       reqLogger.Info("Creating a new ConfigMap %s%s\n", cfgmap.Namespace, cfgmap.Name)
+       err = r.client.Create(context.TODO(), cfgmap)
+       if err != nil {
+			reqLogger.Info("Failed to create new ConfigMap: %v\n", err)
+			return reconcile.Result{}, err
+       }
+		// ConfigMap created successfully - return and requeue
+		controllerutil.SetControllerReference(instance, cfgmap, r.scheme)
+		return reconcile.Result{Requeue: true}, nil
+	} else if err != nil {
+		reqLogger.Info("Failed to get ConfigMap: %v\n", err)
+		return reconcile.Result{}, err
+	}
+
 	// Check if the deployment already exists, if not create a new one
-	found := &appsv1.Deployment{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, found)
+	depFound := &appsv1.Deployment{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, depFound)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new deployment
 		dep := deployments.NewDeploymentForCR(instance)
@@ -129,9 +159,9 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 
 	// Ensure the deployment count is the same as the spec size
 	count := instance.Spec.Count
-	if *found.Spec.Replicas != count {
-		found.Spec.Replicas = &count
-		err = r.client.Update(context.TODO(), found)
+	if *depFound.Spec.Replicas != count {
+		depFound.Spec.Replicas = &count
+		err = r.client.Update(context.TODO(), depFound)
 		if err != nil {
 			reqLogger.Info("Failed to update Deployment: %v\n", err)
 			return reconcile.Result{}, err
@@ -145,8 +175,8 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 	// Ensure the deployment container matches the instance spec
 
 	// Check if the service for the deployment already exists, if not create a new one
-	locate := &corev1.Service{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, locate)
+	svcFound := &corev1.Service{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, svcFound)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new service
 		svc := services.NewServiceForCR(instance, requestCert)

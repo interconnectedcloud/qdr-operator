@@ -3,7 +3,6 @@ package deployments
 import (
 	v1alpha1 "github.com/interconnectedcloud/qdrouterd-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/containers"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/configs"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/selectors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -19,10 +18,9 @@ func labelsForQdrouterd(name string) map[string]string {
 	}
 }
 
-// Create newDeploymentForCR method to create deployment
+// Create NewDeploymentForCR method to create deployment
 func NewDeploymentForCR(m *v1alpha1.Qdrouterd) *appsv1.Deployment {
 	labels := selectors.LabelsForQdrouterd(m.Name)
-	config := configs.ConfigForQdrouterd(m)
 	replicas := m.Spec.Count
 	dep := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
@@ -43,12 +41,22 @@ func NewDeploymentForCR(m *v1alpha1.Qdrouterd) *appsv1.Deployment {
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{containers.ContainerForQdrouterd(m, config)},
+					Containers: []corev1.Container{containers.ContainerForQdrouterd(m)},
 				},
 			},
 		},
 	}
 	volumes := []corev1.Volume{}
+    volumes = append(volumes, corev1.Volume{
+        Name: m.Name,
+        VolumeSource: corev1.VolumeSource{
+            ConfigMap: &corev1.ConfigMapVolumeSource{
+                LocalObjectReference: corev1.LocalObjectReference{
+                    Name: m.Name,
+                },
+            },
+        },
+    })
 	for _, profile := range m.Spec.SslProfiles {
 		if len(profile.Credentials) > 0 {
 			volumes = append(volumes, corev1.Volume{

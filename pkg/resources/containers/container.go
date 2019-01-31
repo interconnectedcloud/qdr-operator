@@ -49,15 +49,11 @@ func CheckQdrouterdContainer(desired *corev1.Container, actual *corev1.Container
 	return true
 }
 
-func ContainerForQdrouterd(m *v1alpha1.Qdrouterd, config string) corev1.Container {
+func ContainerForQdrouterd(m *v1alpha1.Qdrouterd) corev1.Container {
 	container := corev1.Container{
 		Image: m.Spec.Image,
 		Name:  m.Name,
 		Env: []corev1.EnvVar{
-			{
-				Name:  "QDROUTERD_CONF",
-				Value: config,
-			},
 			{
 				Name:  "QDROUTERD_AUTO_MESH_DISCOVERY",
 				Value: "QUERY",
@@ -85,8 +81,12 @@ func ContainerForQdrouterd(m *v1alpha1.Qdrouterd, config string) corev1.Containe
 		},
 		Ports: containerPortsForQdrouterd(m),
 	}
+    volumeMounts := []corev1.VolumeMount{}
+    volumeMounts = append(volumeMounts, corev1.VolumeMount{
+        Name: m.Name,
+        MountPath: "/etc/qpid-dispatch/",
+    })
 	if m.Spec.SslProfiles != nil && len(m.Spec.SslProfiles) > 0 {
-		volumeMounts := []corev1.VolumeMount{}
 		for _, profile := range m.Spec.SslProfiles {
 			if len(profile.Credentials) > 0 {
 				volumeMounts = append(volumeMounts, corev1.VolumeMount{
@@ -102,7 +102,7 @@ func ContainerForQdrouterd(m *v1alpha1.Qdrouterd, config string) corev1.Containe
 			}
 
 		}
-		container.VolumeMounts = volumeMounts
 	}
+    container.VolumeMounts = volumeMounts
 	return container
 }
