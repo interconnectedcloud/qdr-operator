@@ -33,15 +33,6 @@ func servicePortsForListeners(listeners []v1alpha1.Listener) []corev1.ServicePor
 	return ports
 }
 
-func portsForQdrouterd(m *v1alpha1.Qdrouterd) []corev1.ServicePort {
-	ports := []corev1.ServicePort{}
-	external := servicePortsForListeners(m.Spec.Listeners)
-	internal := servicePortsForListeners(m.Spec.InterRouterListeners)
-	ports = append(ports, external...)
-	ports = append(ports, internal...)
-	return ports
-}
-
 func CheckService(desired *corev1.Service, actual *corev1.Service) bool {
 	update := false
 	if !reflect.DeepEqual(desired.Annotations[constants.CertRequestAnnotation], actual.Annotations[constants.CertRequestAnnotation]) {
@@ -56,20 +47,43 @@ func CheckService(desired *corev1.Service, actual *corev1.Service) bool {
 	return update
 }
 
-// Create newServiceForCR method to create service
-func NewServiceForCR(m *v1alpha1.Qdrouterd, requestCert bool) *corev1.Service {
+// Create newServiceForCR method to create normal service
+func NewNormalServiceForCR(m *v1alpha1.Qdrouterd, requestCert bool) *corev1.Service {
 	service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
 			Kind:       "Service",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      m.Name,
+			Name:      m.Name + "-normal",
 			Namespace: m.Namespace,
 		},
 		Spec: corev1.ServiceSpec{
 			Selector: selectors.LabelsForQdrouterd(m.Name),
-			Ports:    portsForQdrouterd(m),
+			Ports:    servicePortsForListeners(m.Spec.Listeners),
+		},
+	}
+	if requestCert {
+		service.Annotations = map[string]string{constants.CertRequestAnnotation: m.Name + "-cert"}
+	}
+	return service
+}
+
+// Create newHeadlessServiceForCR method to create normal service
+func NewHeadlessServiceForCR(m *v1alpha1.Qdrouterd, requestCert bool) *corev1.Service {
+	service := &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Service",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      m.Name + "-headless",
+			Namespace: m.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			ClusterIP: "None",
+			Selector:  selectors.LabelsForQdrouterd(m.Name),
+			Ports:     servicePortsForListeners(m.Spec.InterRouterListeners),
 		},
 	}
 	if requestCert {

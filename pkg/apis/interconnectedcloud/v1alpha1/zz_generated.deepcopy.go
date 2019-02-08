@@ -207,7 +207,7 @@ func (in *QdrouterdSpec) DeepCopyInto(out *QdrouterdSpec) {
 	}
 	if in.AutoLinks != nil {
 		in, out := &in.AutoLinks, &out.AutoLinks
-		*out = make([]Address, len(*in))
+		*out = make([]AutoLink, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}

@@ -47,16 +47,16 @@ func NewDeploymentForCR(m *v1alpha1.Qdrouterd) *appsv1.Deployment {
 		},
 	}
 	volumes := []corev1.Volume{}
-    volumes = append(volumes, corev1.Volume{
-        Name: m.Name,
-        VolumeSource: corev1.VolumeSource{
-            ConfigMap: &corev1.ConfigMapVolumeSource{
-                LocalObjectReference: corev1.LocalObjectReference{
-                    Name: m.Name,
-                },
-            },
-        },
-    })
+	volumes = append(volumes, corev1.Volume{
+		Name: m.Name,
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: m.Name,
+				},
+			},
+		},
+	})
 	for _, profile := range m.Spec.SslProfiles {
 		if len(profile.Credentials) > 0 {
 			volumes = append(volumes, corev1.Volume{

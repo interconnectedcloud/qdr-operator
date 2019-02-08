@@ -4,40 +4,12 @@ metadata:
   name: amq-interconnect
 spec:
   # Add fields here
-  count: 2
+  count: 3
   image: quay.io/ajssmith/qpid-dispatch-router:1.6.0
   addresses:
     - prefix: foo
       waypoint: true
     - prefix: bar
       distribution: closest
-  autolinks:
-    - addr: foo
-      direction: in
-      connection: linkcontainer
-    - addr: foo
-      direction: out
-      connection: linkcontainer
   listeners:
-    - port: 6673
-    - port: 8080
-      http: true
-    - port: 7777
-      routeContainer: true
-  connectors:
-    - name: linkcontainer
-      host: linkcontainer
-      port: 5672
-  linkRoutes:
-    - prefix: cat
-      direction: in
-      connection: linkcontainer
-    - prefix: cat
-      direction: out
-      connection: linkcontainer
-    - prefix: dog
-      direction: in
-      connection: linkcontainer
-    - prefix: dog
-      direction: out
-      connection: linkcontainer
+    - port: 5672

@@ -55,12 +55,12 @@ func ContainerForQdrouterd(m *v1alpha1.Qdrouterd) corev1.Container {
 		Name:  m.Name,
 		Env: []corev1.EnvVar{
 			{
-				Name:  "QDROUTERD_AUTO_MESH_DISCOVERY",
-				Value: "QUERY",
-			},
-			{
 				Name:  "APPLICATION_NAME",
 				Value: m.Name,
+			},
+			{
+				Name:  "POD_COUNT",
+				Value: strconv.Itoa(int(m.Spec.Count)),
 			},
 			{
 				Name: "POD_NAMESPACE",
@@ -81,11 +81,11 @@ func ContainerForQdrouterd(m *v1alpha1.Qdrouterd) corev1.Container {
 		},
 		Ports: containerPortsForQdrouterd(m),
 	}
-    volumeMounts := []corev1.VolumeMount{}
-    volumeMounts = append(volumeMounts, corev1.VolumeMount{
-        Name: m.Name,
-        MountPath: "/etc/qpid-dispatch/",
-    })
+	volumeMounts := []corev1.VolumeMount{}
+	volumeMounts = append(volumeMounts, corev1.VolumeMount{
+		Name:      m.Name,
+		MountPath: "/etc/qpid-dispatch/",
+	})
 	if m.Spec.SslProfiles != nil && len(m.Spec.SslProfiles) > 0 {
 		for _, profile := range m.Spec.SslProfiles {
 			if len(profile.Credentials) > 0 {
@@ -103,6 +103,6 @@ func ContainerForQdrouterd(m *v1alpha1.Qdrouterd) corev1.Container {
 
 		}
 	}
-    container.VolumeMounts = volumeMounts
+	container.VolumeMounts = volumeMounts
 	return container
 }

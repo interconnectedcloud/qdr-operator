@@ -5,9 +5,9 @@ import (
 	"reflect"
 
 	v1alpha1 "github.com/interconnectedcloud/qdrouterd-operator/pkg/apis/interconnectedcloud/v1alpha1"
+	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/configmaps"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/deployments"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/services"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/configmaps"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/configs"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/selectors"
 	appsv1 "k8s.io/api/apps/v1"
@@ -117,18 +117,18 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 
 	requestCert := configs.SetQdrouterdDefaults(instance)
 
-    // Check if configmap already exists, if not create a new one
-    cfgmapFound := &corev1.ConfigMap{}
+	// Check if configmap already exists, if not create a new one
+	cfgmapFound := &corev1.ConfigMap{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, cfgmapFound)
 	if err != nil && errors.IsNotFound(err) {
-       // Define a new configmap
-       cfgmap := configmaps.NewConfigMapForCR(instance)
-       reqLogger.Info("Creating a new ConfigMap %s%s\n", cfgmap.Namespace, cfgmap.Name)
-       err = r.client.Create(context.TODO(), cfgmap)
-       if err != nil {
+		// Define a new configmap
+		cfgmap := configmaps.NewConfigMapForCR(instance)
+		reqLogger.Info("Creating a new ConfigMap %s%s\n", cfgmap.Namespace, cfgmap.Name)
+		err = r.client.Create(context.TODO(), cfgmap)
+		if err != nil {
 			reqLogger.Info("Failed to create new ConfigMap: %v\n", err)
 			return reconcile.Result{}, err
-       }
+		}
 		// ConfigMap created successfully - return and requeue
 		controllerutil.SetControllerReference(instance, cfgmap, r.scheme)
 		return reconcile.Result{Requeue: true}, nil
@@ -174,13 +174,33 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 	// TODO(ansmith): until the qdrouterd can re-read config, this can wait
 	// Ensure the deployment container matches the instance spec
 
-	// Check if the service for the deployment already exists, if not create a new one
+	// Check if the external service for the deployment already exists, if not create a new one
 	svcFound := &corev1.Service{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, svcFound)
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-normal", Namespace: instance.Namespace}, svcFound)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new service
-		svc := services.NewServiceForCR(instance, requestCert)
-		reqLogger.Info("Creating service for qdrouterd deployment")
+		svc := services.NewNormalServiceForCR(instance, requestCert)
+		reqLogger.Info("Creating normal service for qdrouterd deployment")
+		err = r.client.Create(context.TODO(), svc)
+		if err != nil {
+			reqLogger.Info("Failed to create new Service: %v\n", err)
+			return reconcile.Result{}, err
+		}
+		// Service created successfully - return and requeue
+		controllerutil.SetControllerReference(instance, svc, r.scheme)
+		return reconcile.Result{Requeue: true}, nil
+	} else if err != nil {
+		reqLogger.Info("Failed to get Service: %v\n", err)
+		return reconcile.Result{}, err
+	}
+
+	// Check if the headless service for the deployment already exists, if not create a new one
+	svcFound = &corev1.Service{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-headless", Namespace: instance.Namespace}, svcFound)
+	if err != nil && errors.IsNotFound(err) {
+		// Define a new headless service
+		svc := services.NewHeadlessServiceForCR(instance, requestCert)
+		reqLogger.Info("Creating headless service for qdrouterd deployment")
 		err = r.client.Create(context.TODO(), svc)
 		if err != nil {
 			reqLogger.Info("Failed to create new Service: %v\n", err)

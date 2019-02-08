@@ -8,11 +8,11 @@ import (
 type QdrouterdSpec struct {
 	Count                 int32        `json:"count,omitempty"`
 	Image                 string       `json:"image"`
-	Listeners             []Listener   `json:"listeners,:omitempty"`
-	InterRouterListeners  []Listener   `json:"interRouterListeners,:omitempty"`
+	Listeners             []Listener   `json:"listeners,omitempty"`
+	InterRouterListeners  []Listener   `json:"interRouterListeners,omitempty"`
 	SslProfiles           []SslProfile `json:"sslProfiles,omitempty"`
 	Addresses             []Address    `json:"addresses,omitempty"`
-	AutoLinks             []Address    `json:"autoLinks,omitempty"`
+	AutoLinks             []AutoLink   `json:"autoLinks,omitempty"`
 	LinkRoutes            []LinkRoute  `json:"linkRoutes,omitempty"`
 	Connectors            []Connector  `json:"connectors,omitempty"`
 	InterRouterConnectors []Connector  `json:"interRouterConnectors,omitempty"`
