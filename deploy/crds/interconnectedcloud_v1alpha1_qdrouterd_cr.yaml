@@ -13,3 +13,10 @@ spec:
       distribution: closest
   listeners:
     - port: 5672
+  interRouterListeners:
+    - port: 55672
+      host: 0.0.0.0
+      sslProfile: inter_router_tls
+  sslProfiles:
+    - name: inter_router_tls
+      credentials: irl

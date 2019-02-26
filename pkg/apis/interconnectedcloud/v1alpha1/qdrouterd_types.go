@@ -6,7 +6,15 @@ import (
 
 // QdrouterdSpec defines the desired state of Qdrouterd
 type QdrouterdSpec struct {
-	Count                 int32        `json:"count,omitempty"`
+	// The count represents the number of qdrouterds for the deployment.
+	Count int32 `json:"count,omitempty"`
+	// DeploymentMode indicates the topology to be used to install the qdrouterd
+	// into a namespace where each qdrouterd runs in a separte pod. Two toplogies
+	// are currently supported.
+	DeploymentMode string `json:"deploymentMode,omitempty"`
+	// Indicator to expose the service outside of the cluster.
+	ExposeService bool `json:exposeService,omitempty"`
+	// The image used for the qdrouterd deployment
 	Image                 string       `json:"image"`
 	Listeners             []Listener   `json:"listeners,omitempty"`
 	InterRouterListeners  []Listener   `json:"interRouterListeners,omitempty"`
@@ -18,9 +26,39 @@ type QdrouterdSpec struct {
 	InterRouterConnectors []Connector  `json:"interRouterConnectors,omitempty"`
 }
 
+type PhaseType string
+
+const (
+	QdrouterdPhaseNone     PhaseType = ""
+	QdrouterdPhaseCreating           = "Creating"
+	QdrouterdPhaseRunning            = "Running"
+	QdrouterdPhaseFailed             = "Failed"
+)
+
+type ConditionType string
+
+const (
+	QdrouterdConditionProvisioning ConditionType = "Provisioning"
+	QdrouterdConditionDeployed     ConditionType = "Deployed"
+	QdrouterdConditionScalingUp    ConditionType = "ScalingUp"
+	QdrouterdConditionScalingDown  ConditionType = "ScalingDown"
+	QdrouterdConditionUpgrading    ConditionType = "Upgrading"
+)
+
+type QdrouterdCondition struct {
+	Type           ConditionType `json:"type"`
+	TransitionTime metav1.Time   `json:"transitionTime,omitempty"`
+	Reason         string        `json:"reason,omitempty"`
+}
+
 // QdrouterdStatus defines the observed state of Qdrouterd
 type QdrouterdStatus struct {
-	PodNames []string `json:"pods"`
+	Phase     PhaseType `json:"phase,omitempty"`
+	RevNumber string    `json:"revNumber,omitempty"`
+	PodNames  []string  `json:"pods"`
+
+	// Conditions keeps most recent qdrouterd conditions
+	Conditions []QdrouterdCondition `json:"conditions"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

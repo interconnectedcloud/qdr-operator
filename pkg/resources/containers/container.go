@@ -6,6 +6,7 @@ import (
 
 	v1alpha1 "github.com/interconnectedcloud/qdrouterd-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func containerPortsForListeners(listeners []v1alpha1.Listener) []corev1.ContainerPort {
@@ -53,6 +54,14 @@ func ContainerForQdrouterd(m *v1alpha1.Qdrouterd) corev1.Container {
 	container := corev1.Container{
 		Image: m.Spec.Image,
 		Name:  m.Name,
+		LivenessProbe: &corev1.Probe{
+			InitialDelaySeconds: 60,
+			Handler: corev1.Handler{
+				TCPSocket: &corev1.TCPSocketAction{
+					Port: intstr.FromInt(5672),
+				},
+			},
+		},
 		Env: []corev1.EnvVar{
 			{
 				Name:  "APPLICATION_NAME",

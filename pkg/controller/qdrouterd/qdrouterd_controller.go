@@ -13,6 +13,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -26,6 +27,8 @@ import (
 )
 
 var log = logf.Log.WithName("controller_qdrouterd")
+
+const maxConditions = 6
 
 // Add creates a new Qdrouterd Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -79,6 +82,15 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	// Watch for changes to secondary resource Pods and requeue the owner Qdrouterd
+	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1alpha1.Qdrouterd{},
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -90,6 +102,15 @@ type ReconcileQdrouterd struct {
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
 	scheme *runtime.Scheme
+}
+
+func addCondition(conditions []v1alpha1.QdrouterdCondition, condition v1alpha1.QdrouterdCondition) []v1alpha1.QdrouterdCondition {
+	size := len(conditions) + 1
+	first := 0
+	if size > maxConditions {
+		first = size - maxConditions
+	}
+	return append(conditions, condition)[first:size]
 }
 
 // Reconcile reads that state of the cluster for a Qdrouterd object and makes changes based on the state read
@@ -115,6 +136,20 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 		return reconcile.Result{}, err
 	}
 
+	// Assign the generated resource version to the status
+	if instance.Status.RevNumber == "" {
+		instance.Status.RevNumber = instance.ObjectMeta.ResourceVersion
+		// update status
+		condition := v1alpha1.QdrouterdCondition{
+			Type:           v1alpha1.QdrouterdConditionProvisioning,
+			Reason:         "provision spec to desired state",
+			TransitionTime: metav1.Now(),
+		}
+		instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
+		//instance.Status.Conditions = append(instance.Status.Conditions, condition)
+		r.client.Update(context.TODO(), instance)
+	}
+
 	requestCert := configs.SetQdrouterdDefaults(instance)
 
 	// Check if configmap already exists, if not create a new one
@@ -123,14 +158,13 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new configmap
 		cfgmap := configmaps.NewConfigMapForCR(instance)
+		controllerutil.SetControllerReference(instance, cfgmap, r.scheme)
 		reqLogger.Info("Creating a new ConfigMap %s%s\n", cfgmap.Namespace, cfgmap.Name)
 		err = r.client.Create(context.TODO(), cfgmap)
 		if err != nil {
 			reqLogger.Info("Failed to create new ConfigMap: %v\n", err)
 			return reconcile.Result{}, err
 		}
-		// ConfigMap created successfully - return and requeue
-		controllerutil.SetControllerReference(instance, cfgmap, r.scheme)
 		return reconcile.Result{Requeue: true}, nil
 	} else if err != nil {
 		reqLogger.Info("Failed to get ConfigMap: %v\n", err)
@@ -143,14 +177,22 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new deployment
 		dep := deployments.NewDeploymentForCR(instance)
+		controllerutil.SetControllerReference(instance, dep, r.scheme)
 		reqLogger.Info("Creating a new Deployment %s%s\n", dep.Namespace, dep.Name)
 		err = r.client.Create(context.TODO(), dep)
 		if err != nil {
 			reqLogger.Info("Failed to create new Deployment: %v\n", err)
 			return reconcile.Result{}, err
 		}
+		// update status
+		condition := v1alpha1.QdrouterdCondition{
+			Type:           v1alpha1.QdrouterdConditionDeployed,
+			Reason:         "deployment created",
+			TransitionTime: metav1.Now(),
+		}
+		instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
+		r.client.Update(context.TODO(), instance)
 		// Deployment created successfully - return and requeue
-		controllerutil.SetControllerReference(instance, dep, r.scheme)
 		return reconcile.Result{Requeue: true}, nil
 	} else if err != nil {
 		reqLogger.Info("Failed to get Deployment: %v\n", err)
@@ -158,21 +200,28 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 	}
 
 	// Ensure the deployment count is the same as the spec size
+	// TODO(ansmith): for now, when deployment does not match,
+	// delete to recreate pod instances
 	count := instance.Spec.Count
 	if *depFound.Spec.Replicas != count {
-		depFound.Spec.Replicas = &count
-		err = r.client.Update(context.TODO(), depFound)
-		if err != nil {
-			reqLogger.Info("Failed to update Deployment: %v\n", err)
-			return reconcile.Result{}, err
+		if depFound.GetObjectMeta().GetDeletionTimestamp() == nil {
+			r.client.Delete(context.TODO(), depFound)
 		}
-		// Spec updated - return and requeue
-		reqLogger.Info("Deployment count updated")
+		ct := v1alpha1.QdrouterdConditionScalingUp
+		if *depFound.Spec.Replicas > count {
+			ct = v1alpha1.QdrouterdConditionScalingDown
+		}
+		// update status
+		condition := v1alpha1.QdrouterdCondition{
+			Type:           ct,
+			Reason:         "Instance spec count updated",
+			TransitionTime: metav1.Now(),
+		}
+		instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
+		instance.Status.PodNames = instance.Status.PodNames[:0]
+		r.client.Update(context.TODO(), instance)
 		return reconcile.Result{Requeue: true}, nil
 	}
-
-	// TODO(ansmith): until the qdrouterd can re-read config, this can wait
-	// Ensure the deployment container matches the instance spec
 
 	// Check if the external service for the deployment already exists, if not create a new one
 	svcFound := &corev1.Service{}
@@ -180,6 +229,7 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new service
 		svc := services.NewNormalServiceForCR(instance, requestCert)
+		controllerutil.SetControllerReference(instance, svc, r.scheme)
 		reqLogger.Info("Creating normal service for qdrouterd deployment")
 		err = r.client.Create(context.TODO(), svc)
 		if err != nil {
@@ -187,7 +237,6 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 			return reconcile.Result{}, err
 		}
 		// Service created successfully - return and requeue
-		controllerutil.SetControllerReference(instance, svc, r.scheme)
 		return reconcile.Result{Requeue: true}, nil
 	} else if err != nil {
 		reqLogger.Info("Failed to get Service: %v\n", err)
@@ -200,6 +249,7 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new headless service
 		svc := services.NewHeadlessServiceForCR(instance, requestCert)
+		controllerutil.SetControllerReference(instance, svc, r.scheme)
 		reqLogger.Info("Creating headless service for qdrouterd deployment")
 		err = r.client.Create(context.TODO(), svc)
 		if err != nil {
@@ -207,7 +257,6 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 			return reconcile.Result{}, err
 		}
 		// Service created successfully - return and requeue
-		controllerutil.SetControllerReference(instance, svc, r.scheme)
 		return reconcile.Result{Requeue: true}, nil
 	} else if err != nil {
 		reqLogger.Info("Failed to get Service: %v\n", err)

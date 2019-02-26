@@ -49,17 +49,20 @@ func CheckService(desired *corev1.Service, actual *corev1.Service) bool {
 
 // Create newServiceForCR method to create normal service
 func NewNormalServiceForCR(m *v1alpha1.Qdrouterd, requestCert bool) *corev1.Service {
+	labels := selectors.LabelsForQdrouterd(m.Name)
 	service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
 			Kind:       "Service",
 		},
 		ObjectMeta: metav1.ObjectMeta{
+			Labels:    labels,
 			Name:      m.Name + "-normal",
 			Namespace: m.Namespace,
 		},
 		Spec: corev1.ServiceSpec{
-			Selector: selectors.LabelsForQdrouterd(m.Name),
+			Type:     "LoadBalancer",
+			Selector: labels,
 			Ports:    servicePortsForListeners(m.Spec.Listeners),
 		},
 	}
