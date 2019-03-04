@@ -67,171 +67,164 @@ func SetQdrouterdDefaults(m *v1alpha1.Qdrouterd) bool {
 
 func ConfigForQdrouterd(m *v1alpha1.Qdrouterd) string {
 	config := `
-    router {
-        mode: interior
-        id: Router.${HOSTNAME_IP_ADDRESS}
-    }
-    
-    {{range .Listeners}}
-    listener {
-        {{- if .Name}}
-        name: {{.Name}}
-        {{- end}}
-        {{- if .Host}}
-        host: {{.Host}}
-        {{- else}}
-        host: 0.0.0.0
-        {{- end}}
-        {{- if .Port}}
-        port: {{.Port}}
-        {{- end}}
-        {{- if .RouteContainer}}
-        role: route-container
-        {{- else}}
-        role: normal
-        {{- end}}
-        {{- if .Http}}
-        http: true
-        httpRootDir: /usr/share/qpid-dispatch/console
-        {{- end}}
-        {{- if .SslProfile}}
-        sslProfile: {{.SslProfile}}
-        {{- end}}
-    }
+router {
+    mode: interior
+    id: Router.${HOSTNAME_IP_ADDRESS}
+}
+{{range .Listeners}}
+listener {
+    {{- if .Name}}
+    name: {{.Name}}
     {{- end}}
-    
-    {{range .InterRouterListeners}}
-    listener {
-        {{- if .Name}}
-        name: {{.Name}}
-        {{- end}}
-        role: inter-router
-        {{- if .Host}}
-        host: {{.Host}}
-        {{- else}}
-        host: 0.0.0.0
-        {{- end}}
-        {{- if .Port}}
-        port: {{.Port}}
-        {{- end}}
-        {{- if .Cost}}
-        cost: {{.Cost}}
-        {{- end}}
-        {{- if .SslProfile}}
-        sslProfile: {{.SslProfile}}
-        {{- end}}
-    }
+    {{- if .Host}}
+    host: {{.Host}}
+    {{- else}}
+    host: 0.0.0.0
     {{- end}}
-
-    {{range .SslProfiles}}
-    sslProfile {
-       name: {{.Name}}
-       {{- if .Credentials}}
-       certFile: /etc/qpid-dispatch-certs/{{.Name}}/{{.Credentials}}/tls.crt
-       privateKeyFile: /etc/qpid-dispatch-certs/{{.Name}}/{{.Credentials}}/tls.key
-       {{- end}}
-       {{- if .CaCert}}
-       caCertFile: /etc/qpid-dispatch-certs/{{.Name}}/{{.CaCert}}/ca.crt
-       {{- else if .RequireClientCerts}}
-       caCertFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-       {{- end}}
-    }
+    {{- if .Port}}
+    port: {{.Port}}
     {{- end}}
-    
-    {{range .Addresses}}
-    address {
-        {{- if .Prefix}}
-        prefix: {{.Prefix}}
-        {{- end}}
-        {{- if .Pattern}}
-        pattern: {{.Pattern}}
-        {{- end}}
-        {{- if .Distribution}}
-        distribution: {{.Distribution}}
-        {{- end}}
-        {{- if .Waypoint}}
-        waypoint: {{.Waypoint}}
-        {{- end}}
-        {{- if .IngressPhase}}
-        ingressPhase: {{.IngressPhase}}
-        {{- end}}
-        {{- if .EgressPhase}}
-        egressPhase: {{.EgressPhase}}
-        {{- end}}
-    }
+    {{- if .RouteContainer}}
+    role: route-container
+    {{- else}}
+    role: normal
     {{- end}}
-
-    {{range .AutoLinks}}
-    autoLink {
-        {{- if .Address}}
-        addr: {{.Address}}
-        {{- end}}
-        {{- if .Direction}}
-        direction: {{.Direction}}
-        {{- end}}
-        {{- if .ContainerId}}
-        containerId: {{.ContainerId}}
-        {{- end}}
-        {{- if .Connection}}
-        connection: {{.Connection}}
-        {{- end}}
-        {{- if .ExternalPrefix}}
-        externalPrefix: {{.ExternalPrefix}}
-        {{- end}}
-        {{- if .Phase}}
-        Phase: {{.Phase}}
-        {{- end}}
-    }
+    {{- if .Http}}
+    http: true
+    httpRootDir: /usr/share/qpid-dispatch/console/stand-alone
     {{- end}}
-
-    {{range .LinkRoutes}}
-    linkRoute {
-        {{- if .Prefix}}
-        prefix: {{.Prefix}}
-        {{- end}}
-        {{- if .Pattern}}
-        pattern: {{.Pattern}}
-        {{- end}}
-        {{- if .Direction}}
-        direction: {{.Direction}}
-        {{- end}}
-        {{- if .Connection}}
-        connection: {{.Connection}}
-        {{- end}}
-        {{- if .ContainerId}}
-        containerId: {{.ContainerId}}
-        {{- end}}
-        {{- if .AddExternalPrefix}}
-        addExternalPrefix: {{.AddExternalPrefix}}
-        {{- end}}
-        {{- if .RemoveExternalPrefix}}
-        removeExternalPrefix: {{.RemoveExternalPrefix}}
-        {{- end}}
-    }
+    {{- if .SslProfile}}
+    sslProfile: {{.SslProfile}}
     {{- end}}
-
-    {{range .Connectors}}
-    connector {
-        {{- if .Name}}
-        name: {{.Name}}
-        {{- end}}
-        {{- if .Host}}
-        host: {{.Host}}
-        {{- end}}
-        {{- if .Port}}
-        port: {{.Port}}
-        {{- end}}
-        {{- if .RouteContainer}}
-        routeContainer: {{.RouteContainer}}
-        {{- end}}
-        {{- if .Cost}}
-        cost: {{.Cost}}
-        {{- end}}
-        {{- if .SslProfile}}
-        sslProfile: {{.SslProfile}}
-        {{- end}}
-    }
-    {{- end}}`
+}
+{{- end}}
+{{range .InterRouterListeners}}
+listener {
+    {{- if .Name}}
+    name: {{.Name}}
+    {{- end}}
+    role: inter-router
+    {{- if .Host}}
+    host: {{.Host}}
+    {{- else}}
+    host: 0.0.0.0
+    {{- end}}
+    {{- if .Port}}
+    port: {{.Port}}
+    {{- end}}
+    {{- if .Cost}}
+    cost: {{.Cost}}
+    {{- end}}
+    {{- if .SslProfile}}
+    sslProfile: {{.SslProfile}}
+    {{- end}}
+}
+{{- end}}
+{{range .SslProfiles}}
+sslProfile {
+   name: {{.Name}}
+   {{- if .Credentials}}
+   certFile: /etc/qpid-dispatch-certs/{{.Name}}/{{.Credentials}}/tls.crt
+   privateKeyFile: /etc/qpid-dispatch-certs/{{.Name}}/{{.Credentials}}/tls.key
+   {{- end}}
+   {{- if .CaCert}}
+   caCertFile: /etc/qpid-dispatch-certs/{{.Name}}/{{.CaCert}}/ca.crt
+   {{- else if .RequireClientCerts}}
+   caCertFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+   {{- end}}
+}
+{{- end}}
+{{range .Addresses}}
+address {
+    {{- if .Prefix}}
+    prefix: {{.Prefix}}
+    {{- end}}
+    {{- if .Pattern}}
+    pattern: {{.Pattern}}
+    {{- end}}
+    {{- if .Distribution}}
+    distribution: {{.Distribution}}
+    {{- end}}
+    {{- if .Waypoint}}
+    waypoint: {{.Waypoint}}
+    {{- end}}
+    {{- if .IngressPhase}}
+    ingressPhase: {{.IngressPhase}}
+    {{- end}}
+    {{- if .EgressPhase}}
+    egressPhase: {{.EgressPhase}}
+    {{- end}}
+}
+{{- end}}
+{{range .AutoLinks}}
+autoLink {
+    {{- if .Address}}
+    addr: {{.Address}}
+    {{- end}}
+    {{- if .Direction}}
+    direction: {{.Direction}}
+    {{- end}}
+    {{- if .ContainerId}}
+    containerId: {{.ContainerId}}
+    {{- end}}
+    {{- if .Connection}}
+    connection: {{.Connection}}
+    {{- end}}
+    {{- if .ExternalPrefix}}
+    externalPrefix: {{.ExternalPrefix}}
+    {{- end}}
+    {{- if .Phase}}
+    Phase: {{.Phase}}
+    {{- end}}
+}
+{{- end}}
+{{range .LinkRoutes}}
+linkRoute {
+    {{- if .Prefix}}
+    prefix: {{.Prefix}}
+    {{- end}}
+    {{- if .Pattern}}
+    pattern: {{.Pattern}}
+    {{- end}}
+    {{- if .Direction}}
+    direction: {{.Direction}}
+    {{- end}}
+    {{- if .Connection}}
+    connection: {{.Connection}}
+    {{- end}}
+    {{- if .ContainerId}}
+    containerId: {{.ContainerId}}
+    {{- end}}
+    {{- if .AddExternalPrefix}}
+    addExternalPrefix: {{.AddExternalPrefix}}
+    {{- end}}
+    {{- if .RemoveExternalPrefix}}
+    removeExternalPrefix: {{.RemoveExternalPrefix}}
+    {{- end}}
+}
+{{- end}}
+{{range .Connectors}}
+connector {
+    {{- if .Name}}
+    name: {{.Name}}
+    {{- end}}
+    {{- if .Host}}
+    host: {{.Host}}
+    {{- end}}
+    {{- if .Port}}
+    port: {{.Port}}
+    {{- end}}
+    {{- if .RouteContainer}}
+    routeContainer: {{.RouteContainer}}
+    {{- end}}
+    {{- if .Cost}}
+    cost: {{.Cost}}
+    {{- end}}
+    {{- if .SslProfile}}
+    sslProfile: {{.SslProfile}}
+    {{- end}}
+}
+{{- end}}`
 
 	var buff bytes.Buffer
 	qdrouterdconfig := template.Must(template.New("qdrouterdconfig").Parse(config))

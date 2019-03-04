@@ -4,8 +4,9 @@ metadata:
   name: amq-interconnect
 spec:
   # Add fields here
-  count: 3
-  image: quay.io/ajssmith/qpid-dispatch-router:1.6.0
+  count: 4
+  image: quay.io/ajssmith/qpid-dispatch-router:1.5.0
+  deploymentMode: lbfrontend
   addresses:
     - prefix: foo
       waypoint: true
@@ -13,6 +14,10 @@ spec:
       distribution: closest
   listeners:
     - port: 5672
+      host: 0.0.0.0
+      http: true
+      authenticatePeer: no
+      saslMechanisms: ANONYMOUS
   interRouterListeners:
     - port: 55672
       host: 0.0.0.0

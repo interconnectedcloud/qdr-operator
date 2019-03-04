@@ -57,7 +57,7 @@ func ContainerForQdrouterd(m *v1alpha1.Qdrouterd) corev1.Container {
 		LivenessProbe: &corev1.Probe{
 			InitialDelaySeconds: 60,
 			Handler: corev1.Handler{
-				TCPSocket: &corev1.TCPSocketAction{
+				HTTPGet: &corev1.HTTPGetAction{
 					Port: intstr.FromInt(5672),
 				},
 			},
@@ -66,6 +66,14 @@ func ContainerForQdrouterd(m *v1alpha1.Qdrouterd) corev1.Container {
 			{
 				Name:  "APPLICATION_NAME",
 				Value: m.Name,
+			},
+			{
+				Name:  "QDROUTERD_CONF",
+				Value: "/etc/qpid-dispatch/qdrouterd.conf.template",
+			},
+			{
+				Name:  "QDROUTERD_AUTO_MESH_DISCOVERY",
+				Value: "QUERY",
 			},
 			{
 				Name:  "POD_COUNT",

@@ -203,14 +203,13 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 	// TODO(ansmith): for now, when deployment does not match,
 	// delete to recreate pod instances
 	count := instance.Spec.Count
-	if *depFound.Spec.Replicas != count {
-		if depFound.GetObjectMeta().GetDeletionTimestamp() == nil {
-			r.client.Delete(context.TODO(), depFound)
-		}
+	if count != 0 && *depFound.Spec.Replicas != count {
 		ct := v1alpha1.QdrouterdConditionScalingUp
 		if *depFound.Spec.Replicas > count {
 			ct = v1alpha1.QdrouterdConditionScalingDown
 		}
+		*depFound.Spec.Replicas = count
+		r.client.Update(context.TODO(), depFound)
 		// update status
 		condition := v1alpha1.QdrouterdCondition{
 			Type:           ct,
@@ -293,7 +292,9 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 func getPodNames(pods []corev1.Pod) []string {
 	var podNames []string
 	for _, pod := range pods {
-		podNames = append(podNames, pod.Name)
+		if pod.GetObjectMeta().GetDeletionTimestamp() == nil {
+			podNames = append(podNames, pod.Name)
+		}
 	}
 	return podNames
 }
