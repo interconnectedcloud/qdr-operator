@@ -36,12 +36,10 @@ func SetQdrouterdDefaults(m *v1alpha1.Qdrouterd) bool {
 		m.Spec.Listeners = append(m.Spec.Listeners, v1alpha1.Listener{
 			Port: 5672,
 		}, v1alpha1.Listener{
-			Port:       5671,
-			SslProfile: "default",
+			Port: 5671,
 		}, v1alpha1.Listener{
-			Port:       8672,
-			Http:       true,
-			SslProfile: "default",
+			Port: 8672,
+			Http: true,
 		})
 	}
 	if len(m.Spec.InterRouterListeners) == 0 {
