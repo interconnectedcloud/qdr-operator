@@ -1,0 +1,109 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    capabilities: Basic Install
+  name: qdrouterd-operator.v0.1.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - kind: Qdrouterd
+      name: qdrouterds.interconnectedcloud.github.io
+      version: v1alpha1
+  description: Placeholder description
+  displayName: Qdrouterd Operator
+  install:
+    spec:
+      deployments:
+      - name: qdrouterd-operator
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              name: qdrouterd-operator
+          strategy: {}
+          template:
+            metadata:
+              labels:
+                name: qdrouterd-operator
+            spec:
+              containers:
+              - command:
+                - qdrouterd-operator
+                env:
+                - name: WATCH_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: OPERATOR_NAME
+                  value: qdrouterd-operator
+                image: quay.io/ajssmith/qdrouterd-operator
+                imagePullPolicy: Always
+                name: qdrouterd-operator
+                ports:
+                - containerPort: 60000
+                  name: metrics
+                resources: {}
+              serviceAccountName: qdrouterd-operator
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          - services
+          - endpoints
+          - persistentvolumeclaims
+          - events
+          - configmaps
+          - secrets
+          verbs:
+          - '*'
+        - apiGroups:
+          - ""
+          resources:
+          - namespaces
+          verbs:
+          - get
+        - apiGroups:
+          - apps
+          resources:
+          - deployments
+          - daemonsets
+          - replicasets
+          - statefulsets
+          verbs:
+          - '*'
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - servicemonitors
+          verbs:
+          - get
+          - create
+        - apiGroups:
+          - interconnectedcloud.github.io
+          resources:
+          - '*'
+          verbs:
+          - '*'
+        serviceAccountName: qdrouterd-operator
+    strategy: deployment
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: true
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  maturity: alpha
+  provider: {}
+  version: 0.1.0
