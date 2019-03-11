@@ -6,15 +6,8 @@ import (
 
 // QdrouterdSpec defines the desired state of Qdrouterd
 type QdrouterdSpec struct {
-	// The count represents the number of qdrouterds for the deployment.
-	Count int32 `json:"count,omitempty"`
-	// DeploymentMode indicates the topology to be used to install the qdrouterd
-	// into a namespace where each qdrouterd runs in a separte pod. Two toplogies
-	// are currently supported.
-	DeploymentMode string `json:"deploymentMode,omitempty"`
-	// Indicator to expose the service outside of the cluster.
-	ExposeService bool `json:exposeService,omitempty"`
-	// The image used for the qdrouterd deployment
+	Count                 int32        `json:"count,omitempty"`
+	DeploymentMode        string       `json:"deploymentMode,omitempty"`
 	Image                 string       `json:"image"`
 	Listeners             []Listener   `json:"listeners,omitempty"`
 	InterRouterListeners  []Listener   `json:"interRouterListeners,omitempty"`
@@ -92,7 +85,8 @@ type Address struct {
 	Distribution string `json:"distribution,omitempty"`
 	Waypoint     bool   `json:"waypoint,omitempty"`
 	IngressPhase *int32 `json:"ingressPhase,omitempty"`
-	EgressPhase  *int32 `json:"ingressPhase,omitempty"`
+	EgressPhase  *int32 `json:"egressPhase,omitempty"`
+	Priority     *int32 `json:"priority,omitempty"`
 }
 
 type Listener struct {
@@ -103,6 +97,7 @@ type Listener struct {
 	Http           bool   `json:"http,omitempty"`
 	Cost           int32  `json:"cost,omitempty"`
 	SslProfile     string `json:"sslProfile,omitempty"`
+	Expose         bool   `json:"expose,omitempty"`
 }
 
 type SslProfile struct {

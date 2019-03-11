@@ -2,7 +2,20 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
   annotations:
+    alm-examples: |
+      {
+        "apiVersion": "interconnectedcloud.github.io/v1alpha1"
+        "kind": "Qdrouterd"
+        "metadata": {
+          "name": "example"
+        },
+        "spec": {
+          "count": 3,
+          "deploymentMode": "lbfrontend"
+        }
+      }
     capabilities: Basic Install
+    categories: Messaging
   name: qdrouterd-operator.v0.1.0
   namespace: placeholder
 spec:
@@ -11,8 +24,48 @@ spec:
     owned:
     - kind: Qdrouterd
       name: qdrouterds.interconnectedcloud.github.io
+      resources:
+      - kind: Service
+        name: ""
+        version: v1
+      - kind: Deployment
+        name: ""
+        version: v1
+      specDescriptors:
+      - description: The desired number of member pods for qdrouterd mesh
+        displayName: Count
+        path: count
+      - description: The deployment mode
+        displayName: DeploymentMode
+        path: deploymentMode
+      - description: The Image
+        displayName: Image
+        path: image
+      - description: Listeners for incoming connections to the router
+        displayName: Listeners
+        path: listeners
+      - description: Listeners for inter router mesh connections
+        displayName: InterRouterListeners
+        path: interRouterListeners
+      - description: TLS/SSL configuration for connections
+        displayName: SslProfiles
+        path: sslProfiles
+      - description: Address configuration for distribution and phasing
+        displayName: Addresses
+        path: addresses
+      statusDescriptors:
+      - description: The current revision of the qdrouterd cluster
+        displayName: Revision Number
+        path: revNumber
+      - description: The current pods
+        displayName: Pods
+        path: pods
+      - description: The current conditions
+        displayName: Conditions
+        path: conditions
       version: v1alpha1
-  description: Placeholder description
+  description: |
+    The qdrouterd Operator does x y and z
   displayName: Qdrouterd Operator
   install:
     spec:
