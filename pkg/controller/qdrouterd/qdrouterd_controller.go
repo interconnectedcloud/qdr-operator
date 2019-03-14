@@ -7,11 +7,15 @@ import (
 	v1alpha1 "github.com/interconnectedcloud/qdrouterd-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/configmaps"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/deployments"
+	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/rolebindings"
+	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/roles"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/services"
+	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/serviceaccounts"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/configs"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/selectors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -66,6 +70,24 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	// Watch for changes to secondary resource Service and requeue the owner Qdrouterd
 	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1alpha1.Qdrouterd{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource ServiceAccount and requeue the owner Qdrouterd
+	err = c.Watch(&source.Kind{Type: &corev1.ServiceAccount{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1alpha1.Qdrouterd{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource RoleBinding and requeue the owner Qdrouterd
+	err = c.Watch(&source.Kind{Type: &rbacv1.RoleBinding{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &v1alpha1.Qdrouterd{},
 	})
@@ -151,6 +173,63 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 	}
 
 	requestCert := configs.SetQdrouterdDefaults(instance)
+
+	// Check if role already exists, if not create a new one
+	roleFound := &rbacv1.Role{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, roleFound)
+	if err != nil && errors.IsNotFound(err) {
+		// Define a new role
+		role := roles.NewRoleForCR(instance)
+		controllerutil.SetControllerReference(instance, role, r.scheme)
+		reqLogger.Info("Creating a new Role %s%s\n", role.Namespace, role.Name)
+		err = r.client.Create(context.TODO(), role)
+		if err != nil {
+			reqLogger.Info("Failed to create new Role: %v\n", err)
+			return reconcile.Result{}, err
+		}
+		return reconcile.Result{Requeue: true}, nil
+	} else if err != nil {
+		reqLogger.Info("Failed to get Role: %v\n", err)
+		return reconcile.Result{}, err
+	}
+
+	// Check if rolebinding already exists, if not create a new one
+	rolebindingFound := &rbacv1.RoleBinding{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, rolebindingFound)
+	if err != nil && errors.IsNotFound(err) {
+		// Define a new rolebinding
+		rolebinding := rolebindings.NewRoleBindingForCR(instance)
+		controllerutil.SetControllerReference(instance, rolebinding, r.scheme)
+		reqLogger.Info("Creating a new RoleBinding %s%s\n", rolebinding.Namespace, rolebinding.Name)
+		err = r.client.Create(context.TODO(), rolebinding)
+		if err != nil {
+			reqLogger.Info("Failed to create new RoleBinding: %v\n", err)
+			return reconcile.Result{}, err
+		}
+		return reconcile.Result{Requeue: true}, nil
+	} else if err != nil {
+		reqLogger.Info("Failed to get RoleBinding: %v\n", err)
+		return reconcile.Result{}, err
+	}
+
+	// Check if serviceaccount already exists, if not create a new one
+	svcAccntFound := &corev1.ServiceAccount{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, svcAccntFound)
+	if err != nil && errors.IsNotFound(err) {
+		// Define a new serviceaccount
+		svcaccnt := serviceaccounts.NewServiceAccountForCR(instance)
+		controllerutil.SetControllerReference(instance, svcaccnt, r.scheme)
+		reqLogger.Info("Creating a new ServiceAccount %s%s\n", svcaccnt.Namespace, svcaccnt.Name)
+		err = r.client.Create(context.TODO(), svcaccnt)
+		if err != nil {
+			reqLogger.Info("Failed to create new ServiceAccount: %v\n", err)
+			return reconcile.Result{}, err
+		}
+		return reconcile.Result{Requeue: true}, nil
+	} else if err != nil {
+		reqLogger.Info("Failed to get ServiceAccount: %v\n", err)
+		return reconcile.Result{}, err
+	}
 
 	// Check if configmap already exists, if not create a new one
 	cfgmapFound := &corev1.ConfigMap{}
