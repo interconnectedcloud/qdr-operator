@@ -9,6 +9,7 @@ rules:
   resources:
   - pods
   - services
+  - serviceaccounts
   - endpoints
   - persistentvolumeclaims
   - events
@@ -16,6 +17,17 @@ rules:
   - secrets
   verbs:
   - '*'
+- apiGroups:
+  - "rbac.authorization.k8s.io"
+  resources:
+  - rolebindings
+  - roles
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - delete
 - apiGroups:
   - ""
   resources:
