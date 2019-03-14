@@ -2,8 +2,8 @@ package rolebindings
 
 import (
 	v1alpha1 "github.com/interconnectedcloud/qdrouterd-operator/pkg/apis/interconnectedcloud/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Create NewRoleBindingForCR method to create rolebinding
@@ -18,12 +18,12 @@ func NewRoleBindingForCR(m *v1alpha1.Qdrouterd) *rbacv1.RoleBinding {
 			Namespace: m.Namespace,
 		},
 		Subjects: []rbacv1.Subject{{
-			Kind:    "ServiceAccount",
-			Name:    m.Name,
+			Kind: "ServiceAccount",
+			Name: m.Name,
 		}},
 		RoleRef: rbacv1.RoleRef{
-			Kind:    "Role",
-			Name:    m.Name,
+			Kind: "Role",
+			Name: m.Name,
 		},
 	}
 

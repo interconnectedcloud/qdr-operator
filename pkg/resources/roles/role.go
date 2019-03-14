@@ -2,8 +2,8 @@ package roles
 
 import (
 	v1alpha1 "github.com/interconnectedcloud/qdrouterd-operator/pkg/apis/interconnectedcloud/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Create NewRoleForCR method to create role
@@ -18,9 +18,9 @@ func NewRoleForCR(m *v1alpha1.Qdrouterd) *rbacv1.Role {
 			Namespace: m.Namespace,
 		},
 		Rules: []rbacv1.PolicyRule{{
-			Verbs:    []string{"get", "list"},
-			APIGroups:    []string{""},
-			Resources:    []string{"pods"},
+			Verbs:     []string{"get", "list"},
+			APIGroups: []string{""},
+			Resources: []string{"pods"},
 		}},
 	}
 
