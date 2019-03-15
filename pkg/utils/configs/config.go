@@ -5,6 +5,7 @@ import (
 	"text/template"
 
 	v1alpha1 "github.com/interconnectedcloud/qdrouterd-operator/pkg/apis/interconnectedcloud/v1alpha1"
+	"github.com/interconnectedcloud/qdrouterd-operator/pkg/constants"
 )
 
 func isDefaultSslProfileDefined(m *v1alpha1.Qdrouterd) bool {
@@ -38,7 +39,7 @@ func SetQdrouterdDefaults(m *v1alpha1.Qdrouterd) bool {
 		}, v1alpha1.Listener{
 			Port: 5671,
 		}, v1alpha1.Listener{
-			Port: 8672,
+			Port: constants.HttpLivenessPort,
 			Http: true,
 		})
 	}

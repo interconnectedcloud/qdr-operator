@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	v1alpha1 "github.com/interconnectedcloud/qdrouterd-operator/pkg/apis/interconnectedcloud/v1alpha1"
+	"github.com/interconnectedcloud/qdrouterd-operator/pkg/constants"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -65,7 +66,7 @@ func ContainerForQdrouterd(m *v1alpha1.Qdrouterd) corev1.Container {
 			InitialDelaySeconds: 60,
 			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
-					Port: intstr.FromInt(5672),
+					Port: intstr.FromInt(constants.HttpLivenessPort),
 				},
 			},
 		},
