@@ -1,6 +1,7 @@
 package containers
 
 import (
+	"os"
 	"reflect"
 	"strconv"
 
@@ -51,8 +52,14 @@ func CheckQdrouterdContainer(desired *corev1.Container, actual *corev1.Container
 }
 
 func ContainerForQdrouterd(m *v1alpha1.Qdrouterd) corev1.Container {
+	var image string
+	if m.Spec.Image != "" {
+		image = m.Spec.Image
+	} else {
+		image = os.Getenv("QDROUTERD_IMAGE")
+	}
 	container := corev1.Container{
-		Image: m.Spec.Image,
+		Image: image,
 		Name:  m.Name,
 		LivenessProbe: &corev1.Probe{
 			InitialDelaySeconds: 60,
