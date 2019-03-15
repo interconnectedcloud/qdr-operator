@@ -67,7 +67,7 @@ func ConfigForQdrouterd(m *v1alpha1.Qdrouterd) string {
 	config := `
 router {
     mode: interior
-    id: Router.${HOSTNAME_IP_ADDRESS}
+    id: Router.${HOSTNAME}
 }
 {{range .Listeners}}
 listener {
