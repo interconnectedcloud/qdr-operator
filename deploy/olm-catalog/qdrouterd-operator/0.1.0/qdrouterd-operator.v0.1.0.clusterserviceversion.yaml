@@ -96,7 +96,7 @@ spec:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
                   value: qdrouterd-operator
-                image: quay.io/ajssmith/qdrouterd-operator
+                image: quay.io/interconnectedcloud/qdrouterd-operator
                 imagePullPolicy: Always
                 name: qdrouterd-operator
                 ports:
