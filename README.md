@@ -49,27 +49,27 @@ $ kubectl get pods -l name=qdrouterd-operator
 ```
 
 If for some reason, the pod does not get to the running state, look at the
-pod details to review any event that probited the pod from starting.
+pod details to review any event that prohibited the pod from starting.
 
 ```
 $ kubectl describe pod -l name=qdrouterd-operator
 ```
 
-You will be able to confirm that the new CRD has been registerd in the cluster and you can review its details.
+You will be able to confirm that the new CRD has been registered in the cluster and you can review its details.
 
 ```
 $ kubectl get crd
-$ kubectl describd crd qdrouterd-operator
+$ kubectl describe crd qdrouterd-operator
 ```
 
-To create a Qdrouterd deployment, you must create a `Qdrouterd` resource representing the desired specfication of the deployment. For example, to creat a 3-node Qdrouterd mesh deployment you may run:
+To create a Qdrouterd deployment, you must create a `Qdrouterd` resource representing the desired specification of the deployment. For example, to create a 3-node Qdrouterd mesh deployment you may run:
 
 ```console
 $ cat <<EOF | kubectl create -f -
 apiVersion: interconnectedcloud.github.io/v1alpha1
 kind: Qdrouterd
 metadata:
-  name: amq-interconnect
+  name: example-interconnect
 spec:
   # Add fields here
   count: 3
@@ -129,7 +129,7 @@ $ cat <<EOF | kubectl create -f -
 apiVersion: interconnectedcloud.github.io/v1alpha1
 kind: Qdrouterd
 metadata:
-  name: amq-interconnect
+  name: example-interconnect
 spec:
   # Add fields here
   count: 3
