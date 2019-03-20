@@ -2,18 +2,8 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
   annotations:
-    alm-examples: |
-      {
-        "apiVersion": "interconnectedcloud.github.io/v1alpha1"
-        "kind": "Qdrouterd"
-        "metadata": {
-          "name": "example"
-        },
-        "spec": {
-          "count": 3,
-          "deploymentMode": "lbfrontend"
-        }
-      }
+    alm-examples: >-
+      [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Qdrouterd","metadata":{"name":"amq-interconnect"},"spec":{"count":2,"deploymentMode": "lbfrontend","image":"quay.io/interconnectedcloud/qdrouterd:1.5.0"}}]
     capabilities: Basic Install
     categories: Messaging
   name: qdrouterd-operator.v0.1.0
@@ -22,7 +12,10 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
-    - kind: Qdrouterd
+    - version: v1alpha1
+      kind: Qdrouterd
+      description: An instance of Qdrouterd
+      displayName: Qdrouterd
       name: qdrouterds.interconnectedcloud.github.io
       resources:
       - kind: Service
@@ -63,7 +56,6 @@ spec:
       - description: The current conditions
         displayName: Conditions
         path: conditions
-      version: v1alpha1
   description: |
     The qdrouterd Operator does x y and z
   displayName: Qdrouterd Operator
@@ -76,12 +68,12 @@ spec:
           selector:
             matchLabels:
               name: qdrouterd-operator
-          strategy: {}
           template:
             metadata:
               labels:
                 name: qdrouterd-operator
             spec:
+              serviceAccountName: qdrouterd-operator
               containers:
               - command:
                 - qdrouterd-operator
@@ -103,7 +95,6 @@ spec:
                 - containerPort: 60000
                   name: metrics
                 resources: {}
-              serviceAccountName: qdrouterd-operator
       permissions:
       - rules:
         - apiGroups:
@@ -112,12 +103,24 @@ spec:
           - pods
           - services
           - endpoints
+          - serviceaccounts
           - persistentvolumeclaims
           - events
           - configmaps
           - secrets
           verbs:
           - '*'
+        - apiGroups:
+          - "rbac.authorization.k8s.io"
+          resources:
+          - rolebindings
+          - roles
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - delete
         - apiGroups:
           - ""
           resources:

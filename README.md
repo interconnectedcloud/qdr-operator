@@ -140,3 +140,11 @@ EOF
 
 As you make local changes to the code, restart the operator to enact the changes.
 
+## Manage the operator using the Operator Lifecycle Manager
+
+Ensure the Operator Lifecycle Manager is installed in the local cluster.  By default, the `catalog-source.sh` will intall the operator catalog resources in `operator-lifecycle-manager` namespace.  You may also specify different namespace where you have the Operator Lifecycle Manager installed. 
+
+```
+$ ./hack/catalog-source.sh [namespace]
+$ oc apply -f deploy/olm-catalog/qdrouterd-operator/0.1.0/catalog-source.yaml
+```
