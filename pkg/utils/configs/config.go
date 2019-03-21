@@ -90,7 +90,7 @@ listener {
     {{- end}}
     {{- if .Http}}
     http: true
-    httpRootDir: /usr/share/qpid-dispatch/console/stand-alone
+    httpRootDir: /usr/share/qpid-dispatch/console/
     {{- end}}
     {{- if .SslProfile}}
     sslProfile: {{.SslProfile}}
