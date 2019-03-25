@@ -1,0 +1,5 @@
+#! package-manifest: deploy/olm-catalog/qdrouterd-operator/0.1.0/qdrouterd-operator.v0.1.0.clusterserviceversion.yaml
+packageName: qdrouterd-operator
+channels:
+  - name: beta
+    currentCSV: qdrouterd-operator.v0.1.0

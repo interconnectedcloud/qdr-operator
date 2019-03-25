@@ -1,0 +1,331 @@
+apiVersion: v1
+kind: List
+items:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: qdrouterd-resources
+      namespace: operator-lifecycle-manager
+    data:
+      clusterServiceVersions: |
+        - apiVersion: operators.coreos.com/v1alpha1
+          kind: ClusterServiceVersion
+          metadata:
+            annotations:
+              alm-examples: >-
+                [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Qdrouterd","metadata":{"name":"amq-interconnect"},"spec":{"count":2,"deploymentMode": "lbfrontend","image":"quay.io/interconnectedcloud/qdrouterd:1.5.0"}}]
+              capabilities: Basic Install
+              categories: Messaging
+            name: qdrouterd-operator.v0.1.0
+            namespace: placeholder
+          spec:
+            apiservicedefinitions: {}
+            customresourcedefinitions:
+              owned:
+              - version: v1alpha1
+                kind: Qdrouterd
+                description: An instance of Qdrouterd
+                displayName: Qdrouterd
+                name: qdrouterds.interconnectedcloud.github.io
+                resources:
+                - kind: Service
+                  name: ""
+                  version: v1
+                - kind: Deployment
+                  name: ""
+                  version: v1
+                specDescriptors:
+                - description: The desired number of member pods for qdrouterd mesh
+                  displayName: Count
+                  path: count
+                - description: The deployment mode
+                  displayName: DeploymentMode
+                  path: deploymentMode
+                - description: The Image
+                  displayName: Image
+                  path: image
+                - description: Listeners for incoming connections to the router
+                  displayName: Listeners
+                  path: listeners
+                - description: Listeners for inter router mesh connections
+                  displayName: InterRouterListeners
+                  path: interRouterListeners
+                - description: TLS/SSL configuration for connections
+                  displayName: SslProfiles
+                  path: sslProfiles
+                - description: Address configuration for distribution and phasing
+                  displayName: Addresses
+                  path: addresses
+                statusDescriptors:
+                - description: The current revision of the qdrouterd cluster
+                  displayName: Revision Number
+                  path: revNumber
+                - description: The current pods
+                  displayName: Pods
+                  path: pods
+                - description: The current conditions
+                  displayName: Conditions
+                  path: conditions
+            description: |
+              The qdrouterd Operator does x y and z
+            displayName: Qdrouterd Operator
+            install:
+              spec:
+                deployments:
+                - name: qdrouterd-operator
+                  spec:
+                    replicas: 1
+                    selector:
+                      matchLabels:
+                        name: qdrouterd-operator
+                    template:
+                      metadata:
+                        labels:
+                          name: qdrouterd-operator
+                      spec:
+                        serviceAccountName: qdrouterd-operator
+                        containers:
+                        - command:
+                          - qdrouterd-operator
+                          env:
+                          - name: WATCH_NAMESPACE
+                            valueFrom:
+                              fieldRef:
+                                fieldPath: metadata.namespace
+                          - name: POD_NAME
+                            valueFrom:
+                              fieldRef:
+                                fieldPath: metadata.name
+                          - name: OPERATOR_NAME
+                            value: qdrouterd-operator
+                          image: quay.io/interconnectedcloud/qdrouterd-operator
+                          imagePullPolicy: Always
+                          name: qdrouterd-operator
+                          ports:
+                          - containerPort: 60000
+                            name: metrics
+                          resources: {}
+                permissions:
+                - rules:
+                  - apiGroups:
+                    - ""
+                    resources:
+                    - pods
+                    - services
+                    - endpoints
+                    - serviceaccounts
+                    - persistentvolumeclaims
+                    - events
+                    - configmaps
+                    - secrets
+                    verbs:
+                    - '*'
+                  - apiGroups:
+                    - "rbac.authorization.k8s.io"
+                    resources:
+                    - rolebindings
+                    - roles
+                    verbs:
+                    - get
+                    - list
+                    - watch
+                    - create
+                    - delete
+                  - apiGroups:
+                    - ""
+                    resources:
+                    - namespaces
+                    verbs:
+                    - get
+                  - apiGroups:
+                    - apps
+                    resources:
+                    - deployments
+                    - daemonsets
+                    - replicasets
+                    - statefulsets
+                    verbs:
+                    - '*'
+                  - apiGroups:
+                    - monitoring.coreos.com
+                    resources:
+                    - servicemonitors
+                    verbs:
+                    - get
+                    - create
+                  - apiGroups:
+                    - interconnectedcloud.github.io
+                    resources:
+                    - '*'
+                    verbs:
+                    - '*'
+                  serviceAccountName: qdrouterd-operator
+              strategy: deployment
+            installModes:
+            - supported: true
+              type: OwnNamespace
+            - supported: true
+              type: SingleNamespace
+            - supported: false
+              type: MultiNamespace
+            - supported: true
+              type: AllNamespaces
+            maturity: alpha
+            provider: {}
+            version: 0.1.0
+      customResourceDefinitions: |
+        - apiVersion: apiextensions.k8s.io/v1beta1
+          kind: CustomResourceDefinition
+          metadata:
+            name: qdrouterds.interconnectedcloud.github.io
+          spec:
+            group: interconnectedcloud.github.io
+            names:
+              kind: Qdrouterd
+              listKind: QdrouterdList
+              plural: qdrouterds
+              singular: qdrouterd
+              shortNames:
+              - qdr
+            scope: Namespaced
+            version: v1alpha1
+            subresources:
+              status: {}
+            validation:
+             # openAPIV3Schema is the schema for validating custom objects.
+              openAPIV3Schema:
+                required:
+                  - spec
+                properties:
+                  spec:
+                    properties:
+                      count:
+                        type: integer
+                        minimum: 1
+                        maximum: 10
+                      deploymentMode:
+                        type: string
+                        enum:
+                          - lbfrontend
+                          - daemonset
+                        description: The deployment mode
+                      image:
+                        type: string
+                        description: The image used for the qdrouerd deployment
+                      listeners:
+                        type: array
+                        description: Configuration of each individual qdrouterd listener
+                        minItems: 1
+                        items:
+                          type: object
+                          description: qdrouterd listener configuration
+                          properties:
+                            name:
+                              type: string
+                              description: Listener name
+                            host:
+                              type: string
+                              description: Host name
+                            port:
+                              type: integer
+                              description: Port number
+                            routeContainer:
+                              type: boolean
+                              description: Indicator for a router-broker connection
+                            http:
+                              type: boolean
+                              description: Accept HTTP connections
+                            cost:
+                              type: integer
+                              description: Cost metric for inter router connections
+                            sslProfile:
+                              type: string
+                              description: Name of the ssl profile to use
+                      interRouterListeners:
+                        type: array
+                        description: Configuration of each individual inter router listener
+                        minItems: 1
+                        items:
+                          type: object
+                          description: qdrouterd listener configuration
+                          properties:
+                            name:
+                              type: string
+                              description: Listener name
+                            host:
+                              type: string
+                              description: Host name
+                            port:
+                              type: integer
+                              description: Port number
+                            routeContainer:
+                              type: boolean
+                              description: Indicator for a router-broker connection
+                            http:
+                              type: boolean
+                              description: Accept HTTP connections
+                            cost:
+                              type: integer
+                              description: Cost metric for inter router connections
+                            sslProfile:
+                              type: string
+                              description: Name of the ssl profile to use
+                      addresses:
+                        type: array
+                        description: Configuration of each address distribution and phasing
+                        items:
+                          type: object
+                          description: address configuration
+                          properties:
+                            prefix:
+                              type: string
+                              description: The address prefix for the configured setting
+                            pattern:
+                              type: string
+                              description: A wildcarded pattern for address matching
+                            distribution:
+                              type: string
+                              description: Treatment of traffic associated with the address
+                              enum:
+                                - balanced
+                                - closest
+                                - multicast
+                            waypoint:
+                              type: boolean
+                              description: Indicator for waypoint use
+                            ingressPhase:
+                              type: integer
+                              minimum: 0
+                              maximum: 9
+                              description: Ingress phase override for the address
+                            egressPhase:
+                              type: integer
+                              minimum: 0
+                              maximum: 9
+                              description: Egress phase override for the address
+                            priority:
+                              type: integer
+                              minimum: 0
+                              maximum: 9
+                              description: Priority assigned to address for inter router transfer
+      packages: >
+        - #! package-manifest: deploy/olm-catalog/qdrouterd-operator/0.1.0/qdrouterd-operator.v0.1.0.clusterserviceversion.yaml
+          packageName: qdrouterd-operator
+          channels:
+            - name: beta
+              currentCSV: qdrouterd-operator.v0.1.0
+
+  - apiVersion: operators.coreos.com/v1alpha1
+    kind: CatalogSource
+    metadata:
+      name: qdrouterd-resources
+      namespace: operator-lifecycle-manager
+    spec:
+      configMap: qdrouterd-resources
+      displayName: Qdrouterd Operators
+      publisher: Red Hat
+      sourceType: internal
+    status:
+      configMapReference:
+        name: qdrouterd-resources
+        namespace: operator-lifecycle-manager
