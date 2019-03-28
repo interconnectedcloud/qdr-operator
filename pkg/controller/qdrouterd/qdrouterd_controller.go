@@ -301,34 +301,14 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 		return reconcile.Result{Requeue: true}, nil
 	}
 
-	// Check if the external service for the deployment already exists, if not create a new one
+	// Check if the service for the deployment already exists, if not create a new one
 	svcFound := &corev1.Service{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-normal", Namespace: instance.Namespace}, svcFound)
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, svcFound)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new service
-		svc := services.NewNormalServiceForCR(instance, requestCert)
+		svc := services.NewServiceForCR(instance, requestCert)
 		controllerutil.SetControllerReference(instance, svc, r.scheme)
-		reqLogger.Info("Creating normal service for qdrouterd deployment")
-		err = r.client.Create(context.TODO(), svc)
-		if err != nil {
-			reqLogger.Info("Failed to create new Service: %v\n", err)
-			return reconcile.Result{}, err
-		}
-		// Service created successfully - return and requeue
-		return reconcile.Result{Requeue: true}, nil
-	} else if err != nil {
-		reqLogger.Info("Failed to get Service: %v\n", err)
-		return reconcile.Result{}, err
-	}
-
-	// Check if the headless service for the deployment already exists, if not create a new one
-	svcFound = &corev1.Service{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-headless", Namespace: instance.Namespace}, svcFound)
-	if err != nil && errors.IsNotFound(err) {
-		// Define a new headless service
-		svc := services.NewHeadlessServiceForCR(instance, requestCert)
-		controllerutil.SetControllerReference(instance, svc, r.scheme)
-		reqLogger.Info("Creating headless service for qdrouterd deployment")
+		reqLogger.Info("Creating service for qdrouterd deployment")
 		err = r.client.Create(context.TODO(), svc)
 		if err != nil {
 			reqLogger.Info("Failed to create new Service: %v\n", err)

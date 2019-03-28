@@ -214,7 +214,29 @@ connector {
     port: {{.Port}}
     {{- end}}
     {{- if .RouteContainer}}
-    routeContainer: {{.RouteContainer}}
+    role: route-container
+    {{- else}}
+    role: normal
+    {{- end}}
+    {{- if .Cost}}
+    cost: {{.Cost}}
+    {{- end}}
+    {{- if .SslProfile}}
+    sslProfile: {{.SslProfile}}
+    {{- end}}
+}
+{{- end}}
+{{range .InterRouterConnectors}}
+connector {
+    {{- if .Name}}
+    name: {{.Name}}
+    {{- end}}
+    role: inter-router
+    {{- if .Host}}
+    host: {{.Host}}
+    {{- end}}
+    {{- if .Port}}
+    port: {{.Port}}
     {{- end}}
     {{- if .Cost}}
     cost: {{.Cost}}

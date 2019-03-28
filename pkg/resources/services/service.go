@@ -33,6 +33,15 @@ func servicePortsForListeners(listeners []v1alpha1.Listener) []corev1.ServicePor
 	return ports
 }
 
+func servicePortsForRouter(m *v1alpha1.Qdrouterd) []corev1.ServicePort {
+	ports := []corev1.ServicePort{}
+	external := servicePortsForListeners(m.Spec.Listeners)
+	internal := servicePortsForListeners(m.Spec.InterRouterListeners)
+	ports = append(ports, external...)
+	ports = append(ports, internal...)
+	return ports
+}
+
 func CheckService(desired *corev1.Service, actual *corev1.Service) bool {
 	update := false
 	if !reflect.DeepEqual(desired.Annotations[constants.CertRequestAnnotation], actual.Annotations[constants.CertRequestAnnotation]) {
@@ -45,6 +54,31 @@ func CheckService(desired *corev1.Service, actual *corev1.Service) bool {
 		actual.Spec.Ports = desired.Spec.Ports
 	}
 	return update
+}
+
+// Create newServiceForCR method to create normal service
+func NewServiceForCR(m *v1alpha1.Qdrouterd, requestCert bool) *corev1.Service {
+	labels := selectors.LabelsForQdrouterd(m.Name)
+	service := &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Service",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:    labels,
+			Name:      m.Name,
+			Namespace: m.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			Type:     "LoadBalancer",
+			Selector: labels,
+			Ports:    servicePortsForRouter(m),
+		},
+	}
+	if requestCert {
+		service.Annotations = map[string]string{constants.CertRequestAnnotation: m.Name + "-cert"}
+	}
+	return service
 }
 
 // Create newServiceForCR method to create normal service
