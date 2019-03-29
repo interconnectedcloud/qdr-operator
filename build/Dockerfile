@@ -3,7 +3,7 @@ FROM alpine:3.8
 ENV OPERATOR=/usr/local/bin/qdrouterd-operator \
     USER_UID=1001 \
     USER_NAME=qdrouterd-operator \
-    QDROUTERD_IMAGE=quay.io/interconnectedcloud/qdrouterd:1.5.0
+    QDROUTERD_IMAGE=quay.io/interconnectedcloud/qdrouterd:1.6.0
 
 # install operator binary
 COPY build/_output/bin/qdrouterd-operator ${OPERATOR}
