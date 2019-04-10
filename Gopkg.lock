@@ -232,6 +232,17 @@
   version = "v0.3.7"
 
 [[projects]]
+  digest = "1:68822a09e1e35090bd3fe737de741981f6f78ab46c77a0025cec02503b2c5c18"
+  name = "github.com/jetstack/cert-manager"
+  packages = [
+    "pkg/apis/certmanager",
+    "pkg/apis/certmanager/v1alpha1",
+  ]
+  pruneopts = "NT"
+  revision = "193c5e22d6d2ad56956b97c7e4899267bd4ac3ac"
+  version = "v0.7.0"
+
+[[projects]]
   digest = "1:f5b9328966ccea0970b1d15075698eff0ddb3e75889560aad2e9f76b289b536a"
   name = "github.com/joho/godotenv"
   packages = ["."]
@@ -892,6 +903,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/pkg/leader",
     "github.com/operator-framework/operator-sdk/pkg/test",
@@ -907,6 +919,7 @@
     "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/util/intstr",
+    "k8s.io/apimachinery/pkg/util/runtime",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp",
     "k8s.io/code-generator/cmd/client-gen",
     "k8s.io/code-generator/cmd/conversion-gen",

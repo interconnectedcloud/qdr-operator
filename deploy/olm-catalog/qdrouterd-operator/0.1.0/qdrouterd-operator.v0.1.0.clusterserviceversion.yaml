@@ -3,7 +3,7 @@ kind: ClusterServiceVersion
 metadata:
   annotations:
     alm-examples: >-
-      [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Qdrouterd","metadata":{"name":"amq-interconnect"},"spec":{"count":2,"deploymentMode": "lbfrontend","image":"quay.io/interconnectedcloud/qdrouterd:1.5.0"}}]
+      [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Qdrouterd","metadata":{"name":"amq-interconnect"},"spec":{"count":2,"deploymentMode": "lbfrontend","image":"quay.io/interconnectedcloud/qdrouterd:1.6.0"}}]
     capabilities: Basic Install
     categories: Messaging
   name: qdrouterd-operator.v0.1.0
@@ -136,6 +136,17 @@ spec:
           - statefulsets
           verbs:
           - '*'
+        - apiGroups:
+          - "certmanager.k8s.io"
+          resources:
+          - issuers
+          - certificates
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - delete
         - apiGroups:
           - monitoring.coreos.com
           resources:

@@ -73,7 +73,7 @@ metadata:
 spec:
   # Add fields here
   count: 3
-  image: quay.io/interconnectedcloud/qdrouterd:1.5.0
+  image: quay.io/interconnectedcloud/qdrouterd:1.6.0
   deploymentMode: lbfrontend
   addresses:
     - prefix: balanced
@@ -133,7 +133,7 @@ metadata:
 spec:
   # Add fields here
   count: 3
-  image: quay.io/interconnectedcloud/qdrouterd:1.5.0
+  image: quay.io/interconnectedcloud/qdrouterd:1.6.0
   deploymentMode: lbfrontend
 EOF
 ```

@@ -42,7 +42,7 @@ func NewDeploymentForCR(m *v1alpha1.Qdrouterd) *appsv1.Deployment {
 				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: m.Name,
-					Containers: []corev1.Container{containers.ContainerForQdrouterd(m)},
+					Containers:         []corev1.Container{containers.ContainerForQdrouterd(m)},
 				},
 			},
 		},

@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	v1alpha1 "github.com/interconnectedcloud/qdrouterd-operator/pkg/apis/interconnectedcloud/v1alpha1"
+	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/certificates"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/configmaps"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/deployments"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/rolebindings"
@@ -13,6 +14,7 @@ import (
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/services"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/configs"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/selectors"
+	cmv1alpha1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -20,6 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -42,6 +45,11 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
+	// TODO(ansmith): verify this is still needed if cert-manager is fully installed
+	scheme := mgr.GetScheme()
+	utilruntime.Must(cmv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(scheme.SetVersionPriority(cmv1alpha1.SchemeGroupVersion))
+
 	return &ReconcileQdrouterd{client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
@@ -95,6 +103,15 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	// Watch for changes to secondary resource Secreet and requeue the owner Qdrouterd
+	err = c.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1alpha1.Qdrouterd{},
+	})
+	if err != nil {
+		return err
+	}
+
 	// Watch for changes to secondary resource ConfigMap and requeue the owner Qdrouterd
 	err = c.Watch(&source.Kind{Type: &corev1.ConfigMap{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
@@ -112,6 +129,19 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	if err != nil {
 		return err
 	}
+
+	// TODO(ansmith): Check if there is a cert-manager crd instance, handle err
+	// Watch for changes to secondary resource Issuer and requeue the owner Qdrouterd
+	err = c.Watch(&source.Kind{Type: &cmv1alpha1.Issuer{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1alpha1.Qdrouterd{},
+	})
+
+	// Watch for changes to secondary resource Certificates and requeue the owner Qdrouterd
+	err = c.Watch(&source.Kind{Type: &cmv1alpha1.Certificate{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1alpha1.Qdrouterd{},
+	})
 
 	return nil
 }
@@ -168,7 +198,6 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 			TransitionTime: metav1.Now(),
 		}
 		instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
-		//instance.Status.Conditions = append(instance.Status.Conditions, condition)
 		r.client.Update(context.TODO(), instance)
 	}
 
@@ -229,6 +258,119 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 	} else if err != nil {
 		reqLogger.Info("Failed to get ServiceAccount: %v\n", err)
 		return reconcile.Result{}, err
+	}
+
+	if requestCert {
+		// If no spec.Issuer, set up a self-signed issuer
+		caSecret := instance.Spec.Issuer
+		if instance.Spec.Issuer == "" {
+			selfSignedIssuerFound := &cmv1alpha1.Issuer{}
+			err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-selfsigned", Namespace: instance.Namespace}, selfSignedIssuerFound)
+			if err != nil && errors.IsNotFound(err) {
+				// Define a new selfsigned issuer
+				newIssuer := certificates.NewSelfSignedIssuerForCR(instance)
+				controllerutil.SetControllerReference(instance, newIssuer, r.scheme)
+				reqLogger.Info("Creating a new self signed issuer %s%s\n", newIssuer.Namespace, newIssuer.Name)
+				err = r.client.Create(context.TODO(), newIssuer)
+				if err != nil {
+					reqLogger.Info("Failed to create new self signed issuer", "error", err)
+					return reconcile.Result{}, err
+				}
+				// Issuer created successfully - return and requeue
+				return reconcile.Result{Requeue: true}, nil
+			} else if err != nil {
+				reqLogger.Info("Failed to get self signed issuer", "error", err)
+				return reconcile.Result{}, err
+			}
+
+			selfSignedCertFound := &cmv1alpha1.Certificate{}
+			err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-selfsigned", Namespace: instance.Namespace}, selfSignedCertFound)
+			if err != nil && errors.IsNotFound(err) {
+				// Create a new self signed certificate
+				cert := certificates.NewSelfSignedCACertificateForCR(instance)
+				controllerutil.SetControllerReference(instance, cert, r.scheme)
+				reqLogger.Info("Creating a new self signed cert %s%s\n", cert.Namespace, cert.Name)
+				err = r.client.Create(context.TODO(), cert)
+				if err != nil {
+					reqLogger.Info("Failed to create new self signed cert", "error", err)
+					return reconcile.Result{}, err
+				}
+				// Cert created successfully - return and requeue
+				return reconcile.Result{Requeue: true}, nil
+			} else if err != nil {
+				reqLogger.Info("Failed to create self signed cert", "error", err)
+				return reconcile.Result{}, err
+			}
+			caSecret = selfSignedCertFound.Name
+		}
+
+		// Check if CA issuer exists and if not create one
+		caIssuerFound := &cmv1alpha1.Issuer{}
+		err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-ca", Namespace: instance.Namespace}, caIssuerFound)
+		if err != nil && errors.IsNotFound(err) {
+			// Define a new ca issuer
+			newIssuer := certificates.NewCAIssuerForCR(instance, caSecret)
+			controllerutil.SetControllerReference(instance, newIssuer, r.scheme)
+			reqLogger.Info("Creating a new ca issuer %s%s\n", newIssuer.Namespace, newIssuer.Name)
+			err = r.client.Create(context.TODO(), newIssuer)
+			if err != nil {
+				reqLogger.Info("Failed to create new ca issuer", "error", err)
+				return reconcile.Result{}, err
+			}
+			// Issuer created successfully - return and requeue
+			return reconcile.Result{Requeue: true}, nil
+		} else if err != nil {
+			reqLogger.Info("Failed to get ca issuer", "error", err)
+			return reconcile.Result{}, err
+		}
+
+		// As needed, create certs for SslProfiles
+		for i := range instance.Spec.SslProfiles {
+			if instance.Spec.SslProfiles[i].Credentials == "" {
+				certFound := &cmv1alpha1.Certificate{}
+				err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-" + instance.Spec.SslProfiles[i].Name + "-tls", Namespace: instance.Namespace}, certFound)
+				if err != nil && errors.IsNotFound(err) {
+					// Create a new certificate
+					cert := certificates.NewCertificateForCR(instance, instance.Spec.SslProfiles[i].Name)
+					controllerutil.SetControllerReference(instance, cert, r.scheme)
+					reqLogger.Info("Creating a new cert %s%s\n", cert.Namespace, cert.Name)
+					err = r.client.Create(context.TODO(), cert)
+					if err != nil {
+						reqLogger.Info("Failed to create new cert", "error", err)
+						return reconcile.Result{}, err
+					}
+					// Cert created successfully - set credential return and requeue
+					instance.Spec.SslProfiles[i].Credentials = instance.Name + "-" + instance.Spec.SslProfiles[i].Name + "-tls"
+					r.client.Update(context.TODO(), instance)
+					return reconcile.Result{Requeue: true}, nil
+				} else if err != nil {
+					reqLogger.Info("Failed to create cert", "error", err)
+					return reconcile.Result{}, err
+				}
+			}
+			if instance.Spec.SslProfiles[i].RequireClientCerts && instance.Spec.SslProfiles[i].CaCert == "" {
+				caCertFound := &cmv1alpha1.Certificate{}
+				err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-" + instance.Spec.SslProfiles[i].Name + "-ca", Namespace: instance.Namespace}, caCertFound)
+				if err != nil && errors.IsNotFound(err) {
+					// Create a new ca certificate
+					cert := certificates.NewCACertificateForCR(instance, instance.Spec.SslProfiles[i].Name)
+					controllerutil.SetControllerReference(instance, cert, r.scheme)
+					reqLogger.Info("Creating a new ca cert %s%s\n", cert.Namespace, cert.Name)
+					err = r.client.Create(context.TODO(), cert)
+					if err != nil {
+						reqLogger.Info("Failed to create new ca cert", "error", err)
+						return reconcile.Result{}, err
+					}
+					// ca cert created successfully - set cacert return and requeue
+					instance.Spec.SslProfiles[i].CaCert = instance.Name + "-" + instance.Spec.SslProfiles[i].Name + "-ca"
+					r.client.Update(context.TODO(), instance)
+					return reconcile.Result{Requeue: true}, nil
+				} else if err != nil {
+					reqLogger.Info("Failed to create ca cert", "error", err)
+					return reconcile.Result{}, err
+				}
+			}
+		}
 	}
 
 	// Check if configmap already exists, if not create a new one

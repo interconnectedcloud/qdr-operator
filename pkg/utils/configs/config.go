@@ -50,14 +50,14 @@ func SetQdrouterdDefaults(m *v1alpha1.Qdrouterd) bool {
 	}
 	if !isDefaultSslProfileDefined(m) && isDefaultSslProfileUsed(m) {
 		m.Spec.SslProfiles = append(m.Spec.SslProfiles, v1alpha1.SslProfile{
-			Name:        "default",
-			Credentials: m.Name + "-cert",
+			Name: "default",
 		})
 		requestCert = true
 	}
-	for _, profile := range m.Spec.SslProfiles {
-		if profile.Credentials == "" {
-			profile.Credentials = m.Name + "-cert"
+	for i := range m.Spec.SslProfiles {
+		if m.Spec.SslProfiles[i].Credentials == "" {
+			requestCert = true
+		} else if m.Spec.SslProfiles[i].RequireClientCerts && m.Spec.SslProfiles[i].CaCert == "" {
 			requestCert = true
 		}
 	}
