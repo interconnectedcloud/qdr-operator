@@ -3,20 +3,26 @@ package qdrouterd
 import (
 	"context"
 	"reflect"
+	"strconv"
 
 	v1alpha1 "github.com/interconnectedcloud/qdrouterd-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/certificates"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/configmaps"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/deployments"
+	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/ingresses"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/rolebindings"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/roles"
+	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/routes"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/serviceaccounts"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/services"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/configs"
+	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/openshift"
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/selectors"
 	cmv1alpha1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
+	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	extv1b1 "k8s.io/api/extensions/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,6 +56,10 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	utilruntime.Must(cmv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(scheme.SetVersionPriority(cmv1alpha1.SchemeGroupVersion))
 
+	if openshift.IsOpenShift() {
+		utilruntime.Must(routev1.AddToScheme(scheme))
+		utilruntime.Must(scheme.SetVersionPriority(routev1.SchemeGroupVersion))
+	}
 	return &ReconcileQdrouterd{client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
@@ -143,6 +153,17 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		OwnerType:    &v1alpha1.Qdrouterd{},
 	})
 
+	if openshift.IsOpenShift() {
+		// Watch for changes to secondary resource Route and requeue the owner Qdrouterd
+		err = c.Watch(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestForOwner{
+			IsController: true,
+			OwnerType:    &v1alpha1.Qdrouterd{},
+		})
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -210,15 +231,15 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 		// Define a new role
 		role := roles.NewRoleForCR(instance)
 		controllerutil.SetControllerReference(instance, role, r.scheme)
-		reqLogger.Info("Creating a new Role %s%s\n", role.Namespace, role.Name)
+		reqLogger.Info("Creating a new Role", "role", role)
 		err = r.client.Create(context.TODO(), role)
 		if err != nil {
-			reqLogger.Info("Failed to create new Role: %v\n", err)
+			reqLogger.Error(err, "Failed to create new Role")
 			return reconcile.Result{}, err
 		}
 		return reconcile.Result{Requeue: true}, nil
 	} else if err != nil {
-		reqLogger.Info("Failed to get Role: %v\n", err)
+		reqLogger.Error(err, "Failed to get Role")
 		return reconcile.Result{}, err
 	}
 
@@ -229,15 +250,15 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 		// Define a new rolebinding
 		rolebinding := rolebindings.NewRoleBindingForCR(instance)
 		controllerutil.SetControllerReference(instance, rolebinding, r.scheme)
-		reqLogger.Info("Creating a new RoleBinding %s%s\n", rolebinding.Namespace, rolebinding.Name)
+		reqLogger.Info("Creating a new RoleBinding", "RoleBinding", rolebinding)
 		err = r.client.Create(context.TODO(), rolebinding)
 		if err != nil {
-			reqLogger.Info("Failed to create new RoleBinding: %v\n", err)
+			reqLogger.Error(err, "Failed to create new RoleBinding")
 			return reconcile.Result{}, err
 		}
 		return reconcile.Result{Requeue: true}, nil
 	} else if err != nil {
-		reqLogger.Info("Failed to get RoleBinding: %v\n", err)
+		reqLogger.Error(err, "Failed to get RoleBinding")
 		return reconcile.Result{}, err
 	}
 
@@ -248,15 +269,15 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 		// Define a new serviceaccount
 		svcaccnt := serviceaccounts.NewServiceAccountForCR(instance)
 		controllerutil.SetControllerReference(instance, svcaccnt, r.scheme)
-		reqLogger.Info("Creating a new ServiceAccount %s%s\n", svcaccnt.Namespace, svcaccnt.Name)
+		reqLogger.Info("Creating a new ServiceAccount", "ServiceAccount", svcaccnt)
 		err = r.client.Create(context.TODO(), svcaccnt)
 		if err != nil {
-			reqLogger.Info("Failed to create new ServiceAccount: %v\n", err)
+			reqLogger.Error(err, "Failed to create new ServiceAccount")
 			return reconcile.Result{}, err
 		}
 		return reconcile.Result{Requeue: true}, nil
 	} else if err != nil {
-		reqLogger.Info("Failed to get ServiceAccount: %v\n", err)
+		reqLogger.Error(err, "Failed to get ServiceAccount")
 		return reconcile.Result{}, err
 	}
 
@@ -380,15 +401,15 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 		// Define a new configmap
 		cfgmap := configmaps.NewConfigMapForCR(instance)
 		controllerutil.SetControllerReference(instance, cfgmap, r.scheme)
-		reqLogger.Info("Creating a new ConfigMap %s%s\n", cfgmap.Namespace, cfgmap.Name)
+		reqLogger.Info("Creating a new ConfigMap", "ConfigMap", cfgmap)
 		err = r.client.Create(context.TODO(), cfgmap)
 		if err != nil {
-			reqLogger.Info("Failed to create new ConfigMap: %v\n", err)
+			reqLogger.Error(err, "Failed to create new ConfigMap")
 			return reconcile.Result{}, err
 		}
 		return reconcile.Result{Requeue: true}, nil
 	} else if err != nil {
-		reqLogger.Info("Failed to get ConfigMap: %v\n", err)
+		reqLogger.Error(err, "Failed to get ConfigMap")
 		return reconcile.Result{}, err
 	}
 
@@ -399,10 +420,10 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 		// Define a new deployment
 		dep := deployments.NewDeploymentForCR(instance)
 		controllerutil.SetControllerReference(instance, dep, r.scheme)
-		reqLogger.Info("Creating a new Deployment %s%s\n", dep.Namespace, dep.Name)
+		reqLogger.Info("Creating a new Deployment", "Deployment", dep)
 		err = r.client.Create(context.TODO(), dep)
 		if err != nil {
-			reqLogger.Info("Failed to create new Deployment: %v\n", err)
+			reqLogger.Error(err, "Failed to create new Deployment")
 			return reconcile.Result{}, err
 		}
 		// update status
@@ -416,7 +437,7 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 		// Deployment created successfully - return and requeue
 		return reconcile.Result{Requeue: true}, nil
 	} else if err != nil {
-		reqLogger.Info("Failed to get Deployment: %v\n", err)
+		reqLogger.Error(err, "Failed to get Deployment")
 		return reconcile.Result{}, err
 	}
 
@@ -450,17 +471,74 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 		// Define a new service
 		svc := services.NewServiceForCR(instance, requestCert)
 		controllerutil.SetControllerReference(instance, svc, r.scheme)
-		reqLogger.Info("Creating service for qdrouterd deployment")
+		reqLogger.Info("Creating service for qdrouterd deployment", "Service", svc)
 		err = r.client.Create(context.TODO(), svc)
 		if err != nil {
-			reqLogger.Info("Failed to create new Service: %v\n", err)
+			reqLogger.Error(err, "Failed to create new Service")
 			return reconcile.Result{}, err
 		}
 		// Service created successfully - return and requeue
 		return reconcile.Result{Requeue: true}, nil
 	} else if err != nil {
-		reqLogger.Info("Failed to get Service: %v\n", err)
+		reqLogger.Error(err, "Failed to get Service")
 		return reconcile.Result{}, err
+	}
+
+	// create route for exposed listeners
+	for _, listener := range instance.Spec.Listeners {
+		if listener.Expose {
+			target := listener.Name
+			if target == "" {
+				target = "port-" + strconv.Itoa(int(listener.Port))
+			}
+			if openshift.IsOpenShift() {
+				routeFound := &routev1.Route{}
+				err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-" + target, Namespace: instance.Namespace}, routeFound)
+				if err != nil && errors.IsNotFound(err) {
+					// Define a new route
+					if listener.SslProfile == "" && !listener.Http {
+						// create the route but issue warning
+						reqLogger.Info("Warning an exposed listener should be http or ssl enabled", "listener", listener)
+					}
+					route := routes.NewRouteForCR(instance, target)
+					controllerutil.SetControllerReference(instance, route, r.scheme)
+					reqLogger.Info("Creating route for qdrouterd deployment", "listener", listener)
+					err = r.client.Create(context.TODO(), route)
+					if err != nil {
+						reqLogger.Error(err, "Failed to create new Route")
+						return reconcile.Result{}, err
+					}
+					// Route created successfully - return and requeue
+					return reconcile.Result{Requeue: true}, nil
+				} else if err != nil {
+					reqLogger.Error(err, "Failed to get Route")
+					return reconcile.Result{}, err
+				}
+			} else {
+				ingressFound := &extv1b1.Ingress{}
+				err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-" + target, Namespace: instance.Namespace}, ingressFound)
+				if err != nil && errors.IsNotFound(err) {
+					// Define a new Ingress
+					if listener.SslProfile == "" && !listener.Http {
+						// create the ingress but issue warning
+						reqLogger.Info("Warning an exposed listener should be http or ssl enabled", "listener", listener)
+					}
+					ingress := ingresses.NewIngressForCR(instance, listener)
+					controllerutil.SetControllerReference(instance, ingress, r.scheme)
+					reqLogger.Info("Creating Ingress for qdrouterd deployment", "listener", listener)
+					err = r.client.Create(context.TODO(), ingress)
+					if err != nil {
+						reqLogger.Error(err, "Failed to create new Ingress")
+						return reconcile.Result{}, err
+					}
+					// Ingress created successfully - return and requeue
+					return reconcile.Result{Requeue: true}, nil
+				} else if err != nil {
+					reqLogger.Error(err, "Failed to get Ingress")
+					return reconcile.Result{}, err
+				}
+			}
+		}
 	}
 
 	// List the pods for this deployment
@@ -469,7 +547,7 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 	listOps := &client.ListOptions{Namespace: instance.Namespace, LabelSelector: labelSelector}
 	err = r.client.List(context.TODO(), listOps, podList)
 	if err != nil {
-		reqLogger.Info("Failed to list pods: %v\n", err)
+		reqLogger.Error(err, "Failed to list pods")
 		return reconcile.Result{}, err
 	}
 	podNames := getPodNames(podList.Items)
@@ -479,7 +557,7 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 		instance.Status.PodNames = podNames
 		err := r.client.Update(context.TODO(), instance)
 		if err != nil {
-			reqLogger.Info("Failed to update pod names: %v\n", err)
+			reqLogger.Error(err, "Failed to update pod names")
 			return reconcile.Result{}, err
 		}
 		reqLogger.Info("Pod names updated")

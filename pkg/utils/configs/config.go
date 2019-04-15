@@ -85,6 +85,8 @@ listener {
     {{- end}}
     {{- if .RouteContainer}}
     role: route-container
+    {{- else if .EdgeIngress}}
+    role: edge
     {{- else}}
     role: normal
     {{- end}}

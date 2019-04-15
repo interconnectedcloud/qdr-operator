@@ -94,7 +94,8 @@ type Listener struct {
 	Name           string `json:"name,omitempty"`
 	Host           string `json:"host,omitempty"`
 	Port           int32  `json:"port"`
-	RouteContainer bool   `json:"role,omitempty"`
+	RouteContainer bool   `json:"routeContainer,omitempty"`
+	EdgeIngress    bool   `json:"edgeIngress,omitempty"`
 	Http           bool   `json:"http,omitempty"`
 	Cost           int32  `json:"cost,omitempty"`
 	SslProfile     string `json:"sslProfile,omitempty"`

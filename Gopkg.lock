@@ -319,6 +319,14 @@
   version = "1.0.1"
 
 [[projects]]
+  digest = "1:8bc8f43d2332d035857c92581df240f247c287629d5f60c751df609f9b6215c5"
+  name = "github.com/openshift/api"
+  packages = ["route/v1"]
+  pruneopts = "NT"
+  revision = "0d921e363e951d89f583292c60d013c318df64dc"
+  version = "v3.9.0"
+
+[[projects]]
   branch = "master"
   digest = "1:86268c315b26974aeeeaed2216c81cb65305aa5c6c33b4d643ab289931b57d33"
   name = "github.com/operator-framework/operator-sdk"
@@ -536,6 +544,7 @@
     "internal/triegen",
     "internal/ucd",
     "language",
+    "search",
     "secure/bidirule",
     "transform",
     "unicode/bidi",
@@ -904,13 +913,17 @@
   analyzer-version = 1
   input-imports = [
     "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1",
+    "github.com/openshift/api/route/v1",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/pkg/leader",
     "github.com/operator-framework/operator-sdk/pkg/test",
     "github.com/operator-framework/operator-sdk/pkg/test/e2eutil",
     "github.com/operator-framework/operator-sdk/version",
+    "golang.org/x/text/language",
+    "golang.org/x/text/search",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
+    "k8s.io/api/extensions/v1beta1",
     "k8s.io/api/rbac/v1",
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
@@ -920,6 +933,7 @@
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/util/intstr",
     "k8s.io/apimachinery/pkg/util/runtime",
+    "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp",
     "k8s.io/code-generator/cmd/client-gen",
     "k8s.io/code-generator/cmd/conversion-gen",

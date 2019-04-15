@@ -29,6 +29,16 @@ rules:
   - create
   - delete
 - apiGroups:
+  - "extensions"
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - delete
+- apiGroups:
   - ""
   resources:
   - namespaces
@@ -61,6 +71,18 @@ rules:
   verbs:
   - get
   - create
+- apiGroups:
+  - "route.openshift.io"
+  resources:
+  - routes
+  - routes/custom-host
+  - routes/status
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - delete
 - apiGroups:
   - interconnectedcloud.github.io
   resources:
