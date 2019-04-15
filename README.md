@@ -140,6 +140,22 @@ EOF
 
 As you make local changes to the code, restart the operator to enact the changes.
 
+#### Test
+
+Before submitting PR, please test your code. 
+
+File or local validation.
+```
+$ ./hack/go-test.sh
+```
+
+Cluster-based test. 
+Ensure there is a cluster running before running the test.
+
+```
+$ operator-sdk test local "./test/e2e"
+```
+
 ## Manage the operator using the Operator Lifecycle Manager
 
 Ensure the Operator Lifecycle Manager is installed in the local cluster.  By default, the `catalog-source.sh` will intall the operator catalog resources in `operator-lifecycle-manager` namespace.  You may also specify different namespace where you have the Operator Lifecycle Manager installed. 

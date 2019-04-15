@@ -65,6 +65,75 @@ spec:
                   sslProfile:
                     type: string
                     description: Name of the ssl profile to use
+                  role:
+                    type: boolean
+                  expose:
+                    type: boolean
+            autoLinks:
+              items:
+                properties:
+                  address:
+                    type: string
+                  connection:
+                    type: string
+                  containerId:
+                    type: string
+                  direction:
+                    type: string
+                  externalPrefix:
+                    type: string
+                  phase:
+                    format: int32
+                    type: integer
+                required:
+                  - address
+                  - direction
+                type: object
+              type: array
+            connectors:
+              items:
+                properties:
+                  cost:
+                    format: int32
+                    type: integer
+                  host:
+                    type: string
+                  name:
+                    type: string
+                  port:
+                    format: int32
+                    type: integer
+                  routeContainer:
+                    type: boolean
+                  sslProfile:
+                    type: string
+                required:
+                  - host
+                  - port
+                type: object
+              type: array
+            interRouterConnectors:
+              items:
+                properties:
+                  cost:
+                    format: int32
+                    type: integer
+                  host:
+                    type: string
+                  name:
+                    type: string
+                  port:
+                    format: int32
+                    type: integer
+                  routeContainer:
+                    type: boolean
+                  sslProfile:
+                    type: string
+                required:
+                  - host
+                  - port
+                type: object
+              type: array
             interRouterListeners:
               type: array
               description: Configuration of each individual inter router listener
@@ -94,6 +163,10 @@ spec:
                   sslProfile:
                     type: string
                     description: Name of the ssl profile to use
+                  role:
+                    type: boolean
+                  expose:
+                    type: boolean
             addresses:
               type: array
               description: Configuration of each address distribution and phasing
@@ -132,3 +205,69 @@ spec:
                     minimum: 0
                     maximum: 9
                     description: Priority assigned to address for inter router transfer
+            sslProfiles:
+              items:
+                properties:
+                  caCert:
+                    type: string
+                  ciphers:
+                    type: string
+                  credentials:
+                    type: string
+                  name:
+                    type: string
+                  protocols:
+                    type: string
+                  requireClientCerts:
+                    type: boolean
+                type: object
+              type: array
+            linkRoutes:
+              items:
+                properties:
+                  addExternalPrefix:
+                    type: string
+                  connection:
+                    type: string
+                  containerId:
+                    type: string
+                  direction:
+                    type: string
+                  pattern:
+                    type: string
+                  prefix:
+                    type: string
+                  removeExternalPrefix:
+                    type: string
+                type: object
+              type: array
+          type: object
+        status:
+          type: object
+          required:
+          - pods
+          - conditions
+          properties:
+            revNumber:
+              type: string
+            pods:
+              items:
+                type: string
+              type: array
+            phase:
+              type: string
+            conditions:
+              description: Conditions keeps most recent qdrouterd conditions
+              items:
+                properties:
+                  reason:
+                    type: string
+                  transitionTime:
+                    format: date-time
+                    type: object
+                  type:
+                    type: string
+                required:
+                - type
+                type: object
+              type: array
