@@ -10,6 +10,7 @@ type QdrouterdSpec struct {
 	DeploymentMode        string       `json:"deploymentMode,omitempty"`
 	Image                 string       `json:"image"`
 	Issuer                string       `json:"issuer,omitempty"`
+	AntiAffinity          bool         `json:"antiAffinity,omitempty"`
 	Listeners             []Listener   `json:"listeners,omitempty"`
 	InterRouterListeners  []Listener   `json:"interRouterListeners,omitempty"`
 	SslProfiles           []SslProfile `json:"sslProfiles,omitempty"`

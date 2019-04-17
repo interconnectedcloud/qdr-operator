@@ -22,6 +22,27 @@ func labelsForQdrouterd(name string) map[string]string {
 func NewDeploymentForCR(m *v1alpha1.Qdrouterd) *appsv1.Deployment {
 	labels := selectors.LabelsForQdrouterd(m.Name)
 	replicas := m.Spec.Count
+	affinity := &corev1.Affinity{}
+	if m.Spec.AntiAffinity {
+		affinity = &corev1.Affinity{
+			PodAntiAffinity: &corev1.PodAntiAffinity{
+				RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
+					{
+						LabelSelector: &metav1.LabelSelector{
+							MatchExpressions: []metav1.LabelSelectorRequirement{
+								{
+									Key:      "application",
+									Operator: metav1.LabelSelectorOpIn,
+									Values:   []string{m.Name},
+								},
+							},
+						},
+						TopologyKey: "kubernetes.io/hostname",
+					},
+				},
+			},
+		}
+	}
 	dep := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",
@@ -42,6 +63,7 @@ func NewDeploymentForCR(m *v1alpha1.Qdrouterd) *appsv1.Deployment {
 				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: m.Name,
+					Affinity:           affinity,
 					Containers:         []corev1.Container{containers.ContainerForQdrouterd(m)},
 				},
 			},
