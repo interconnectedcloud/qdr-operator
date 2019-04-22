@@ -219,7 +219,7 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 			TransitionTime: metav1.Now(),
 		}
 		instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
-		r.client.Update(context.TODO(), instance)
+		r.client.Status().Update(context.TODO(), instance)
 	}
 
 	requestCert := configs.SetQdrouterdDefaults(instance)
@@ -433,7 +433,7 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 			TransitionTime: metav1.Now(),
 		}
 		instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
-		r.client.Update(context.TODO(), instance)
+		r.client.Status().Update(context.TODO(), instance)
 		// Deployment created successfully - return and requeue
 		return reconcile.Result{Requeue: true}, nil
 	} else if err != nil {
@@ -460,7 +460,7 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 		}
 		instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
 		instance.Status.PodNames = instance.Status.PodNames[:0]
-		r.client.Update(context.TODO(), instance)
+		r.client.Status().Update(context.TODO(), instance)
 		return reconcile.Result{Requeue: true}, nil
 	}
 
@@ -555,7 +555,7 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 	// Update status.PodNames if needed
 	if !reflect.DeepEqual(podNames, instance.Status.PodNames) {
 		instance.Status.PodNames = podNames
-		err := r.client.Update(context.TODO(), instance)
+		err := r.client.Status().Update(context.TODO(), instance)
 		if err != nil {
 			reqLogger.Error(err, "Failed to update pod names")
 			return reconcile.Result{}, err

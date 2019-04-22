@@ -34,6 +34,10 @@ spec:
         version: v1
       - kind: roles
         version: v1
+      - kind: routes
+        version: v1
+      - kind: secrets
+        version: v1
       specDescriptors:
       - description: The desired number of member pods for qdrouterd mesh
         displayName: Count

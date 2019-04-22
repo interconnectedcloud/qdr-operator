@@ -29,10 +29,24 @@ items:
                 name: qdrouterds.interconnectedcloud.github.io
                 resources:
                 - kind: Service
-                  name: ""
                   version: v1
                 - kind: Deployment
-                  name: ""
+                  version: v1
+                - kind: ServiceAccount
+                  version: v1
+                - kind: qdrouterds
+                  version: v1alpha1
+                - kind: rolebindings
+                  version: v1
+                - kind: pods
+                  version: v1
+                - kind: configmaps
+                  version: v1
+                - kind: roles
+                  version: v1
+                - kind: routes
+                  version: v1
+                - kind: secrets
                   version: v1
                 specDescriptors:
                 - description: The desired number of member pods for qdrouterd mesh
@@ -121,7 +135,7 @@ items:
                     verbs:
                     - '*'
                   - apiGroups:
-                    - "rbac.authorization.k8s.io"
+                    - rbac.authorization.k8s.io
                     resources:
                     - rolebindings
                     - roles
@@ -243,6 +257,8 @@ items:
                             routeContainer:
                               type: boolean
                               description: Indicator for a router-broker connection
+                            edgeIngress:
+                              type: boolean
                             http:
                               type: boolean
                               description: Accept HTTP connections
@@ -252,6 +268,75 @@ items:
                             sslProfile:
                               type: string
                               description: Name of the ssl profile to use
+                            role:
+                              type: boolean
+                            expose:
+                              type: boolean
+                      autoLinks:
+                        items:
+                          properties:
+                            address:
+                              type: string
+                            connection:
+                              type: string
+                            containerId:
+                              type: string
+                            direction:
+                              type: string
+                            externalPrefix:
+                              type: string
+                            phase:
+                              format: int32
+                              type: integer
+                          required:
+                            - address
+                            - direction
+                          type: object
+                        type: array
+                      connectors:
+                        items:
+                          properties:
+                            cost:
+                              format: int32
+                              type: integer
+                            host:
+                              type: string
+                            name:
+                              type: string
+                            port:
+                              format: int32
+                              type: integer
+                            routeContainer:
+                              type: boolean
+                            sslProfile:
+                              type: string
+                          required:
+                            - host
+                            - port
+                          type: object
+                        type: array
+                      interRouterConnectors:
+                        items:
+                          properties:
+                            cost:
+                              format: int32
+                              type: integer
+                            host:
+                              type: string
+                            name:
+                              type: string
+                            port:
+                              format: int32
+                              type: integer
+                            routeContainer:
+                              type: boolean
+                            sslProfile:
+                              type: string
+                          required:
+                            - host
+                            - port
+                          type: object
+                        type: array
                       interRouterListeners:
                         type: array
                         description: Configuration of each individual inter router listener
@@ -272,6 +357,8 @@ items:
                             routeContainer:
                               type: boolean
                               description: Indicator for a router-broker connection
+                            edgeIngress:
+                              type: boolean
                             http:
                               type: boolean
                               description: Accept HTTP connections
@@ -281,6 +368,10 @@ items:
                             sslProfile:
                               type: string
                               description: Name of the ssl profile to use
+                            role:
+                              type: boolean
+                            expose:
+                              type: boolean
                       addresses:
                         type: array
                         description: Configuration of each address distribution and phasing
@@ -319,6 +410,74 @@ items:
                               minimum: 0
                               maximum: 9
                               description: Priority assigned to address for inter router transfer
+                      sslProfiles:
+                        items:
+                          properties:
+                            caCert:
+                              type: string
+                            ciphers:
+                              type: string
+                            credentials:
+                              type: string
+                            name:
+                              type: string
+                            protocols:
+                              type: string
+                            requireClientCerts:
+                              type: boolean
+                          type: object
+                        type: array
+                      linkRoutes:
+                        items:
+                          properties:
+                            addExternalPrefix:
+                              type: string
+                            connection:
+                              type: string
+                            containerId:
+                              type: string
+                            direction:
+                              type: string
+                            pattern:
+                              type: string
+                            prefix:
+                              type: string
+                            removeExternalPrefix:
+                              type: string
+                          type: object
+                        type: array
+                      issuer:
+                        type: string
+                    type: object
+                  status:
+                    type: object
+                    required:
+                    - pods
+                    - conditions
+                    properties:
+                      revNumber:
+                        type: string
+                      pods:
+                        items:
+                          type: string
+                        type: array
+                      phase:
+                        type: string
+                      conditions:
+                        description: Conditions keeps most recent qdrouterd conditions
+                        items:
+                          properties:
+                            reason:
+                              type: string
+                            transitionTime:
+                              format: date-time
+                              type: object
+                            type:
+                              type: string
+                          required:
+                          - type
+                          type: object
+                        type: array
       packages: >
         - #! package-manifest: deploy/olm-catalog/qdrouterd-operator/0.1.0/qdrouterd-operator.v0.1.0.clusterserviceversion.yaml
           packageName: qdrouterd-operator

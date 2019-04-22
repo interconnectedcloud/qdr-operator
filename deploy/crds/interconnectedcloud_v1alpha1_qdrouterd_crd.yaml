@@ -56,6 +56,8 @@ spec:
                   routeContainer:
                     type: boolean
                     description: Indicator for a router-broker connection
+                  edgeIngress:
+                    type: boolean
                   http:
                     type: boolean
                     description: Accept HTTP connections
@@ -154,6 +156,8 @@ spec:
                   routeContainer:
                     type: boolean
                     description: Indicator for a router-broker connection
+                  edgeIngress:
+                    type: boolean
                   http:
                     type: boolean
                     description: Accept HTTP connections
@@ -241,6 +245,8 @@ spec:
                     type: string
                 type: object
               type: array
+            issuer:
+              type: string
           type: object
         status:
           type: object
