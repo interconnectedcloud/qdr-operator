@@ -44,6 +44,10 @@ items:
                   version: v1
                 - kind: roles
                   version: v1
+                - kind: routes
+                  version: v1
+                - kind: secrets
+                  version: v1
                 specDescriptors:
                 - description: The desired number of member pods for qdrouterd mesh
                   displayName: Count
@@ -265,6 +269,8 @@ items:
                             routeContainer:
                               type: boolean
                               description: Indicator for a router-broker connection
+                            edgeIngress:
+                              type: boolean
                             http:
                               type: boolean
                               description: Accept HTTP connections
@@ -363,6 +369,8 @@ items:
                             routeContainer:
                               type: boolean
                               description: Indicator for a router-broker connection
+                            edgeIngress:
+                              type: boolean
                             http:
                               type: boolean
                               description: Accept HTTP connections
@@ -450,6 +458,8 @@ items:
                               type: string
                           type: object
                         type: array
+                      issuer:
+                        type: string
                     type: object
                   status:
                     type: object
