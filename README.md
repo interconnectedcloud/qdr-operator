@@ -153,20 +153,28 @@ EOF
 
 As you make local changes to the code, restart the operator to enact the changes.
 
+#### Build
+
+The Makefile will do the dependency check, operator-sdk generate k8s, run local test, and finally the operator-sdk build. Please ensure any local docker server is running.
+
+```
+make
+```
+
 #### Test
 
 Before submitting PR, please test your code. 
 
 File or local validation.
 ```
-$ ./hack/go-test.sh
+$ make test
 ```
 
 Cluster-based test. 
 Ensure there is a cluster running before running the test.
 
 ```
-$ operator-sdk test local "./test/e2e"
+$ make cluster-test
 ```
 
 ## Manage the operator using the Operator Lifecycle Manager
