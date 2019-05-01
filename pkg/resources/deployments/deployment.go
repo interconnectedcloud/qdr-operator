@@ -21,9 +21,9 @@ func labelsForQdrouterd(name string) map[string]string {
 // Create NewDeploymentForCR method to create deployment
 func NewDeploymentForCR(m *v1alpha1.Qdrouterd) *appsv1.Deployment {
 	labels := selectors.LabelsForQdrouterd(m.Name)
-	replicas := m.Spec.Count
+	replicas := m.Spec.DeploymentPlan.Size
 	affinity := &corev1.Affinity{}
-	if m.Spec.AntiAffinity {
+	if m.Spec.DeploymentPlan.Placement == v1alpha1.PlacementAntiAffinity {
 		affinity = &corev1.Affinity{
 			PodAntiAffinity: &corev1.PodAntiAffinity{
 				RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
@@ -105,4 +105,70 @@ func NewDeploymentForCR(m *v1alpha1.Qdrouterd) *appsv1.Deployment {
 	dep.Spec.Template.Spec.Volumes = volumes
 
 	return dep
+}
+
+// Create NewDaemonSetForCR method to create daemonset
+func NewDaemonSetForCR(m *v1alpha1.Qdrouterd) *appsv1.DaemonSet {
+	labels := selectors.LabelsForQdrouterd(m.Name)
+
+	ds := &appsv1.DaemonSet{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "apps/v1",
+			Kind:       "DaemonSet",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      m.Name,
+			Namespace: m.Namespace,
+		},
+		Spec: appsv1.DaemonSetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
+				Spec: corev1.PodSpec{
+					ServiceAccountName: m.Name,
+					Containers:         []corev1.Container{containers.ContainerForQdrouterd(m)},
+				},
+			},
+		},
+	}
+	volumes := []corev1.Volume{}
+	volumes = append(volumes, corev1.Volume{
+		Name: m.Name,
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: m.Name,
+				},
+			},
+		},
+	})
+	for _, profile := range m.Spec.SslProfiles {
+		if len(profile.Credentials) > 0 {
+			volumes = append(volumes, corev1.Volume{
+				Name: profile.Credentials,
+				VolumeSource: corev1.VolumeSource{
+					Secret: &corev1.SecretVolumeSource{
+						SecretName: profile.Credentials,
+					},
+				},
+			})
+		}
+		if len(profile.CaCert) > 0 && profile.CaCert != profile.Credentials {
+			volumes = append(volumes, corev1.Volume{
+				Name: profile.CaCert,
+				VolumeSource: corev1.VolumeSource{
+					Secret: &corev1.SecretVolumeSource{
+						SecretName: profile.CaCert,
+					},
+				},
+			})
+		}
+	}
+	ds.Spec.Template.Spec.Volumes = volumes
+
+	return ds
 }

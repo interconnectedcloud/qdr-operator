@@ -9,6 +9,11 @@ import (
 	"github.com/interconnectedcloud/qdrouterd-operator/pkg/constants"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+)
+
+var (
+	log = logf.Log.WithName("containers")
 )
 
 func containerPortsForListeners(listeners []v1alpha1.Listener) []corev1.ContainerPort {
@@ -36,6 +41,29 @@ func nameForListener(l *v1alpha1.Listener) string {
 	}
 }
 
+func containerEnvVarsForQdrouterd(m *v1alpha1.Qdrouterd) []corev1.EnvVar {
+	envVars := []corev1.EnvVar{}
+	envVars = append(envVars, corev1.EnvVar{Name: "APPLICATION_NAME", Value: m.Name})
+	envVars = append(envVars, corev1.EnvVar{Name: "QDROUTERD_CONF", Value: "/etc/qpid-dispatch/qdrouterd.conf.template"})
+	envVars = append(envVars, corev1.EnvVar{Name: "POD_COUNT", Value: strconv.Itoa(int(m.Spec.DeploymentPlan.Size))})
+	envVars = append(envVars, corev1.EnvVar{Name: "POD_NAMESPACE", ValueFrom: &corev1.EnvVarSource{
+		FieldRef: &corev1.ObjectFieldSelector{
+			FieldPath: "metadata.namespace",
+		},
+	},
+	})
+	envVars = append(envVars, corev1.EnvVar{Name: "POD_IP", ValueFrom: &corev1.EnvVarSource{
+		FieldRef: &corev1.ObjectFieldSelector{
+			FieldPath: "status.podIP",
+		},
+	},
+	})
+	if m.Spec.DeploymentPlan.Role == v1alpha1.RouterRoleInterior {
+		envVars = append(envVars, corev1.EnvVar{Name: "QDROUTERD_AUTO_MESH_DISCOVERY", Value: "QUERY"})
+	}
+	return envVars
+}
+
 func CheckQdrouterdContainer(desired *corev1.Container, actual *corev1.Container) bool {
 	if desired.Image != actual.Image {
 		return false
@@ -54,8 +82,8 @@ func CheckQdrouterdContainer(desired *corev1.Container, actual *corev1.Container
 
 func ContainerForQdrouterd(m *v1alpha1.Qdrouterd) corev1.Container {
 	var image string
-	if m.Spec.Image != "" {
-		image = m.Spec.Image
+	if m.Spec.DeploymentPlan.Image != "" {
+		image = m.Spec.DeploymentPlan.Image
 	} else {
 		image = os.Getenv("QDROUTERD_IMAGE")
 	}
@@ -70,40 +98,7 @@ func ContainerForQdrouterd(m *v1alpha1.Qdrouterd) corev1.Container {
 				},
 			},
 		},
-		Env: []corev1.EnvVar{
-			{
-				Name:  "APPLICATION_NAME",
-				Value: m.Name,
-			},
-			{
-				Name:  "QDROUTERD_CONF",
-				Value: "/etc/qpid-dispatch/qdrouterd.conf.template",
-			},
-			{
-				Name:  "QDROUTERD_AUTO_MESH_DISCOVERY",
-				Value: "QUERY",
-			},
-			{
-				Name:  "POD_COUNT",
-				Value: strconv.Itoa(int(m.Spec.Count)),
-			},
-			{
-				Name: "POD_NAMESPACE",
-				ValueFrom: &corev1.EnvVarSource{
-					FieldRef: &corev1.ObjectFieldSelector{
-						FieldPath: "metadata.namespace",
-					},
-				},
-			},
-			{
-				Name: "POD_IP",
-				ValueFrom: &corev1.EnvVarSource{
-					FieldRef: &corev1.ObjectFieldSelector{
-						FieldPath: "status.podIP",
-					},
-				},
-			},
-		},
+		Env:   containerEnvVarsForQdrouterd(m),
 		Ports: containerPortsForQdrouterd(m),
 	}
 	volumeMounts := []corev1.VolumeMount{}
@@ -129,5 +124,6 @@ func ContainerForQdrouterd(m *v1alpha1.Qdrouterd) corev1.Container {
 		}
 	}
 	container.VolumeMounts = volumeMounts
+	container.Resources = m.Spec.DeploymentPlan.Resources
 	return container
 }

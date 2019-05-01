@@ -31,6 +31,27 @@ func isDefaultSslProfileUsed(m *v1alpha1.Qdrouterd) bool {
 	return false
 }
 
+func getExposedListeners(listeners []v1alpha1.Listener) []v1alpha1.Listener {
+	exposedListeners := []v1alpha1.Listener{}
+	for _, listener := range listeners {
+		if listener.Expose {
+			exposedListeners = append(exposedListeners, listener)
+		}
+	}
+	return exposedListeners
+}
+
+func GetQdrouterdExposedListeners(m *v1alpha1.Qdrouterd) []v1alpha1.Listener {
+	listeners := []v1alpha1.Listener{}
+	normal := getExposedListeners(m.Spec.Listeners)
+	internal := getExposedListeners(m.Spec.InterRouterListeners)
+	edge := getExposedListeners(m.Spec.EdgeListeners)
+	listeners = append(listeners, normal...)
+	listeners = append(listeners, internal...)
+	listeners = append(listeners, edge...)
+	return listeners
+}
+
 func SetQdrouterdDefaults(m *v1alpha1.Qdrouterd) bool {
 	requestCert := false
 	if len(m.Spec.Listeners) == 0 {
@@ -43,10 +64,17 @@ func SetQdrouterdDefaults(m *v1alpha1.Qdrouterd) bool {
 			Http: true,
 		})
 	}
-	if len(m.Spec.InterRouterListeners) == 0 {
-		m.Spec.InterRouterListeners = append(m.Spec.InterRouterListeners, v1alpha1.Listener{
-			Port: 55672,
-		})
+	if m.Spec.DeploymentPlan.Role == v1alpha1.RouterRoleInterior {
+		if len(m.Spec.InterRouterListeners) == 0 {
+			m.Spec.InterRouterListeners = append(m.Spec.InterRouterListeners, v1alpha1.Listener{
+				Port: 55672,
+			})
+		}
+		if len(m.Spec.EdgeListeners) == 0 {
+			m.Spec.EdgeListeners = append(m.Spec.EdgeListeners, v1alpha1.Listener{
+				Port: 45672,
+			})
+		}
 	}
 	if !isDefaultSslProfileDefined(m) && isDefaultSslProfileUsed(m) {
 		m.Spec.SslProfiles = append(m.Spec.SslProfiles, v1alpha1.SslProfile{
@@ -67,7 +95,7 @@ func SetQdrouterdDefaults(m *v1alpha1.Qdrouterd) bool {
 func ConfigForQdrouterd(m *v1alpha1.Qdrouterd) string {
 	config := `
 router {
-    mode: interior
+    mode: {{.DeploymentPlan.Role}}
     id: Router.${HOSTNAME}
 }
 {{range .Listeners}}
@@ -85,9 +113,7 @@ listener {
     {{- end}}
     {{- if .RouteContainer}}
     role: route-container
-    {{- else if .EdgeIngress}}
-    role: edge
-    {{- else}}
+    {{- else }}
     role: normal
     {{- end}}
     {{- if .Http}}
@@ -104,6 +130,28 @@ listener {
     name: {{.Name}}
     {{- end}}
     role: inter-router
+    {{- if .Host}}
+    host: {{.Host}}
+    {{- else}}
+    host: 0.0.0.0
+    {{- end}}
+    {{- if .Port}}
+    port: {{.Port}}
+    {{- end}}
+    {{- if .Cost}}
+    cost: {{.Cost}}
+    {{- end}}
+    {{- if .SslProfile}}
+    sslProfile: {{.SslProfile}}
+    {{- end}}
+}
+{{- end}}
+{{range .EdgeListeners}}
+listener {
+    {{- if .Name}}
+    name: {{.Name}}
+    {{- end}}
+    role: edge
     {{- if .Host}}
     host: {{.Host}}
     {{- else}}
@@ -246,8 +294,27 @@ connector {
     sslProfile: {{.SslProfile}}
     {{- end}}
 }
+{{- end}}
+{{range .EdgeConnectors}}
+connector {
+    {{- if .Name}}
+    name: {{.Name}}
+    {{- end}}
+    role: edge
+    {{- if .Host}}
+    host: {{.Host}}
+    {{- end}}
+    {{- if .Port}}
+    port: {{.Port}}
+    {{- end}}
+    {{- if .Cost}}
+    cost: {{.Cost}}
+    {{- end}}
+    {{- if .SslProfile}}
+    sslProfile: {{.SslProfile}}
+    {{- end}}
+}
 {{- end}}`
-
 	var buff bytes.Buffer
 	qdrouterdconfig := template.Must(template.New("qdrouterdconfig").Parse(config))
 	qdrouterdconfig.Execute(&buff, m.Spec)

@@ -1,12 +1,14 @@
 apiVersion: interconnectedcloud.github.io/v1alpha1
 kind: Qdrouterd
 metadata:
-  name: amq-interconnect
+  name: interior-interconnect
 spec:
   # Add fields here
-  count: 3
-  image: quay.io/interconnectedcloud/qdrouterd:1.6.0
-  deploymentMode: lbfrontend
+  deploymentPlan:
+    image: quay.io/interconnectedcloud/qdrouterd:1.6.0
+    role: interior
+    size: 3
+    placement: Any
   addresses:
     - prefix: balanced
       distribution: balanced

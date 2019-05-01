@@ -39,27 +39,39 @@ spec:
       - kind: secrets
         version: v1
       specDescriptors:
-      - description: The desired number of member pods for qdrouterd mesh
-        displayName: Count
-        path: count
-      - description: The deployment mode
-        displayName: DeploymentMode
-        path: deploymentMode
-      - description: The Image
-        displayName: Image
-        path: image
+      - description: The role and placement plan for the qdrouterd deployment
+        displayName: DeploymentPlan
+        path: deploymentPlan
       - description: Listeners for incoming connections to the router
         displayName: Listeners
         path: listeners
       - description: Listeners for inter router mesh connections
         displayName: InterRouterListeners
         path: interRouterListeners
+      - description: Listeners for edge downlink connections
+        displayName: EdgeListeners
+        path: edgeListeners
       - description: TLS/SSL configuration for connections
         displayName: SslProfiles
         path: sslProfiles
       - description: Address configuration for distribution and phasing
         displayName: Addresses
         path: addresses
+      - description: Auto links address configuration
+        displayName: AutLinks
+        path: autoLinks
+      - description: Link routes address configuration
+        displayName: LinkRoutes
+        path: linkRoutes
+      - description: Outbound client connections to AMQP 1.0 entity
+        displayName: Connectors
+        path: connectors
+      - description: Outbound interior router connections for mesh operation
+        displayName: InterRouterConnectors
+        path: interRouterConnectors
+      - description: Outbound edge router connections for edge uplink
+        displayName: EdgeConnectors
+        path: edgeConnectors
       statusDescriptors:
       - description: The current revision of the qdrouterd cluster
         displayName: Revision Number
@@ -71,7 +83,8 @@ spec:
         displayName: Conditions
         path: conditions
   description: |
-    The qdrouterd Operator does x y and z
+    The qdr Operator creates and maintains interior mesh or edge
+    deployments on kubernetes and OpenShift.
   displayName: Qdrouterd Operator
   install:
     spec:

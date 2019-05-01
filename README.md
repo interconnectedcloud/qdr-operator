@@ -1,6 +1,6 @@
 # Qdrouterd Operator
 
-A Kubernetes operator to manage Qdrouterd deployments, automating mesh creation and administration
+A Kubernetes operator to manage Qdrouterd interior and deployments, automating creation and administration
 
 ## Introduction
 
@@ -59,7 +59,7 @@ You will be able to confirm that the new CRD has been registered in the cluster 
 
 ```
 $ kubectl get crd
-$ kubectl describe crd qdrouterd-operator
+$ kubectl describe crd qdrouterds.interconnectedcloud.github.io
 ```
 
 To create a Qdrouterd deployment, you must create a `Qdrouterd` resource representing the desired specification of the deployment. For example, to create a 3-node Qdrouterd mesh deployment you may run:
@@ -72,9 +72,11 @@ metadata:
   name: example-interconnect
 spec:
   # Add fields here
-  count: 3
-  image: quay.io/interconnectedcloud/qdrouterd:1.6.0
-  deploymentMode: lbfrontend
+  deploymentPlan:
+    image: quay.io/interconnectedcloud/qdrouterd:1.6.0
+    role: interior
+    size: 3
+    placement: Any
   addresses:
     - prefix: balanced
       distribution: balanced
@@ -89,6 +91,16 @@ The Qdrouterd Operator will act upon the creation of the resource by
 creating the necessary Kubernetes resources for the desired deployment.
 These resources will be monitored by the Qdrouterd Operator and will maintain
 the desired state as long as the `Qdrouterd` resource exists. 
+
+You will be able to confirm that the instance has been created in the cluster and
+you can review its details. To view the Qdrtouterd instance, the deployment it manages
+and the associated pods that are deployed:
+
+```
+$ kubectl describe qdr example-interconnect
+$ kubectl describe deploy example-interconnect
+$ kubectl get pods -o yaml
+```
 
 ## Development
 
@@ -131,10 +143,11 @@ kind: Qdrouterd
 metadata:
   name: example-interconnect
 spec:
-  # Add fields here
-  count: 3
-  image: quay.io/interconnectedcloud/qdrouterd:1.6.0
-  deploymentMode: lbfrontend
+  deploymentPlan:
+    image: quay.io/interconnectedcloud/qdrouterd:1.6.0
+    role: interior
+    size: 3
+    placement: Any
 EOF
 ```
 

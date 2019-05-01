@@ -37,8 +37,10 @@ func servicePortsForRouter(m *v1alpha1.Qdrouterd) []corev1.ServicePort {
 	ports := []corev1.ServicePort{}
 	external := servicePortsForListeners(m.Spec.Listeners)
 	internal := servicePortsForListeners(m.Spec.InterRouterListeners)
+	edge := servicePortsForListeners(m.Spec.EdgeListeners)
 	ports = append(ports, external...)
 	ports = append(ports, internal...)
+	ports = append(ports, edge...)
 	return ports
 }
 

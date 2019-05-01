@@ -49,27 +49,39 @@ items:
                 - kind: secrets
                   version: v1
                 specDescriptors:
-                - description: The desired number of member pods for qdrouterd mesh
-                  displayName: Count
-                  path: count
-                - description: The deployment mode
-                  displayName: DeploymentMode
-                  path: deploymentMode
-                - description: The Image
-                  displayName: Image
-                  path: image
+                - description: The role and placement plan for the qdrouterd deployment
+                  displayName: DeploymentPlan
+                  path: deploymentPlan
                 - description: Listeners for incoming connections to the router
                   displayName: Listeners
                   path: listeners
                 - description: Listeners for inter router mesh connections
                   displayName: InterRouterListeners
                   path: interRouterListeners
+                - description: Listeners for edge downlink connections
+                  displayName: EdgeListeners
+                  path: edgeListeners
                 - description: TLS/SSL configuration for connections
                   displayName: SslProfiles
                   path: sslProfiles
                 - description: Address configuration for distribution and phasing
                   displayName: Addresses
                   path: addresses
+                - description: Auto links address configuration
+                  displayName: AutLinks
+                  path: autoLinks
+                - description: Link routes address configuration
+                  displayName: LinkRoutes
+                  path: linkRoutes
+                - description: Outbound client connections to AMQP 1.0 entity
+                  displayName: Connectors
+                  path: connectors
+                - description: Outbound interior router connections for mesh operation
+                  displayName: InterRouterConnectors
+                  path: interRouterConnectors
+                - description: Outbound edge router connections for edge uplink
+                  displayName: EdgeConnectors
+                  path: edgeConnectors
                 statusDescriptors:
                 - description: The current revision of the qdrouterd cluster
                   displayName: Revision Number
@@ -81,7 +93,8 @@ items:
                   displayName: Conditions
                   path: conditions
             description: |
-              The qdrouterd Operator does x y and z
+              The qdr Operator creates and maintains interior mesh or edge
+              deployments on kubernetes and OpenShift.
             displayName: Qdrouterd Operator
             install:
               spec:
@@ -236,19 +249,51 @@ items:
                 properties:
                   spec:
                     properties:
-                      count:
-                        type: integer
-                        minimum: 1
-                        maximum: 10
-                      deploymentMode:
-                        type: string
-                        enum:
-                          - lbfrontend
-                          - daemonset
-                        description: The deployment mode
-                      image:
-                        type: string
-                        description: The image used for the qdrouerd deployment
+                      deploymentPlan:
+                        type: object
+                        properties:
+                          image:
+                            type: string
+                            description: The image used for the qdrouterd deployment
+                          size:
+                            type: integer
+                            minimum: 1
+                            maximum: 16
+                            description: The number of qdrouterd pods to deploy
+                          role:
+                            description: The qdrouterd deployment role
+                            type: string
+                            enum:
+                              - edge
+                              - interior
+                          placement:
+                            description: The qdrouterd placement plan
+                            type: string
+                            enum:
+                              - Any
+                              - Every
+                              - AntiAffinity
+                              - Node
+                          resources:
+                            type: object
+                            properties:
+                              requests:
+                                type: object
+                                properties:
+                                cpu:
+                                  type: string
+                                memory:
+                                  type: string
+                              limits:
+                                type: object
+                                properties:
+                                cpu:
+                                  type: string
+                                memory:
+                                  type: string
+                          issuer:
+                            type: string
+                            description: The externally provided credentials
                       listeners:
                         type: array
                         description: Configuration of each individual qdrouterd listener
@@ -269,8 +314,6 @@ items:
                             routeContainer:
                               type: boolean
                               description: Indicator for a router-broker connection
-                            edgeIngress:
-                              type: boolean
                             http:
                               type: boolean
                               description: Accept HTTP connections
@@ -306,6 +349,8 @@ items:
                           type: object
                         type: array
                       connectors:
+                        type: array
+                        description: Configuration of each individual router connnector
                         items:
                           properties:
                             cost:
@@ -328,6 +373,8 @@ items:
                           type: object
                         type: array
                       interRouterConnectors:
+                        type: array
+                        description: Configuration of each individual inter router connector
                         items:
                           properties:
                             cost:
@@ -349,10 +396,34 @@ items:
                             - port
                           type: object
                         type: array
+                      edgeConnectors:
+                        type: array
+                        description: Configuration of each individual edge uplink connector
+                        items:
+                          properties:
+                            cost:
+                              format: int32
+                              type: integer
+                            host:
+                              type: string
+                            name:
+                              type: string
+                            port:
+                              format: int32
+                              type: integer
+                            routeContainer:
+                              type: boolean
+                              description: Indicator for a router-broker connection
+                            sslProfile:
+                              type: string
+                          required:
+                            - host
+                            - port
+                          type: object
+                        type: array
                       interRouterListeners:
                         type: array
                         description: Configuration of each individual inter router listener
-                        minItems: 1
                         items:
                           type: object
                           description: qdrouterd listener configuration
@@ -369,8 +440,6 @@ items:
                             routeContainer:
                               type: boolean
                               description: Indicator for a router-broker connection
-                            edgeIngress:
-                              type: boolean
                             http:
                               type: boolean
                               description: Accept HTTP connections
@@ -380,8 +449,36 @@ items:
                             sslProfile:
                               type: string
                               description: Name of the ssl profile to use
-                            role:
+                            expose:
                               type: boolean
+                      edgeListeners:
+                        type: array
+                        description: Configuration of each individual inter edge listener
+                        items:
+                          type: object
+                          description: qdrouterd listener configuration
+                          properties:
+                            name:
+                              type: string
+                              description: Listener name
+                            host:
+                              type: string
+                              description: Host name
+                            port:
+                              type: integer
+                              description: Port number
+                            routeContainer:
+                              type: boolean
+                              description: Indicator for a router-broker connection
+                            http:
+                              type: boolean
+                              description: Accept HTTP connections
+                            cost:
+                              type: integer
+                              description: Cost metric for inter router connections
+                            sslProfile:
+                              type: string
+                              description: Name of the ssl profile to use
                             expose:
                               type: boolean
                       addresses:

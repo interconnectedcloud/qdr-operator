@@ -1,24 +1,23 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // QdrouterdSpec defines the desired state of Qdrouterd
 type QdrouterdSpec struct {
-	Count                 int32        `json:"count,omitempty"`
-	DeploymentMode        string       `json:"deploymentMode,omitempty"`
-	Image                 string       `json:"image"`
-	Issuer                string       `json:"issuer,omitempty"`
-	AntiAffinity          bool         `json:"antiAffinity,omitempty"`
-	Listeners             []Listener   `json:"listeners,omitempty"`
-	InterRouterListeners  []Listener   `json:"interRouterListeners,omitempty"`
-	SslProfiles           []SslProfile `json:"sslProfiles,omitempty"`
-	Addresses             []Address    `json:"addresses,omitempty"`
-	AutoLinks             []AutoLink   `json:"autoLinks,omitempty"`
-	LinkRoutes            []LinkRoute  `json:"linkRoutes,omitempty"`
-	Connectors            []Connector  `json:"connectors,omitempty"`
-	InterRouterConnectors []Connector  `json:"interRouterConnectors,omitempty"`
+	DeploymentPlan        DeploymentPlanType `json:"deploymentPlan,omitempty"`
+	Listeners             []Listener         `json:"listeners,omitempty"`
+	InterRouterListeners  []Listener         `json:"interRouterListeners,omitempty"`
+	EdgeListeners         []Listener         `json:"edgeListeners,omitempty"`
+	SslProfiles           []SslProfile       `json:"sslProfiles,omitempty"`
+	Addresses             []Address          `json:"addresses,omitempty"`
+	AutoLinks             []AutoLink         `json:"autoLinks,omitempty"`
+	LinkRoutes            []LinkRoute        `json:"linkRoutes,omitempty"`
+	Connectors            []Connector        `json:"connectors,omitempty"`
+	InterRouterConnectors []Connector        `json:"interRouterConnectors,omitempty"`
+	EdgeConnectors        []Connector        `json:"edgeConnectors,omitempty"`
 }
 
 type PhaseType string
@@ -81,6 +80,31 @@ func init() {
 	SchemeBuilder.Register(&Qdrouterd{}, &QdrouterdList{})
 }
 
+type RouterRoleType string
+
+const (
+	RouterRoleInterior RouterRoleType = "interior"
+	RouterRoleEdge                    = "edge"
+)
+
+type PlacementType string
+
+const (
+	PlacementAny          PlacementType = "Any"
+	PlacementEvery                      = "Every"
+	PlacementAntiAffinity               = "AntiAffinity"
+	PlacementNode                       = "Node"
+)
+
+type DeploymentPlanType struct {
+	Image     string                      `json:"image,omitempty"`
+	Size      int32                       `json:"size,omitempty"`
+	Role      RouterRoleType              `json:"role,omitempty"`
+	Placement PlacementType               `json:"placement,omitempty"`
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
+	Issuer    string                      `json:"issuer,omitempty"`
+}
+
 type Address struct {
 	Prefix       string `json:"prefix,omitempty"`
 	Pattern      string `json:"pattern,omitempty"`
@@ -96,7 +120,6 @@ type Listener struct {
 	Host           string `json:"host,omitempty"`
 	Port           int32  `json:"port"`
 	RouteContainer bool   `json:"routeContainer,omitempty"`
-	EdgeIngress    bool   `json:"edgeIngress,omitempty"`
 	Http           bool   `json:"http,omitempty"`
 	Cost           int32  `json:"cost,omitempty"`
 	SslProfile     string `json:"sslProfile,omitempty"`

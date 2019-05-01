@@ -55,8 +55,12 @@ func qdrouterdScaleTest(t *testing.T, f *framework.Framework, ctx *framework.Tes
 			Namespace: namespace,
 		},
 		Spec: v1alpha1.QdrouterdSpec{
-			Count: 3,
-			Image: "quay.io/ajssmith/qpid-dispatch-router:1.5.0",
+			DeploymentPlan: v1alpha1.DeploymentPlanType{
+				Size:      3,
+				Image:     "quay.io/ajssmith/qpid-dispatch-router:1.6.0",
+				Role:      "interior",
+				Placement: "Any",
+			},
 		},
 	}
 	// use TestCtx's create helper to create the object and add a cleanup function for the new object
@@ -74,7 +78,7 @@ func qdrouterdScaleTest(t *testing.T, f *framework.Framework, ctx *framework.Tes
 	if err != nil {
 		return err
 	}
-	exampleQdrouterd.Spec.Count = 4
+	exampleQdrouterd.Spec.DeploymentPlan.Size = 4
 	err = f.Client.Update(goctx.TODO(), exampleQdrouterd)
 	if err != nil {
 		return err

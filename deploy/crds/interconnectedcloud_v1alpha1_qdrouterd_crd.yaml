@@ -23,19 +23,51 @@ spec:
       properties:
         spec:
           properties:
-            count:
-              type: integer
-              minimum: 1
-              maximum: 10
-            deploymentMode:
-              type: string
-              enum:
-                - lbfrontend
-                - daemonset
-              description: The deployment mode
-            image:
-              type: string
-              description: The image used for the qdrouerd deployment
+            deploymentPlan:
+              type: object
+              properties:
+                image:
+                  type: string
+                  description: The image used for the qdrouterd deployment
+                size:
+                  type: integer
+                  minimum: 1
+                  maximum: 16
+                  description: The number of qdrouterd pods to deploy
+                role:
+                  description: The qdrouterd deployment role
+                  type: string
+                  enum:
+                    - edge
+                    - interior
+                placement:
+                  description: The qdrouterd placement plan
+                  type: string
+                  enum:
+                    - Any
+                    - Every
+                    - AntiAffinity
+                    - Node
+                resources:
+                  type: object
+                  properties:
+                    requests:
+                      type: object
+                      properties:
+                      cpu:
+                        type: string
+                      memory:
+                        type: string
+                    limits:
+                      type: object
+                      properties:
+                      cpu:
+                        type: string
+                      memory:
+                        type: string
+                issuer:
+                  type: string
+                  description: The externally provided credentials
             listeners:
               type: array
               description: Configuration of each individual qdrouterd listener
@@ -56,8 +88,6 @@ spec:
                   routeContainer:
                     type: boolean
                     description: Indicator for a router-broker connection
-                  edgeIngress:
-                    type: boolean
                   http:
                     type: boolean
                     description: Accept HTTP connections
@@ -93,6 +123,8 @@ spec:
                 type: object
               type: array
             connectors:
+              type: array
+              description: Configuration of each individual router connnector
               items:
                 properties:
                   cost:
@@ -115,6 +147,8 @@ spec:
                 type: object
               type: array
             interRouterConnectors:
+              type: array
+              description: Configuration of each individual inter router connector
               items:
                 properties:
                   cost:
@@ -136,10 +170,34 @@ spec:
                   - port
                 type: object
               type: array
+            edgeConnectors:
+              type: array
+              description: Configuration of each individual edge uplink connector
+              items:
+                properties:
+                  cost:
+                    format: int32
+                    type: integer
+                  host:
+                    type: string
+                  name:
+                    type: string
+                  port:
+                    format: int32
+                    type: integer
+                  routeContainer:
+                    type: boolean
+                    description: Indicator for a router-broker connection
+                  sslProfile:
+                    type: string
+                required:
+                  - host
+                  - port
+                type: object
+              type: array
             interRouterListeners:
               type: array
               description: Configuration of each individual inter router listener
-              minItems: 1
               items:
                 type: object
                 description: qdrouterd listener configuration
@@ -156,8 +214,6 @@ spec:
                   routeContainer:
                     type: boolean
                     description: Indicator for a router-broker connection
-                  edgeIngress:
-                    type: boolean
                   http:
                     type: boolean
                     description: Accept HTTP connections
@@ -167,8 +223,36 @@ spec:
                   sslProfile:
                     type: string
                     description: Name of the ssl profile to use
-                  role:
+                  expose:
                     type: boolean
+            edgeListeners:
+              type: array
+              description: Configuration of each individual inter edge listener
+              items:
+                type: object
+                description: qdrouterd listener configuration
+                properties:
+                  name:
+                    type: string
+                    description: Listener name
+                  host:
+                    type: string
+                    description: Host name
+                  port:
+                    type: integer
+                    description: Port number
+                  routeContainer:
+                    type: boolean
+                    description: Indicator for a router-broker connection
+                  http:
+                    type: boolean
+                    description: Accept HTTP connections
+                  cost:
+                    type: integer
+                    description: Cost metric for inter router connections
+                  sslProfile:
+                    type: string
+                    description: Name of the ssl profile to use
                   expose:
                     type: boolean
             addresses:

@@ -283,8 +283,8 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 
 	if requestCert {
 		// If no spec.Issuer, set up a self-signed issuer
-		caSecret := instance.Spec.Issuer
-		if instance.Spec.Issuer == "" {
+		caSecret := instance.Spec.DeploymentPlan.Issuer
+		if instance.Spec.DeploymentPlan.Issuer == "" {
 			selfSignedIssuerFound := &cmv1alpha1.Issuer{}
 			err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-selfsigned", Namespace: instance.Namespace}, selfSignedIssuerFound)
 			if err != nil && errors.IsNotFound(err) {
@@ -414,55 +414,85 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 	}
 
 	// Check if the deployment already exists, if not create a new one
-	depFound := &appsv1.Deployment{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, depFound)
-	if err != nil && errors.IsNotFound(err) {
-		// Define a new deployment
-		dep := deployments.NewDeploymentForCR(instance)
-		controllerutil.SetControllerReference(instance, dep, r.scheme)
-		reqLogger.Info("Creating a new Deployment", "Deployment", dep)
-		err = r.client.Create(context.TODO(), dep)
-		if err != nil {
-			reqLogger.Error(err, "Failed to create new Deployment")
+	if instance.Spec.DeploymentPlan.Placement == v1alpha1.PlacementAny ||
+		instance.Spec.DeploymentPlan.Placement == v1alpha1.PlacementAntiAffinity {
+		depFound := &appsv1.Deployment{}
+		err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, depFound)
+		if err != nil && errors.IsNotFound(err) {
+			// Define a new deployment
+			dep := deployments.NewDeploymentForCR(instance)
+			controllerutil.SetControllerReference(instance, dep, r.scheme)
+			reqLogger.Info("Creating a new Deployment", "Deployment", dep)
+			err = r.client.Create(context.TODO(), dep)
+			if err != nil {
+				reqLogger.Error(err, "Failed to create new Deployment")
+				return reconcile.Result{}, err
+			}
+			// update status
+			condition := v1alpha1.QdrouterdCondition{
+				Type:           v1alpha1.QdrouterdConditionDeployed,
+				Reason:         "deployment created",
+				TransitionTime: metav1.Now(),
+			}
+			instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
+			r.client.Status().Update(context.TODO(), instance)
+			// Deployment created successfully - return and requeue
+			return reconcile.Result{Requeue: true}, nil
+		} else if err != nil {
+			reqLogger.Error(err, "Failed to get Deployment")
 			return reconcile.Result{}, err
 		}
-		// update status
-		condition := v1alpha1.QdrouterdCondition{
-			Type:           v1alpha1.QdrouterdConditionDeployed,
-			Reason:         "deployment created",
-			TransitionTime: metav1.Now(),
-		}
-		instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
-		r.client.Status().Update(context.TODO(), instance)
-		// Deployment created successfully - return and requeue
-		return reconcile.Result{Requeue: true}, nil
-	} else if err != nil {
-		reqLogger.Error(err, "Failed to get Deployment")
-		return reconcile.Result{}, err
-	}
 
-	// Ensure the deployment count is the same as the spec size
-	// TODO(ansmith): for now, when deployment does not match,
-	// delete to recreate pod instances
-	count := instance.Spec.Count
-	if count != 0 && *depFound.Spec.Replicas != count {
-		ct := v1alpha1.QdrouterdConditionScalingUp
-		if *depFound.Spec.Replicas > count {
-			ct = v1alpha1.QdrouterdConditionScalingDown
+		// Ensure the deployment count is the same as the spec size
+		// TODO(ansmith): for now, when deployment does not match,
+		// delete to recreate pod instances
+		size := instance.Spec.DeploymentPlan.Size
+		if size != 0 && *depFound.Spec.Replicas != size {
+			ct := v1alpha1.QdrouterdConditionScalingUp
+			if *depFound.Spec.Replicas > size {
+				ct = v1alpha1.QdrouterdConditionScalingDown
+			}
+			*depFound.Spec.Replicas = size
+			r.client.Update(context.TODO(), depFound)
+			// update status
+			condition := v1alpha1.QdrouterdCondition{
+				Type:           ct,
+				Reason:         "Instance spec count updated",
+				TransitionTime: metav1.Now(),
+			}
+			instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
+			instance.Status.PodNames = instance.Status.PodNames[:0]
+			r.client.Status().Update(context.TODO(), instance)
+			return reconcile.Result{Requeue: true}, nil
 		}
-		*depFound.Spec.Replicas = count
-		r.client.Update(context.TODO(), depFound)
-		// update status
-		condition := v1alpha1.QdrouterdCondition{
-			Type:           ct,
-			Reason:         "Instance spec count updated",
-			TransitionTime: metav1.Now(),
+	} else if instance.Spec.DeploymentPlan.Placement == v1alpha1.PlacementEvery {
+		dsFound := &appsv1.DaemonSet{}
+		err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, dsFound)
+		if err != nil && errors.IsNotFound(err) {
+			// Define a new daemon set
+			ds := deployments.NewDaemonSetForCR(instance)
+			controllerutil.SetControllerReference(instance, ds, r.scheme)
+			reqLogger.Info("Creating a new DaemonSet", "DaemonSet", ds)
+			err = r.client.Create(context.TODO(), ds)
+			if err != nil {
+				reqLogger.Error(err, "Failed to create new DaemonSet")
+				return reconcile.Result{}, err
+			}
+			// update status
+			condition := v1alpha1.QdrouterdCondition{
+				Type:           v1alpha1.QdrouterdConditionDeployed,
+				Reason:         "daemonset created",
+				TransitionTime: metav1.Now(),
+			}
+			instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
+			r.client.Update(context.TODO(), instance)
+			// DaemonSet created successfully - return and requeue
+			return reconcile.Result{Requeue: true}, nil
+		} else if err != nil {
+			reqLogger.Error(err, "Failed to get DaemonSet")
+			return reconcile.Result{}, err
 		}
-		instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
-		instance.Status.PodNames = instance.Status.PodNames[:0]
-		r.client.Status().Update(context.TODO(), instance)
-		return reconcile.Result{Requeue: true}, nil
-	}
+	} //end of placement is every
 
 	// Check if the service for the deployment already exists, if not create a new one
 	svcFound := &corev1.Service{}
@@ -485,58 +515,57 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 	}
 
 	// create route for exposed listeners
-	for _, listener := range instance.Spec.Listeners {
-		if listener.Expose {
-			target := listener.Name
-			if target == "" {
-				target = "port-" + strconv.Itoa(int(listener.Port))
+	exposedListeners := configs.GetQdrouterdExposedListeners(instance)
+	for _, listener := range exposedListeners {
+		target := listener.Name
+		if target == "" {
+			target = "port-" + strconv.Itoa(int(listener.Port))
+		}
+		if openshift.IsOpenShift() {
+			routeFound := &routev1.Route{}
+			err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-" + target, Namespace: instance.Namespace}, routeFound)
+			if err != nil && errors.IsNotFound(err) {
+				// Define a new route
+				if listener.SslProfile == "" && !listener.Http {
+					// create the route but issue warning
+					reqLogger.Info("Warning an exposed listener should be http or ssl enabled", "listener", listener)
+				}
+				route := routes.NewRouteForCR(instance, target)
+				controllerutil.SetControllerReference(instance, route, r.scheme)
+				reqLogger.Info("Creating route for qdrouterd deployment", "listener", listener)
+				err = r.client.Create(context.TODO(), route)
+				if err != nil {
+					reqLogger.Error(err, "Failed to create new Route")
+					return reconcile.Result{}, err
+				}
+				// Route created successfully - return and requeue
+				return reconcile.Result{Requeue: true}, nil
+			} else if err != nil {
+				reqLogger.Error(err, "Failed to get Route")
+				return reconcile.Result{}, err
 			}
-			if openshift.IsOpenShift() {
-				routeFound := &routev1.Route{}
-				err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-" + target, Namespace: instance.Namespace}, routeFound)
-				if err != nil && errors.IsNotFound(err) {
-					// Define a new route
-					if listener.SslProfile == "" && !listener.Http {
-						// create the route but issue warning
-						reqLogger.Info("Warning an exposed listener should be http or ssl enabled", "listener", listener)
-					}
-					route := routes.NewRouteForCR(instance, target)
-					controllerutil.SetControllerReference(instance, route, r.scheme)
-					reqLogger.Info("Creating route for qdrouterd deployment", "listener", listener)
-					err = r.client.Create(context.TODO(), route)
-					if err != nil {
-						reqLogger.Error(err, "Failed to create new Route")
-						return reconcile.Result{}, err
-					}
-					// Route created successfully - return and requeue
-					return reconcile.Result{Requeue: true}, nil
-				} else if err != nil {
-					reqLogger.Error(err, "Failed to get Route")
+		} else {
+			ingressFound := &extv1b1.Ingress{}
+			err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-" + target, Namespace: instance.Namespace}, ingressFound)
+			if err != nil && errors.IsNotFound(err) {
+				// Define a new Ingress
+				if listener.SslProfile == "" && !listener.Http {
+					// create the ingress but issue warning
+					reqLogger.Info("Warning an exposed listener should be http or ssl enabled", "listener", listener)
+				}
+				ingress := ingresses.NewIngressForCR(instance, listener)
+				controllerutil.SetControllerReference(instance, ingress, r.scheme)
+				reqLogger.Info("Creating Ingress for qdrouterd deployment", "listener", listener)
+				err = r.client.Create(context.TODO(), ingress)
+				if err != nil {
+					reqLogger.Error(err, "Failed to create new Ingress")
 					return reconcile.Result{}, err
 				}
-			} else {
-				ingressFound := &extv1b1.Ingress{}
-				err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-" + target, Namespace: instance.Namespace}, ingressFound)
-				if err != nil && errors.IsNotFound(err) {
-					// Define a new Ingress
-					if listener.SslProfile == "" && !listener.Http {
-						// create the ingress but issue warning
-						reqLogger.Info("Warning an exposed listener should be http or ssl enabled", "listener", listener)
-					}
-					ingress := ingresses.NewIngressForCR(instance, listener)
-					controllerutil.SetControllerReference(instance, ingress, r.scheme)
-					reqLogger.Info("Creating Ingress for qdrouterd deployment", "listener", listener)
-					err = r.client.Create(context.TODO(), ingress)
-					if err != nil {
-						reqLogger.Error(err, "Failed to create new Ingress")
-						return reconcile.Result{}, err
-					}
-					// Ingress created successfully - return and requeue
-					return reconcile.Result{Requeue: true}, nil
-				} else if err != nil {
-					reqLogger.Error(err, "Failed to get Ingress")
-					return reconcile.Result{}, err
-				}
+				// Ingress created successfully - return and requeue
+				return reconcile.Result{Requeue: true}, nil
+			} else if err != nil {
+				reqLogger.Error(err, "Failed to get Ingress")
+				return reconcile.Result{}, err
 			}
 		}
 	}
