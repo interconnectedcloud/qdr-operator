@@ -1,27 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: qdrouterd-operator
+  name: qdr-operator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: qdrouterd-operator
+      name: qdr-operator
   template:
     metadata:
       labels:
-        name: qdrouterd-operator
+        name: qdr-operator
     spec:
-      serviceAccountName: qdrouterd-operator
+      serviceAccountName: qdr-operator
       containers:
-        - name: qdrouterd-operator
+        - name: qdr-operator
           # Replace this with the built image name
-          image: quay.io/interconnectedcloud/qdrouterd-operator
+          image: quay.io/interconnectedcloud/qdr-operator
           ports:
           - containerPort: 60000
             name: metrics
           command:
-          - qdrouterd-operator
+          - qdr-operator
           imagePullPolicy: Always
           env:
             - name: WATCH_NAMESPACE
@@ -33,4 +33,4 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
-              value: "qdrouterd-operator"
+              value: "qdr-operator"

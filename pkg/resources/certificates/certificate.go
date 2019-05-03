@@ -1,12 +1,12 @@
 package certificates
 
 import (
-	v1alpha1 "github.com/interconnectedcloud/qdrouterd-operator/pkg/apis/interconnectedcloud/v1alpha1"
+	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	cmv1alpha1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func NewSelfSignedIssuerForCR(m *v1alpha1.Qdrouterd) *cmv1alpha1.Issuer {
+func NewSelfSignedIssuerForCR(m *v1alpha1.Qdr) *cmv1alpha1.Issuer {
 	issuer := &cmv1alpha1.Issuer{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "certmanager.k8s.io/v1alpha1",
@@ -25,7 +25,7 @@ func NewSelfSignedIssuerForCR(m *v1alpha1.Qdrouterd) *cmv1alpha1.Issuer {
 	return issuer
 }
 
-func NewCAIssuerForCR(m *v1alpha1.Qdrouterd, secret string) *cmv1alpha1.Issuer {
+func NewCAIssuerForCR(m *v1alpha1.Qdr, secret string) *cmv1alpha1.Issuer {
 	issuer := &cmv1alpha1.Issuer{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "certmanager.k8s.io/v1alpha1",
@@ -46,7 +46,7 @@ func NewCAIssuerForCR(m *v1alpha1.Qdrouterd, secret string) *cmv1alpha1.Issuer {
 	return issuer
 }
 
-func NewSelfSignedCACertificateForCR(m *v1alpha1.Qdrouterd) *cmv1alpha1.Certificate {
+func NewSelfSignedCACertificateForCR(m *v1alpha1.Qdr) *cmv1alpha1.Certificate {
 	cert := &cmv1alpha1.Certificate{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "certmanager.k8s.io/v1alpha1",
@@ -68,7 +68,7 @@ func NewSelfSignedCACertificateForCR(m *v1alpha1.Qdrouterd) *cmv1alpha1.Certific
 	return cert
 }
 
-func NewCertificateForCR(m *v1alpha1.Qdrouterd, profileName string) *cmv1alpha1.Certificate {
+func NewCertificateForCR(m *v1alpha1.Qdr, profileName string) *cmv1alpha1.Certificate {
 	cert := &cmv1alpha1.Certificate{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "certmanager.k8s.io/v1alpha1",
@@ -92,7 +92,7 @@ func NewCertificateForCR(m *v1alpha1.Qdrouterd, profileName string) *cmv1alpha1.
 	return cert
 }
 
-func NewCACertificateForCR(m *v1alpha1.Qdrouterd, profileName string) *cmv1alpha1.Certificate {
+func NewCACertificateForCR(m *v1alpha1.Qdr, profileName string) *cmv1alpha1.Certificate {
 	cert := &cmv1alpha1.Certificate{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "certmanager.k8s.io/v1alpha1",

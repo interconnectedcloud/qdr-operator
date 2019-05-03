@@ -7,8 +7,8 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/apis"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/controller"
+	"github.com/interconnectedcloud/qdr-operator/pkg/apis"
+	"github.com/interconnectedcloud/qdr-operator/pkg/controller"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
@@ -52,7 +52,7 @@ func main() {
 	}
 
 	// Become the leader before proceeding
-	err = leader.Become(context.TODO(), "qdrouterd-operator-lock")
+	err = leader.Become(context.TODO(), "qdr-operator-lock")
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)

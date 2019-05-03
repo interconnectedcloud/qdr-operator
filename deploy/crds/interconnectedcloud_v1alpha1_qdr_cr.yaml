@@ -1,5 +1,5 @@
 apiVersion: interconnectedcloud.github.io/v1alpha1
-kind: Qdrouterd
+kind: Qdr
 metadata:
   name: interior-interconnect
 spec:

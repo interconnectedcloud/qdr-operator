@@ -1,9 +1,9 @@
 package deployments
 
 import (
-	v1alpha1 "github.com/interconnectedcloud/qdrouterd-operator/pkg/apis/interconnectedcloud/v1alpha1"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/containers"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/selectors"
+	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
+	"github.com/interconnectedcloud/qdr-operator/pkg/resources/containers"
+	"github.com/interconnectedcloud/qdr-operator/pkg/utils/selectors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -11,7 +11,7 @@ import (
 
 // move this to util
 // Set labels in a map
-func labelsForQdrouterd(name string) map[string]string {
+func labelsForQdr(name string) map[string]string {
 	return map[string]string{
 		selectors.LabelAppKey:      name,
 		selectors.LabelResourceKey: name,
@@ -19,8 +19,8 @@ func labelsForQdrouterd(name string) map[string]string {
 }
 
 // Create NewDeploymentForCR method to create deployment
-func NewDeploymentForCR(m *v1alpha1.Qdrouterd) *appsv1.Deployment {
-	labels := selectors.LabelsForQdrouterd(m.Name)
+func NewDeploymentForCR(m *v1alpha1.Qdr) *appsv1.Deployment {
+	labels := selectors.LabelsForQdr(m.Name)
 	replicas := m.Spec.DeploymentPlan.Size
 	affinity := &corev1.Affinity{}
 	if m.Spec.DeploymentPlan.Placement == v1alpha1.PlacementAntiAffinity {
@@ -64,7 +64,7 @@ func NewDeploymentForCR(m *v1alpha1.Qdrouterd) *appsv1.Deployment {
 				Spec: corev1.PodSpec{
 					ServiceAccountName: m.Name,
 					Affinity:           affinity,
-					Containers:         []corev1.Container{containers.ContainerForQdrouterd(m)},
+					Containers:         []corev1.Container{containers.ContainerForQdr(m)},
 				},
 			},
 		},
@@ -108,8 +108,8 @@ func NewDeploymentForCR(m *v1alpha1.Qdrouterd) *appsv1.Deployment {
 }
 
 // Create NewDaemonSetForCR method to create daemonset
-func NewDaemonSetForCR(m *v1alpha1.Qdrouterd) *appsv1.DaemonSet {
-	labels := selectors.LabelsForQdrouterd(m.Name)
+func NewDaemonSetForCR(m *v1alpha1.Qdr) *appsv1.DaemonSet {
+	labels := selectors.LabelsForQdr(m.Name)
 
 	ds := &appsv1.DaemonSet{
 		TypeMeta: metav1.TypeMeta{
@@ -130,7 +130,7 @@ func NewDaemonSetForCR(m *v1alpha1.Qdrouterd) *appsv1.DaemonSet {
 				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: m.Name,
-					Containers:         []corev1.Container{containers.ContainerForQdrouterd(m)},
+					Containers:         []corev1.Container{containers.ContainerForQdr(m)},
 				},
 			},
 		},

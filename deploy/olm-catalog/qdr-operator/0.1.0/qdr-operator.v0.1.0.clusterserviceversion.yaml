@@ -3,20 +3,20 @@ kind: ClusterServiceVersion
 metadata:
   annotations:
     alm-examples: >-
-      [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Qdrouterd","metadata":{"name":"amq-interconnect"},"spec":{"count":2,"deploymentMode": "lbfrontend","image":"quay.io/interconnectedcloud/qdrouterd:1.6.0"}}]
+      [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Qdr","metadata":{"name":"amq-interconnect"},"spec":{"count":2,"deploymentMode": "lbfrontend","image":"quay.io/interconnectedcloud/qdrouterd:1.6.0"}}]
     capabilities: Basic Install
     categories: Messaging
-  name: qdrouterd-operator.v0.1.0
+  name: qdr-operator.v0.1.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
     - version: v1alpha1
-      kind: Qdrouterd
-      description: An instance of Qdrouterd
-      displayName: Qdrouterd
-      name: qdrouterds.interconnectedcloud.github.io
+      kind: Qdr
+      description: An instance of Qdr
+      displayName: Qdr
+      name: qdrs.interconnectedcloud.github.io
       resources:
       - kind: Service
         version: v1
@@ -24,7 +24,7 @@ spec:
         version: v1
       - kind: ServiceAccount
         version: v1
-      - kind: qdrouterds
+      - kind: qdrs
         version: v1alpha1
       - kind: rolebindings
         version: v1
@@ -39,7 +39,7 @@ spec:
       - kind: secrets
         version: v1
       specDescriptors:
-      - description: The role and placement plan for the qdrouterd deployment
+      - description: The role and placement plan for the qdr deployment
         displayName: DeploymentPlan
         path: deploymentPlan
       - description: Listeners for incoming connections to the router
@@ -73,7 +73,7 @@ spec:
         displayName: EdgeConnectors
         path: edgeConnectors
       statusDescriptors:
-      - description: The current revision of the qdrouterd cluster
+      - description: The current revision of the qdr cluster
         displayName: Revision Number
         path: revNumber
       - description: The current pods
@@ -85,25 +85,25 @@ spec:
   description: |
     The qdr Operator creates and maintains interior mesh or edge
     deployments on kubernetes and OpenShift.
-  displayName: Qdrouterd Operator
+  displayName: Qdr Operator
   install:
     spec:
       deployments:
-      - name: qdrouterd-operator
+      - name: qdr-operator
         spec:
           replicas: 1
           selector:
             matchLabels:
-              name: qdrouterd-operator
+              name: qdr-operator
           template:
             metadata:
               labels:
-                name: qdrouterd-operator
+                name: qdr-operator
             spec:
-              serviceAccountName: qdrouterd-operator
+              serviceAccountName: qdr-operator
               containers:
               - command:
-                - qdrouterd-operator
+                - qdr-operator
                 env:
                 - name: WATCH_NAMESPACE
                   valueFrom:
@@ -114,10 +114,10 @@ spec:
                     fieldRef:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
-                  value: qdrouterd-operator
-                image: quay.io/interconnectedcloud/qdrouterd-operator
+                  value: qdr-operator
+                image: quay.io/interconnectedcloud/qdr-operator
                 imagePullPolicy: Always
-                name: qdrouterd-operator
+                name: qdr-operator
                 ports:
                 - containerPort: 60000
                   name: metrics
@@ -199,7 +199,7 @@ spec:
           - '*'
           verbs:
           - '*'
-        serviceAccountName: qdrouterd-operator
+        serviceAccountName: qdr-operator
     strategy: deployment
   installModes:
   - supported: true
