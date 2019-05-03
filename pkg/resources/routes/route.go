@@ -1,16 +1,16 @@
 package routes
 
 import (
-	v1alpha1 "github.com/interconnectedcloud/qdrouterd-operator/pkg/apis/interconnectedcloud/v1alpha1"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/selectors"
+	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
+	"github.com/interconnectedcloud/qdr-operator/pkg/utils/selectors"
 	routev1 "github.com/openshift/api/route/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // Create newRouteForCR method to create exposed route
-func NewRouteForCR(m *v1alpha1.Qdrouterd, target string) *routev1.Route {
-	labels := selectors.LabelsForQdrouterd(m.Name)
+func NewRouteForCR(m *v1alpha1.Qdr, target string) *routev1.Route {
+	labels := selectors.LabelsForQdr(m.Name)
 	route := &routev1.Route{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",

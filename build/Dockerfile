@@ -1,12 +1,12 @@
 FROM registry.access.redhat.com/ubi7-dev-preview/ubi-minimal:7.6
 
-ENV OPERATOR=/usr/local/bin/qdrouterd-operator \
+ENV OPERATOR=/usr/local/bin/qdr-operator \
     USER_UID=1001 \
-    USER_NAME=qdrouterd-operator \
+    USER_NAME=qdr-operator \
     QDROUTERD_IMAGE=quay.io/interconnectedcloud/qdrouterd:1.6.0
 
 # install operator binary
-COPY build/_output/bin/qdrouterd-operator ${OPERATOR}
+COPY build/_output/bin/qdr-operator ${OPERATOR}
 
 COPY build/bin /usr/local/bin
 RUN  /usr/local/bin/user_setup

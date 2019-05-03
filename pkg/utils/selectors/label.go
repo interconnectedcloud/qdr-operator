@@ -7,19 +7,19 @@ import (
 const (
 	LabelAppKey = "application"
 
-	LabelResourceKey = "qdrouterd_cr"
+	LabelResourceKey = "qdr_cr"
 )
 
 // Set labels in a map
-func LabelsForQdrouterd(name string) map[string]string {
+func LabelsForQdr(name string) map[string]string {
 	return map[string]string{
 		LabelAppKey:      name,
 		LabelResourceKey: name,
 	}
 }
 
-// return a selector that matches resources for a qdrouterd resource
-func ResourcesByQdrouterdName(name string) labels.Selector {
+// return a selector that matches resources for a qdr resource
+func ResourcesByQdrName(name string) labels.Selector {
 	set := map[string]string{
 		LabelAppKey:      name,
 		LabelResourceKey: name,

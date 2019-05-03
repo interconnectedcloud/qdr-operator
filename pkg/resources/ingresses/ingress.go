@@ -3,20 +3,20 @@ package ingresses
 import (
 	"strconv"
 
-	v1alpha1 "github.com/interconnectedcloud/qdrouterd-operator/pkg/apis/interconnectedcloud/v1alpha1"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/selectors"
+	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
+	"github.com/interconnectedcloud/qdr-operator/pkg/utils/selectors"
 	extv1b1 "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // Create newIngressForCR method to create exposed ingress
-func NewIngressForCR(m *v1alpha1.Qdrouterd, listener v1alpha1.Listener) *extv1b1.Ingress {
+func NewIngressForCR(m *v1alpha1.Qdr, listener v1alpha1.Listener) *extv1b1.Ingress {
 	target := listener.Name
 	if target == "" {
 		target = "port-" + strconv.Itoa(int(listener.Port))
 	}
-	labels := selectors.LabelsForQdrouterd(m.Name)
+	labels := selectors.LabelsForQdr(m.Name)
 	ingress := &extv1b1.Ingress{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",

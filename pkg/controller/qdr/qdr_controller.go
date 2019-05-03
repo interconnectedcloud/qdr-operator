@@ -1,23 +1,23 @@
-package qdrouterd
+package qdr
 
 import (
 	"context"
 	"reflect"
 	"strconv"
 
-	v1alpha1 "github.com/interconnectedcloud/qdrouterd-operator/pkg/apis/interconnectedcloud/v1alpha1"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/certificates"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/configmaps"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/deployments"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/ingresses"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/rolebindings"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/roles"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/routes"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/serviceaccounts"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/resources/services"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/configs"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/openshift"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/utils/selectors"
+	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
+	"github.com/interconnectedcloud/qdr-operator/pkg/resources/certificates"
+	"github.com/interconnectedcloud/qdr-operator/pkg/resources/configmaps"
+	"github.com/interconnectedcloud/qdr-operator/pkg/resources/deployments"
+	"github.com/interconnectedcloud/qdr-operator/pkg/resources/ingresses"
+	"github.com/interconnectedcloud/qdr-operator/pkg/resources/rolebindings"
+	"github.com/interconnectedcloud/qdr-operator/pkg/resources/roles"
+	"github.com/interconnectedcloud/qdr-operator/pkg/resources/routes"
+	"github.com/interconnectedcloud/qdr-operator/pkg/resources/serviceaccounts"
+	"github.com/interconnectedcloud/qdr-operator/pkg/resources/services"
+	"github.com/interconnectedcloud/qdr-operator/pkg/utils/configs"
+	"github.com/interconnectedcloud/qdr-operator/pkg/utils/openshift"
+	"github.com/interconnectedcloud/qdr-operator/pkg/utils/selectors"
 	cmv1alpha1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -39,11 +39,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_qdrouterd")
+var log = logf.Log.WithName("controller_qdr")
 
 const maxConditions = 6
 
-// Add creates a new Qdrouterd Controller and adds it to the Manager. The Manager will set fields on the Controller
+// Add creates a new Qdr Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr))
@@ -60,104 +60,104 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 		utilruntime.Must(routev1.AddToScheme(scheme))
 		utilruntime.Must(scheme.SetVersionPriority(routev1.SchemeGroupVersion))
 	}
-	return &ReconcileQdrouterd{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileQdr{client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
-	c, err := controller.New("qdrouterd-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("qdr-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to primary resource Qdrouterd
-	err = c.Watch(&source.Kind{Type: &v1alpha1.Qdrouterd{}}, &handler.EnqueueRequestForObject{})
+	// Watch for changes to primary resource Qdr
+	err = c.Watch(&source.Kind{Type: &v1alpha1.Qdr{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to secondary resource Deployment and requeue the owner Qdrouterd
+	// Watch for changes to secondary resource Deployment and requeue the owner Qdr
 	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1alpha1.Qdrouterd{},
+		OwnerType:    &v1alpha1.Qdr{},
 	})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to secondary resource Service and requeue the owner Qdrouterd
+	// Watch for changes to secondary resource Service and requeue the owner Qdr
 	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1alpha1.Qdrouterd{},
+		OwnerType:    &v1alpha1.Qdr{},
 	})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to secondary resource ServiceAccount and requeue the owner Qdrouterd
+	// Watch for changes to secondary resource ServiceAccount and requeue the owner Qdr
 	err = c.Watch(&source.Kind{Type: &corev1.ServiceAccount{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1alpha1.Qdrouterd{},
+		OwnerType:    &v1alpha1.Qdr{},
 	})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to secondary resource RoleBinding and requeue the owner Qdrouterd
+	// Watch for changes to secondary resource RoleBinding and requeue the owner Qdr
 	err = c.Watch(&source.Kind{Type: &rbacv1.RoleBinding{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1alpha1.Qdrouterd{},
+		OwnerType:    &v1alpha1.Qdr{},
 	})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to secondary resource Secreet and requeue the owner Qdrouterd
+	// Watch for changes to secondary resource Secreet and requeue the owner Qdr
 	err = c.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1alpha1.Qdrouterd{},
+		OwnerType:    &v1alpha1.Qdr{},
 	})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to secondary resource ConfigMap and requeue the owner Qdrouterd
+	// Watch for changes to secondary resource ConfigMap and requeue the owner Qdr
 	err = c.Watch(&source.Kind{Type: &corev1.ConfigMap{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1alpha1.Qdrouterd{},
+		OwnerType:    &v1alpha1.Qdr{},
 	})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to secondary resource Pods and requeue the owner Qdrouterd
+	// Watch for changes to secondary resource Pods and requeue the owner Qdr
 	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1alpha1.Qdrouterd{},
+		OwnerType:    &v1alpha1.Qdr{},
 	})
 	if err != nil {
 		return err
 	}
 
 	// TODO(ansmith): Check if there is a cert-manager crd instance, handle err
-	// Watch for changes to secondary resource Issuer and requeue the owner Qdrouterd
+	// Watch for changes to secondary resource Issuer and requeue the owner Qdr
 	err = c.Watch(&source.Kind{Type: &cmv1alpha1.Issuer{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1alpha1.Qdrouterd{},
+		OwnerType:    &v1alpha1.Qdr{},
 	})
 
-	// Watch for changes to secondary resource Certificates and requeue the owner Qdrouterd
+	// Watch for changes to secondary resource Certificates and requeue the owner Qdr
 	err = c.Watch(&source.Kind{Type: &cmv1alpha1.Certificate{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1alpha1.Qdrouterd{},
+		OwnerType:    &v1alpha1.Qdr{},
 	})
 
 	if openshift.IsOpenShift() {
-		// Watch for changes to secondary resource Route and requeue the owner Qdrouterd
+		// Watch for changes to secondary resource Route and requeue the owner Qdr
 		err = c.Watch(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestForOwner{
 			IsController: true,
-			OwnerType:    &v1alpha1.Qdrouterd{},
+			OwnerType:    &v1alpha1.Qdr{},
 		})
 		if err != nil {
 			return err
@@ -167,17 +167,17 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
-var _ reconcile.Reconciler = &ReconcileQdrouterd{}
+var _ reconcile.Reconciler = &ReconcileQdr{}
 
-// ReconcileQdrouterd reconciles a Qdrouterd object
-type ReconcileQdrouterd struct {
+// ReconcileQdr reconciles a Qdr object
+type ReconcileQdr struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
 	scheme *runtime.Scheme
 }
 
-func addCondition(conditions []v1alpha1.QdrouterdCondition, condition v1alpha1.QdrouterdCondition) []v1alpha1.QdrouterdCondition {
+func addCondition(conditions []v1alpha1.QdrCondition, condition v1alpha1.QdrCondition) []v1alpha1.QdrCondition {
 	size := len(conditions) + 1
 	first := 0
 	if size > maxConditions {
@@ -186,17 +186,17 @@ func addCondition(conditions []v1alpha1.QdrouterdCondition, condition v1alpha1.Q
 	return append(conditions, condition)[first:size]
 }
 
-// Reconcile reads that state of the cluster for a Qdrouterd object and makes changes based on the state read
-// and what is in the Qdrouterd.Spec
+// Reconcile reads that state of the cluster for a Qdr object and makes changes based on the state read
+// and what is in the Qdr.Spec
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling Qdrouterd")
+	reqLogger.Info("Reconciling Qdr")
 
-	// Fetch the Qdrouterd instance
-	instance := &v1alpha1.Qdrouterd{}
+	// Fetch the Qdr instance
+	instance := &v1alpha1.Qdr{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -213,8 +213,8 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 	if instance.Status.RevNumber == "" {
 		instance.Status.RevNumber = instance.ObjectMeta.ResourceVersion
 		// update status
-		condition := v1alpha1.QdrouterdCondition{
-			Type:           v1alpha1.QdrouterdConditionProvisioning,
+		condition := v1alpha1.QdrCondition{
+			Type:           v1alpha1.QdrConditionProvisioning,
 			Reason:         "provision spec to desired state",
 			TransitionTime: metav1.Now(),
 		}
@@ -222,7 +222,7 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 		r.client.Status().Update(context.TODO(), instance)
 	}
 
-	requestCert := configs.SetQdrouterdDefaults(instance)
+	requestCert := configs.SetQdrDefaults(instance)
 
 	// Check if role already exists, if not create a new one
 	roleFound := &rbacv1.Role{}
@@ -429,8 +429,8 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 				return reconcile.Result{}, err
 			}
 			// update status
-			condition := v1alpha1.QdrouterdCondition{
-				Type:           v1alpha1.QdrouterdConditionDeployed,
+			condition := v1alpha1.QdrCondition{
+				Type:           v1alpha1.QdrConditionDeployed,
 				Reason:         "deployment created",
 				TransitionTime: metav1.Now(),
 			}
@@ -448,14 +448,14 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 		// delete to recreate pod instances
 		size := instance.Spec.DeploymentPlan.Size
 		if size != 0 && *depFound.Spec.Replicas != size {
-			ct := v1alpha1.QdrouterdConditionScalingUp
+			ct := v1alpha1.QdrConditionScalingUp
 			if *depFound.Spec.Replicas > size {
-				ct = v1alpha1.QdrouterdConditionScalingDown
+				ct = v1alpha1.QdrConditionScalingDown
 			}
 			*depFound.Spec.Replicas = size
 			r.client.Update(context.TODO(), depFound)
 			// update status
-			condition := v1alpha1.QdrouterdCondition{
+			condition := v1alpha1.QdrCondition{
 				Type:           ct,
 				Reason:         "Instance spec count updated",
 				TransitionTime: metav1.Now(),
@@ -479,8 +479,8 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 				return reconcile.Result{}, err
 			}
 			// update status
-			condition := v1alpha1.QdrouterdCondition{
-				Type:           v1alpha1.QdrouterdConditionDeployed,
+			condition := v1alpha1.QdrCondition{
+				Type:           v1alpha1.QdrConditionDeployed,
 				Reason:         "daemonset created",
 				TransitionTime: metav1.Now(),
 			}
@@ -501,7 +501,7 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 		// Define a new service
 		svc := services.NewServiceForCR(instance, requestCert)
 		controllerutil.SetControllerReference(instance, svc, r.scheme)
-		reqLogger.Info("Creating service for qdrouterd deployment", "Service", svc)
+		reqLogger.Info("Creating service for qdr deployment", "Service", svc)
 		err = r.client.Create(context.TODO(), svc)
 		if err != nil {
 			reqLogger.Error(err, "Failed to create new Service")
@@ -515,7 +515,7 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 	}
 
 	// create route for exposed listeners
-	exposedListeners := configs.GetQdrouterdExposedListeners(instance)
+	exposedListeners := configs.GetQdrExposedListeners(instance)
 	for _, listener := range exposedListeners {
 		target := listener.Name
 		if target == "" {
@@ -532,7 +532,7 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 				}
 				route := routes.NewRouteForCR(instance, target)
 				controllerutil.SetControllerReference(instance, route, r.scheme)
-				reqLogger.Info("Creating route for qdrouterd deployment", "listener", listener)
+				reqLogger.Info("Creating route for qdr deployment", "listener", listener)
 				err = r.client.Create(context.TODO(), route)
 				if err != nil {
 					reqLogger.Error(err, "Failed to create new Route")
@@ -555,7 +555,7 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 				}
 				ingress := ingresses.NewIngressForCR(instance, listener)
 				controllerutil.SetControllerReference(instance, ingress, r.scheme)
-				reqLogger.Info("Creating Ingress for qdrouterd deployment", "listener", listener)
+				reqLogger.Info("Creating Ingress for qdr deployment", "listener", listener)
 				err = r.client.Create(context.TODO(), ingress)
 				if err != nil {
 					reqLogger.Error(err, "Failed to create new Ingress")
@@ -572,7 +572,7 @@ func (r *ReconcileQdrouterd) Reconcile(request reconcile.Request) (reconcile.Res
 
 	// List the pods for this deployment
 	podList := &corev1.PodList{}
-	labelSelector := selectors.ResourcesByQdrouterdName(instance.Name)
+	labelSelector := selectors.ResourcesByQdrName(instance.Name)
 	listOps := &client.ListOptions{Namespace: instance.Namespace, LabelSelector: labelSelector}
 	err = r.client.List(context.TODO(), listOps, podList)
 	if err != nil {

@@ -5,8 +5,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// QdrouterdSpec defines the desired state of Qdrouterd
-type QdrouterdSpec struct {
+// QdrSpec defines the desired state of Qdr
+type QdrSpec struct {
 	DeploymentPlan        DeploymentPlanType `json:"deploymentPlan,omitempty"`
 	Listeners             []Listener         `json:"listeners,omitempty"`
 	InterRouterListeners  []Listener         `json:"interRouterListeners,omitempty"`
@@ -23,61 +23,61 @@ type QdrouterdSpec struct {
 type PhaseType string
 
 const (
-	QdrouterdPhaseNone     PhaseType = ""
-	QdrouterdPhaseCreating           = "Creating"
-	QdrouterdPhaseRunning            = "Running"
-	QdrouterdPhaseFailed             = "Failed"
+	QdrPhaseNone     PhaseType = ""
+	QdrPhaseCreating           = "Creating"
+	QdrPhaseRunning            = "Running"
+	QdrPhaseFailed             = "Failed"
 )
 
 type ConditionType string
 
 const (
-	QdrouterdConditionProvisioning ConditionType = "Provisioning"
-	QdrouterdConditionDeployed     ConditionType = "Deployed"
-	QdrouterdConditionScalingUp    ConditionType = "ScalingUp"
-	QdrouterdConditionScalingDown  ConditionType = "ScalingDown"
-	QdrouterdConditionUpgrading    ConditionType = "Upgrading"
+	QdrConditionProvisioning ConditionType = "Provisioning"
+	QdrConditionDeployed     ConditionType = "Deployed"
+	QdrConditionScalingUp    ConditionType = "ScalingUp"
+	QdrConditionScalingDown  ConditionType = "ScalingDown"
+	QdrConditionUpgrading    ConditionType = "Upgrading"
 )
 
-type QdrouterdCondition struct {
+type QdrCondition struct {
 	Type           ConditionType `json:"type"`
 	TransitionTime metav1.Time   `json:"transitionTime,omitempty"`
 	Reason         string        `json:"reason,omitempty"`
 }
 
-// QdrouterdStatus defines the observed state of Qdrouterd
-type QdrouterdStatus struct {
+// QdrStatus defines the observed state of Qdr
+type QdrStatus struct {
 	Phase     PhaseType `json:"phase,omitempty"`
 	RevNumber string    `json:"revNumber,omitempty"`
 	PodNames  []string  `json:"pods"`
 
-	// Conditions keeps most recent qdrouterd conditions
-	Conditions []QdrouterdCondition `json:"conditions"`
+	// Conditions keeps most recent qdr conditions
+	Conditions []QdrCondition `json:"conditions"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Qdrouterd is the Schema for the qdrouterds API
+// Qdr is the Schema for the qdrs API
 // +k8s:openapi-gen=true
-type Qdrouterd struct {
+type Qdr struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   QdrouterdSpec   `json:"spec,omitempty"`
-	Status QdrouterdStatus `json:"status,omitempty"`
+	Spec   QdrSpec   `json:"spec,omitempty"`
+	Status QdrStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// QdrouterdList contains a list of Qdrouterd
-type QdrouterdList struct {
+// QdrList contains a list of Qdr
+type QdrList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Qdrouterd `json:"items"`
+	Items           []Qdr `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Qdrouterd{}, &QdrouterdList{})
+	SchemeBuilder.Register(&Qdr{}, &QdrList{})
 }
 
 type RouterRoleType string

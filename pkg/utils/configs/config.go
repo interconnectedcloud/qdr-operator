@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"text/template"
 
-	v1alpha1 "github.com/interconnectedcloud/qdrouterd-operator/pkg/apis/interconnectedcloud/v1alpha1"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/constants"
+	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
+	"github.com/interconnectedcloud/qdr-operator/pkg/constants"
 )
 
-func isDefaultSslProfileDefined(m *v1alpha1.Qdrouterd) bool {
+func isDefaultSslProfileDefined(m *v1alpha1.Qdr) bool {
 	for _, profile := range m.Spec.SslProfiles {
 		if profile.Name == "default" {
 			return true
@@ -17,7 +17,7 @@ func isDefaultSslProfileDefined(m *v1alpha1.Qdrouterd) bool {
 	return false
 }
 
-func isDefaultSslProfileUsed(m *v1alpha1.Qdrouterd) bool {
+func isDefaultSslProfileUsed(m *v1alpha1.Qdr) bool {
 	for _, listener := range m.Spec.Listeners {
 		if listener.SslProfile == "default" {
 			return true
@@ -41,7 +41,7 @@ func getExposedListeners(listeners []v1alpha1.Listener) []v1alpha1.Listener {
 	return exposedListeners
 }
 
-func GetQdrouterdExposedListeners(m *v1alpha1.Qdrouterd) []v1alpha1.Listener {
+func GetQdrExposedListeners(m *v1alpha1.Qdr) []v1alpha1.Listener {
 	listeners := []v1alpha1.Listener{}
 	normal := getExposedListeners(m.Spec.Listeners)
 	internal := getExposedListeners(m.Spec.InterRouterListeners)
@@ -52,7 +52,7 @@ func GetQdrouterdExposedListeners(m *v1alpha1.Qdrouterd) []v1alpha1.Listener {
 	return listeners
 }
 
-func SetQdrouterdDefaults(m *v1alpha1.Qdrouterd) bool {
+func SetQdrDefaults(m *v1alpha1.Qdr) bool {
 	requestCert := false
 	if len(m.Spec.Listeners) == 0 {
 		m.Spec.Listeners = append(m.Spec.Listeners, v1alpha1.Listener{
@@ -92,7 +92,7 @@ func SetQdrouterdDefaults(m *v1alpha1.Qdrouterd) bool {
 	return requestCert
 }
 
-func ConfigForQdrouterd(m *v1alpha1.Qdrouterd) string {
+func ConfigForQdr(m *v1alpha1.Qdr) string {
 	config := `
 router {
     mode: {{.DeploymentPlan.Role}}
@@ -316,7 +316,7 @@ connector {
 }
 {{- end}}`
 	var buff bytes.Buffer
-	qdrouterdconfig := template.Must(template.New("qdrouterdconfig").Parse(config))
-	qdrouterdconfig.Execute(&buff, m.Spec)
+	qdrconfig := template.Must(template.New("qdrconfig").Parse(config))
+	qdrconfig.Execute(&buff, m.Spec)
 	return buff.String()
 }

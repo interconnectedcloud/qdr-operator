@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"strconv"
 
-	v1alpha1 "github.com/interconnectedcloud/qdrouterd-operator/pkg/apis/interconnectedcloud/v1alpha1"
-	"github.com/interconnectedcloud/qdrouterd-operator/pkg/constants"
+	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
+	"github.com/interconnectedcloud/qdr-operator/pkg/constants"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
@@ -27,7 +27,7 @@ func containerPortsForListeners(listeners []v1alpha1.Listener) []corev1.Containe
 	return ports
 }
 
-func containerPortsForQdrouterd(m *v1alpha1.Qdrouterd) []corev1.ContainerPort {
+func containerPortsForQdr(m *v1alpha1.Qdr) []corev1.ContainerPort {
 	ports := containerPortsForListeners(m.Spec.Listeners)
 	ports = append(ports, containerPortsForListeners(m.Spec.InterRouterListeners)...)
 	return ports
@@ -41,7 +41,7 @@ func nameForListener(l *v1alpha1.Listener) string {
 	}
 }
 
-func containerEnvVarsForQdrouterd(m *v1alpha1.Qdrouterd) []corev1.EnvVar {
+func containerEnvVarsForQdr(m *v1alpha1.Qdr) []corev1.EnvVar {
 	envVars := []corev1.EnvVar{}
 	envVars = append(envVars, corev1.EnvVar{Name: "APPLICATION_NAME", Value: m.Name})
 	envVars = append(envVars, corev1.EnvVar{Name: "QDROUTERD_CONF", Value: "/etc/qpid-dispatch/qdrouterd.conf.template"})
@@ -64,7 +64,7 @@ func containerEnvVarsForQdrouterd(m *v1alpha1.Qdrouterd) []corev1.EnvVar {
 	return envVars
 }
 
-func CheckQdrouterdContainer(desired *corev1.Container, actual *corev1.Container) bool {
+func CheckQdrContainer(desired *corev1.Container, actual *corev1.Container) bool {
 	if desired.Image != actual.Image {
 		return false
 	}
@@ -80,7 +80,7 @@ func CheckQdrouterdContainer(desired *corev1.Container, actual *corev1.Container
 	return true
 }
 
-func ContainerForQdrouterd(m *v1alpha1.Qdrouterd) corev1.Container {
+func ContainerForQdr(m *v1alpha1.Qdr) corev1.Container {
 	var image string
 	if m.Spec.DeploymentPlan.Image != "" {
 		image = m.Spec.DeploymentPlan.Image
@@ -98,8 +98,8 @@ func ContainerForQdrouterd(m *v1alpha1.Qdrouterd) corev1.Container {
 				},
 			},
 		},
-		Env:   containerEnvVarsForQdrouterd(m),
-		Ports: containerPortsForQdrouterd(m),
+		Env:   containerEnvVarsForQdr(m),
+		Ports: containerPortsForQdr(m),
 	}
 	volumeMounts := []corev1.VolumeMount{}
 	volumeMounts = append(volumeMounts, corev1.VolumeMount{

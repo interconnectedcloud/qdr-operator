@@ -5,7 +5,7 @@
 
 if ! whoami &>/dev/null; then
   if [ -w /etc/passwd ]; then
-    echo "${USER_NAME:-qdrouterd-operator}:x:$(id -u):$(id -g):${USER_NAME:-qdrouterd-operator} user:${HOME}:/sbin/nologin" >> /etc/passwd
+    echo "${USER_NAME:-qdr-operator}:x:$(id -u):$(id -g):${USER_NAME:-qdr-operator} user:${HOME}:/sbin/nologin" >> /etc/passwd
   fi
 fi
 
