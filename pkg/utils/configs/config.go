@@ -96,7 +96,7 @@ func ConfigForQdr(m *v1alpha1.Qdr) string {
 	config := `
 router {
     mode: {{.DeploymentPlan.Role}}
-    id: Router.${HOSTNAME}
+    id: ${HOSTNAME}
 }
 {{range .Listeners}}
 listener {
