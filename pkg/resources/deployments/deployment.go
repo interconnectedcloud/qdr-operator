@@ -18,6 +18,17 @@ func labelsForQdr(name string) map[string]string {
 	}
 }
 
+func CheckDeployedContainer(actual *corev1.PodTemplateSpec, cr *v1alpha1.Qdr) bool {
+	desired := containers.ContainerForQdr(cr)
+	if len(actual.Spec.Containers) != 1 || !containers.CheckQdrContainer(&desired, &actual.Spec.Containers[0]) {
+		actual.Spec.Containers = []corev1.Container{desired}
+		return false
+	}
+	return true
+}
+
+
+
 // Create NewDeploymentForCR method to create deployment
 func NewDeploymentForCR(m *v1alpha1.Qdr) *appsv1.Deployment {
 	labels := selectors.LabelsForQdr(m.Name)
@@ -70,16 +81,6 @@ func NewDeploymentForCR(m *v1alpha1.Qdr) *appsv1.Deployment {
 		},
 	}
 	volumes := []corev1.Volume{}
-	volumes = append(volumes, corev1.Volume{
-		Name: m.Name,
-		VolumeSource: corev1.VolumeSource{
-			ConfigMap: &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: m.Name,
-				},
-			},
-		},
-	})
 	for _, profile := range m.Spec.SslProfiles {
 		if len(profile.Credentials) > 0 {
 			volumes = append(volumes, corev1.Volume{
@@ -136,16 +137,6 @@ func NewDaemonSetForCR(m *v1alpha1.Qdr) *appsv1.DaemonSet {
 		},
 	}
 	volumes := []corev1.Volume{}
-	volumes = append(volumes, corev1.Volume{
-		Name: m.Name,
-		VolumeSource: corev1.VolumeSource{
-			ConfigMap: &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: m.Name,
-				},
-			},
-		},
-	})
 	for _, profile := range m.Spec.SslProfiles {
 		if len(profile.Credentials) > 0 {
 			volumes = append(volumes, corev1.Volume{

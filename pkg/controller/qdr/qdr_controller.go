@@ -7,7 +7,6 @@ import (
 
 	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/pkg/resources/certificates"
-	"github.com/interconnectedcloud/qdr-operator/pkg/resources/configmaps"
 	"github.com/interconnectedcloud/qdr-operator/pkg/resources/deployments"
 	"github.com/interconnectedcloud/qdr-operator/pkg/resources/ingresses"
 	"github.com/interconnectedcloud/qdr-operator/pkg/resources/rolebindings"
@@ -394,25 +393,6 @@ func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, e
 		}
 	}
 
-	// Check if configmap already exists, if not create a new one
-	cfgmapFound := &corev1.ConfigMap{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, cfgmapFound)
-	if err != nil && errors.IsNotFound(err) {
-		// Define a new configmap
-		cfgmap := configmaps.NewConfigMapForCR(instance)
-		controllerutil.SetControllerReference(instance, cfgmap, r.scheme)
-		reqLogger.Info("Creating a new ConfigMap", "ConfigMap", cfgmap)
-		err = r.client.Create(context.TODO(), cfgmap)
-		if err != nil {
-			reqLogger.Error(err, "Failed to create new ConfigMap")
-			return reconcile.Result{}, err
-		}
-		return reconcile.Result{Requeue: true}, nil
-	} else if err != nil {
-		reqLogger.Error(err, "Failed to get ConfigMap")
-		return reconcile.Result{}, err
-	}
-
 	// Check if the deployment already exists, if not create a new one
 	if instance.Spec.DeploymentPlan.Placement == v1alpha1.PlacementAny ||
 		instance.Spec.DeploymentPlan.Placement == v1alpha1.PlacementAntiAffinity {
@@ -464,6 +444,20 @@ func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, e
 			instance.Status.PodNames = instance.Status.PodNames[:0]
 			r.client.Status().Update(context.TODO(), instance)
 			return reconcile.Result{Requeue: true}, nil
+		} else if !deployments.CheckDeployedContainer(&depFound.Spec.Template, instance) {
+			reqLogger.Info("Container config has changed")
+			ct := v1alpha1.QdrConditionProvisioning
+			r.client.Update(context.TODO(), depFound)
+			// update status
+			condition := v1alpha1.QdrCondition{
+				Type:           ct,
+				Reason:         "Configuration changed",
+				TransitionTime: metav1.Now(),
+			}
+			instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
+			instance.Status.PodNames = instance.Status.PodNames[:0]
+			r.client.Status().Update(context.TODO(), instance)
+			return reconcile.Result{Requeue: true}, nil
 		}
 	} else if instance.Spec.DeploymentPlan.Placement == v1alpha1.PlacementEvery {
 		dsFound := &appsv1.DaemonSet{}
@@ -491,6 +485,20 @@ func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, e
 		} else if err != nil {
 			reqLogger.Error(err, "Failed to get DaemonSet")
 			return reconcile.Result{}, err
+		} else if !deployments.CheckDeployedContainer(&dsFound.Spec.Template, instance) {
+			reqLogger.Info("Container config has changed")
+			ct := v1alpha1.QdrConditionProvisioning
+			r.client.Update(context.TODO(), dsFound)
+			// update status
+			condition := v1alpha1.QdrCondition{
+				Type:           ct,
+				Reason:         "Configuration changed",
+				TransitionTime: metav1.Now(),
+			}
+			instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
+			instance.Status.PodNames = instance.Status.PodNames[:0]
+			r.client.Status().Update(context.TODO(), instance)
+			return reconcile.Result{Requeue: true}, nil
 		}
 	} //end of placement is every
 
