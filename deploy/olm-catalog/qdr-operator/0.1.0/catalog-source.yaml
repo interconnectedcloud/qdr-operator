@@ -13,7 +13,7 @@ items:
           metadata:
             annotations:
               alm-examples: >-
-                [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Qdr","metadata":{"name":"amq-interconnect"},"spec":{"count":2,"deploymentMode": "lbfrontend","image":"quay.io/interconnectedcloud/qdrouterd:1.6.0"}}]
+                [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Qdr","metadata":{"name":"amq-interconnect"},"spec":{"deploymentPlan":{"size":2,"role":"interior","placement":"Any","image":"quay.io/interconnectedcloud/qdrouterd:1.6.0"}}}]
               capabilities: Basic Install
               categories: Messaging
             name: qdr-operator.v0.1.0
@@ -93,8 +93,65 @@ items:
                   displayName: Conditions
                   path: conditions
             description: |
-              The qdr Operator creates and maintains interior mesh or edge
-              deployments on kubernetes and OpenShift.
+          
+              An operator for managing Layer 7 (e.g. Application Layer) addressing and routing within and across [Kubernetes](https://kubernetes.io/) or
+              [OpenShift](https://www.openshift.com/) clusters.
+          
+              This operator provides a `Qdr` [Custom Resource Definition](https://kubernetes.io/docs/tasks/access-kubernetes-api/extend-api-custom-resource-definitions/)
+              (CRD) that describes a deployment of [Apache Qpid Dispatch Router](https://qpid.apache.org/components/dispatch-router/index.html) allowing developers to expertly
+              deploy qdr routers for their infrastructure and middle-ware oriented  messaging requirements. The number of messaging routers, the deployment topology, address
+              semantics and other desired options can be specified through the CRD.
+          
+              ### Introduction
+              The qdr is a lightweight [AMQP 1.0](https://www.amqp.org/) message router for building high performance, large scale and highly resilient messaging networks
+              for hybrid cloud and IoT/edge deployments. The qdr acts as a "bump in the wire" for the AMQP 1.0 protocol and transparently learns the addresses of messaging
+              endpoints (e.g. target subscribers) in order to flexibly route messages between any AMQP 1.0 enabled endpoints including clients, servers and
+              messaging brokers.
+          
+              ### Core Capabilities
+          
+              The qdr provides the following core capabilities:
+          
+              * High throughput, low latency, shortest path  message forwarding based on layer 7 address routing mechanisms
+          
+              * `Interior` mode deployments for any arbitrary topology of geographically distributed and interconnected qdrs
+          
+              * `Edge` mode deployments for extremely large scale device endpoint connectivity
+          
+              * Automatic message traffic re-routing when network topology changes (e.g. resiliency without restrictions)
+          
+              * Flexible addressing schemes and delivery semantics (e.g. anycast, multicast, closest, balanced)
+          
+              * Integrated management with full support for the draft AMQP management specification
+          
+              * Full featured security capabilities for authentication, authorization and policy based resource access control
+          
+              ### Operator Features
+          
+              * **Manages the qdr Deployment** - Flexible Deployment Plans for `interior` and `edge` mode scenarios including all dependent resources
+          
+              * **Placement Directives** - Simplifies the deployment resource type and pod scheduling with deployment or daemon set and anti-affinity
+          
+              * **Connectivity Configuration Defaults** - Automatically generates configuration defaults for listeners, connectors and ssl setup
+          
+              * **Exposes the Service** - Integrated management of OpenShift Route resource for exposed listener services for client, inter-router and edge communications
+          
+              * **Manages Certificates** - Creates and manages certificates through integration with [jetstack cert-manager](https://github.com/jetstack/cert-manager)
+          
+              ### Troubleshooting
+          
+              Once you have created the qdr deployment, its operation can be checked to ensure it is working as expected.
+          
+              * Select the qdr instance to see details
+          
+              * Select the Deployment (or DaemonSet) instance to see details
+          
+              * Select an individual pod for the Deployment (or DaemonSet) to see the details
+          
+              * Select any Route created for exposed services to see the details
+          
+              * Execute a series of `qdstat` commands to verify setup and connectivity
+          
             displayName: Qdr Operator
             install:
               spec:
@@ -125,7 +182,7 @@ items:
                                 fieldPath: metadata.name
                           - name: OPERATOR_NAME
                             value: qdr-operator
-                          image: quay.io/interconnectedcloud/qdr-operator
+                          image: quay.io/myeung/qdr-operator
                           imagePullPolicy: Always
                           name: qdr-operator
                           ports:

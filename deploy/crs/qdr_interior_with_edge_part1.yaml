@@ -1,0 +1,29 @@
+apiVersion: interconnectedcloud.github.io/v1alpha1
+kind: Qdr
+metadata:
+  name: interior-interconnect
+spec:
+  # Add fields here
+  deploymentPlan:
+    image: quay.io/interconnectedcloud/qdrouterd:1.6.0
+    role: interior
+    size: 3
+    placement: Any
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+  interRouterListeners:
+    - host: 0.0.0.0
+      port: 55672
+  edgeListeners:
+    - host: 0.0.0.0
+      port: 45672
+      expose: true
+  addresses:
+    - prefix: balanced
+      distribution: balanced
+    - prefix: closest
+      distribution: closest
+    - prefix: multicast
+      distribution: multicast
