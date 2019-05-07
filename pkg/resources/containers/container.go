@@ -2,11 +2,11 @@ package containers
 
 import (
 	"os"
-	"reflect"
 	"strconv"
 
 	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/pkg/constants"
+	"github.com/interconnectedcloud/qdr-operator/pkg/utils/configs"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
@@ -44,7 +44,7 @@ func nameForListener(l *v1alpha1.Listener) string {
 func containerEnvVarsForQdr(m *v1alpha1.Qdr) []corev1.EnvVar {
 	envVars := []corev1.EnvVar{}
 	envVars = append(envVars, corev1.EnvVar{Name: "APPLICATION_NAME", Value: m.Name})
-	envVars = append(envVars, corev1.EnvVar{Name: "QDROUTERD_CONF", Value: "/etc/qpid-dispatch/qdrouterd.conf.template"})
+	envVars = append(envVars, corev1.EnvVar{Name: "QDROUTERD_CONF", Value: configs.ConfigForQdr(m)})
 	envVars = append(envVars, corev1.EnvVar{Name: "POD_COUNT", Value: strconv.Itoa(int(m.Spec.DeploymentPlan.Size))})
 	envVars = append(envVars, corev1.EnvVar{Name: "POD_NAMESPACE", ValueFrom: &corev1.EnvVarSource{
 		FieldRef: &corev1.ObjectFieldSelector{
@@ -64,17 +64,26 @@ func containerEnvVarsForQdr(m *v1alpha1.Qdr) []corev1.EnvVar {
 	return envVars
 }
 
+func findEnvVar(env []corev1.EnvVar, name string) *corev1.EnvVar {
+	for _, v := range env {
+		if v.Name == name {
+			return &v
+		}
+	}
+	return nil
+}
+
+func checkQdrConfig(desired []corev1.EnvVar, actual []corev1.EnvVar) bool {
+	a := findEnvVar(desired, "QDROUTERD_CONF")
+	b := findEnvVar(actual, "QDROUTERD_CONF")
+	return (a == nil && b == nil) || a.Value == b.Value
+}
+
 func CheckQdrContainer(desired *corev1.Container, actual *corev1.Container) bool {
 	if desired.Image != actual.Image {
 		return false
 	}
-	if !reflect.DeepEqual(desired.Env, actual.Env) {
-		return false
-	}
-	if !reflect.DeepEqual(desired.Ports, actual.Ports) {
-		return false
-	}
-	if !reflect.DeepEqual(desired.VolumeMounts, actual.VolumeMounts) {
+	if !checkQdrConfig(desired.Env, actual.Env) {
 		return false
 	}
 	return true
@@ -102,10 +111,6 @@ func ContainerForQdr(m *v1alpha1.Qdr) corev1.Container {
 		Ports: containerPortsForQdr(m),
 	}
 	volumeMounts := []corev1.VolumeMount{}
-	volumeMounts = append(volumeMounts, corev1.VolumeMount{
-		Name:      m.Name,
-		MountPath: "/etc/qpid-dispatch/",
-	})
 	if m.Spec.SslProfiles != nil && len(m.Spec.SslProfiles) > 0 {
 		for _, profile := range m.Spec.SslProfiles {
 			if len(profile.Credentials) > 0 {
