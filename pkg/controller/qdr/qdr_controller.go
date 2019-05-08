@@ -221,7 +221,11 @@ func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, e
 		r.client.Status().Update(context.TODO(), instance)
 	}
 
-	requestCert := configs.SetQdrDefaults(instance)
+	requestCert, updateDefaults := configs.SetQdrDefaults(instance)
+	if updateDefaults {
+		reqLogger.Info("Updating qdr instance defaults")
+		r.client.Update(context.TODO(), instance)
+	}
 
 	// Check if role already exists, if not create a new one
 	roleFound := &rbacv1.Role{}
