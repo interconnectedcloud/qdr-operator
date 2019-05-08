@@ -538,7 +538,7 @@ func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, e
 					// create the route but issue warning
 					reqLogger.Info("Warning an exposed listener should be http or ssl enabled", "listener", listener)
 				}
-				route := routes.NewRouteForCR(instance, target)
+				route := routes.NewRouteForCR(instance, target, listener.SslProfile != "")
 				controllerutil.SetControllerReference(instance, route, r.scheme)
 				reqLogger.Info("Creating route for qdr deployment", "listener", listener)
 				err = r.client.Create(context.TODO(), route)

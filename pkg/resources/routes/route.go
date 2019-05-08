@@ -9,7 +9,7 @@ import (
 )
 
 // Create newRouteForCR method to create exposed route
-func NewRouteForCR(m *v1alpha1.Qdr, target string) *routev1.Route {
+func NewRouteForCR(m *v1alpha1.Qdr, target string, tls bool) *routev1.Route {
 	labels := selectors.LabelsForQdr(m.Name)
 	route := &routev1.Route{
 		TypeMeta: metav1.TypeMeta{
@@ -26,15 +26,22 @@ func NewRouteForCR(m *v1alpha1.Qdr, target string) *routev1.Route {
 			Port: &routev1.RoutePort{
 				TargetPort: intstr.FromString(target),
 			},
-			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationPassthrough,
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyNone,
-			},
 			To: routev1.RouteTargetReference{
 				Kind: "Service",
 				Name: m.Name,
 			},
 		},
+	}
+	if tls {
+		route.Spec.TLS = &routev1.TLSConfig{
+			Termination:                   routev1.TLSTerminationPassthrough,
+			InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyNone,
+		}
+	} else {
+		route.Spec.TLS = &routev1.TLSConfig{
+			Termination:                   routev1.TLSTerminationEdge,
+			InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow,
+		}
 	}
 	return route
 }
