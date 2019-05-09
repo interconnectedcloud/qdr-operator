@@ -62,9 +62,9 @@ func SetQdrDefaults(m *v1alpha1.Qdr) (bool, bool) {
 	}
 	if m.Spec.DeploymentPlan.Role == "" {
 		m.Spec.DeploymentPlan.Role = v1alpha1.RouterRoleInterior
-		m.Spec.DeploymentPlan.Placement = v1alpha1.PlacementAny
 		updateDefaults = true
-	} else if m.Spec.DeploymentPlan.Placement == "" {
+	}
+	if m.Spec.DeploymentPlan.Placement == "" {
 		m.Spec.DeploymentPlan.Placement = v1alpha1.PlacementAny
 		updateDefaults = true
 	}
