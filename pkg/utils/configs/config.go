@@ -52,8 +52,23 @@ func GetQdrExposedListeners(m *v1alpha1.Qdr) []v1alpha1.Listener {
 	return listeners
 }
 
-func SetQdrDefaults(m *v1alpha1.Qdr) bool {
+func SetQdrDefaults(m *v1alpha1.Qdr) (bool, bool) {
 	requestCert := false
+	updateDefaults := false
+
+	if m.Spec.DeploymentPlan.Size == 0 {
+		m.Spec.DeploymentPlan.Size = 1
+		updateDefaults = true
+	}
+	if m.Spec.DeploymentPlan.Role == "" {
+		m.Spec.DeploymentPlan.Role = v1alpha1.RouterRoleInterior
+		updateDefaults = true
+	}
+	if m.Spec.DeploymentPlan.Placement == "" {
+		m.Spec.DeploymentPlan.Placement = v1alpha1.PlacementAny
+		updateDefaults = true
+	}
+
 	if len(m.Spec.Listeners) == 0 {
 		m.Spec.Listeners = append(m.Spec.Listeners, v1alpha1.Listener{
 			Port: 5672,
@@ -63,23 +78,27 @@ func SetQdrDefaults(m *v1alpha1.Qdr) bool {
 			Port: constants.HttpLivenessPort,
 			Http: true,
 		})
+		updateDefaults = true
 	}
 	if m.Spec.DeploymentPlan.Role == v1alpha1.RouterRoleInterior {
 		if len(m.Spec.InterRouterListeners) == 0 {
 			m.Spec.InterRouterListeners = append(m.Spec.InterRouterListeners, v1alpha1.Listener{
 				Port: 55672,
 			})
+			updateDefaults = true
 		}
 		if len(m.Spec.EdgeListeners) == 0 {
 			m.Spec.EdgeListeners = append(m.Spec.EdgeListeners, v1alpha1.Listener{
 				Port: 45672,
 			})
+			updateDefaults = true
 		}
 	}
 	if !isDefaultSslProfileDefined(m) && isDefaultSslProfileUsed(m) {
 		m.Spec.SslProfiles = append(m.Spec.SslProfiles, v1alpha1.SslProfile{
 			Name: "default",
 		})
+		updateDefaults = true
 		requestCert = true
 	}
 	for i := range m.Spec.SslProfiles {
@@ -89,7 +108,7 @@ func SetQdrDefaults(m *v1alpha1.Qdr) bool {
 			requestCert = true
 		}
 	}
-	return requestCert
+	return requestCert, updateDefaults
 }
 
 func ConfigForQdr(m *v1alpha1.Qdr) string {
