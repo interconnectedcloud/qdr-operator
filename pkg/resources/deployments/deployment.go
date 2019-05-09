@@ -27,8 +27,6 @@ func CheckDeployedContainer(actual *corev1.PodTemplateSpec, cr *v1alpha1.Qdr) bo
 	return true
 }
 
-
-
 // Create NewDeploymentForCR method to create deployment
 func NewDeploymentForCR(m *v1alpha1.Qdr) *appsv1.Deployment {
 	labels := selectors.LabelsForQdr(m.Name)

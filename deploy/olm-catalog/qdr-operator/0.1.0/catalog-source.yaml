@@ -13,7 +13,7 @@ items:
           metadata:
             annotations:
               alm-examples: >-
-                [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Qdr","metadata":{"name":"amq-interconnect"},"spec":{"count":2,"deploymentMode": "lbfrontend","image":"quay.io/interconnectedcloud/qdrouterd:1.6.0"}}]
+                [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Qdr","metadata":{"name":"amq-interconnect"},"spec":{"deploymentPlan":{"size":2,"role":"interior","placement":"Any","image":"quay.io/interconnectedcloud/qdrouterd:1.6.0"}}}]
               capabilities: Basic Install
               categories: Messaging
             name: qdr-operator.v0.1.0
@@ -68,7 +68,7 @@ items:
                   displayName: Addresses
                   path: addresses
                 - description: Auto links address configuration
-                  displayName: AutLinks
+                  displayName: AutoLinks
                   path: autoLinks
                 - description: Link routes address configuration
                   displayName: LinkRoutes
@@ -83,7 +83,7 @@ items:
                   displayName: EdgeConnectors
                   path: edgeConnectors
                 statusDescriptors:
-                - description: The current revision of the qdr cluster
+                - description: The current revision of the Qdr cluster
                   displayName: Revision Number
                   path: revNumber
                 - description: The current pods
@@ -93,8 +93,51 @@ items:
                   displayName: Conditions
                   path: conditions
             description: |
-              The qdr Operator creates and maintains interior mesh or edge
-              deployments on kubernetes and OpenShift.
+          
+              The Qdr Operator is a lightweight [AMQP 1.0](https://www.amqp.org/) message router for building large, highly resilient messaging networks for hybrid cloud and IoT/edge deployments. Qdr transparently learns the addresses of messaging endpoints (such as clients, servers, and message brokers) and flexibly routes messages between them.
+          
+              ### Core Capabilities
+          
+              * High throughput, low latency, shortest path message forwarding based on Layer 7 address routing mechanisms.
+          
+              * `Interior` mode deployments for any arbitrary topology of geographically-distributed and interconnected Qdrs.
+          
+              * `Edge` mode deployments for extremely large scale device endpoint connectivity.
+          
+              * Automatic message traffic re-routing when the network topology changes (resiliency without restrictions).
+          
+              * Flexible addressing schemes and delivery semantics (anycast, multicast, closest, balanced).
+          
+              * Integrated management with full support for the draft AMQP management specification.
+          
+              * Full-featured security capabilities for authentication, authorization, and policy-based resource access control.
+          
+              ### Operator Features
+          
+              * **Flexible deployment plans** - Configurable deployment plans are available for `interior` and `edge` mode scenarios. These plans include all dependent resources.
+          
+              * **Placement directives** - Directives are provided to control how the pods should be scheduled.
+          
+              * **Connectivity configuration defaults** - Configuration defaults are automatically generated for listeners, connectors, and SSL/TLS setup.
+          
+              * **Exposes the service** - Integrated management of OpenShift Routes for exposed listener services for client, inter-router, and edge communications.
+          
+              * **Security certificate management** - Certificates are created and managed through integration with [jetstack cert-manager](https://github.com/jetstack/cert-manager).
+          
+              ### Troubleshooting
+          
+              After deploying Qdr, check any of the following to verify that it is operating correctly:
+          
+              * The Qdr instance
+          
+              * The Deployment (or DaemonSet) instance
+          
+              * An individual pod for the Deployment (or DaemonSet)
+          
+              * A Route created for exposed services
+          
+              In addition, use `qdstat` commands to verify connectivity.
+          
             displayName: Qdr Operator
             install:
               spec:

@@ -1,0 +1,18 @@
+apiVersion: interconnectedcloud.github.io/v1alpha1
+kind: Qdr
+metadata:
+  name: interior-every-interconnect
+spec:
+  # Add fields here
+  deploymentPlan:
+    image: quay.io/interconnectedcloud/qdrouterd:1.6.0
+    role: interior
+    size: 3
+    placement: Every
+  addresses:
+    - prefix: balanced
+      distribution: balanced
+    - prefix: closest
+      distribution: closest
+    - prefix: multicast
+      distribution: multicast
