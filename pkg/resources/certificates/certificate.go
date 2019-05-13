@@ -3,8 +3,56 @@ package certificates
 import (
 	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	cmv1alpha1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
+	apiextv1b1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
+
+var (
+	certmgr_detected *bool
+	log              = logf.Log.WithName("certificates")
+)
+
+func DetectCertmgrIssuer() bool {
+	// find certmanager issuer crd
+	if certmgr_detected == nil {
+		iscm := detectCertmgr()
+		certmgr_detected = &iscm
+	}
+	return *certmgr_detected
+}
+
+func detectCertmgr() bool {
+	config, err := config.GetConfig()
+	if err != nil {
+		log.Error(err, "Error getting config: %v")
+		return false
+	}
+
+	// create a client set that includes crd schema
+	extClient, err := apiextclientset.NewForConfig(config)
+	if err != nil {
+		log.Error(err, "Error getting ext client set: %v")
+		return false
+	}
+
+	crdList := &apiextv1b1.CustomResourceDefinitionList{}
+	crdList, err = extClient.ApiextensionsV1beta1().CustomResourceDefinitions().List(metav1.ListOptions{})
+	if err != nil {
+		log.Error(err, "Error getting CustomResoruceDefinition list: %v")
+		return false
+	}
+
+	for _, crd := range crdList.Items {
+		if crd.Name == "issuers.certmanager.k8s.io" {
+			log.Info("Certmanager issuer detected")
+			return true
+		}
+	}
+	return false
+}
 
 func NewSelfSignedIssuerForCR(m *v1alpha1.Qdr) *cmv1alpha1.Issuer {
 	issuer := &cmv1alpha1.Issuer{
