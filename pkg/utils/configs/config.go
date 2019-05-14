@@ -121,7 +121,7 @@ func SetQdrDefaults(m *v1alpha1.Qdr) (bool, bool) {
 			requestCert = true
 		}
 	}
-	return requestCert, updateDefaults
+	return requestCert && certMgrPresent, updateDefaults
 }
 
 func ConfigForQdr(m *v1alpha1.Qdr) string {

@@ -38,19 +38,16 @@ func detectCertmgr() bool {
 		return false
 	}
 
-	crdList := &apiextv1b1.CustomResourceDefinitionList{}
-	crdList, err = extClient.ApiextensionsV1beta1().CustomResourceDefinitions().List(metav1.ListOptions{})
+	crd := &apiextv1b1.CustomResourceDefinition{}
+	crd, err = extClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get("issuers.certmanager.k8s.io", metav1.GetOptions{})
 	if err != nil {
-		log.Error(err, "Error getting CustomResoruceDefinition list: %v")
+		log.Error(err, "Error getting certmanager issuer crd: %v")
 		return false
+	} else {
+		log.Info("Detected certmanager issuer crd", "issuer", crd)
+		return true
 	}
 
-	for _, crd := range crdList.Items {
-		if crd.Name == "issuers.certmanager.k8s.io" {
-			log.Info("Certmanager issuer detected")
-			return true
-		}
-	}
 	return false
 }
 
