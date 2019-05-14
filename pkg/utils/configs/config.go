@@ -6,6 +6,7 @@ import (
 
 	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/pkg/constants"
+	"github.com/interconnectedcloud/qdr-operator/pkg/resources/certificates"
 )
 
 func isDefaultSslProfileDefined(m *v1alpha1.Qdr) bool {
@@ -55,6 +56,7 @@ func GetQdrExposedListeners(m *v1alpha1.Qdr) []v1alpha1.Listener {
 func SetQdrDefaults(m *v1alpha1.Qdr) (bool, bool) {
 	requestCert := false
 	updateDefaults := false
+	certMgrPresent := certificates.DetectCertmgrIssuer()
 
 	if m.Spec.DeploymentPlan.Size == 0 {
 		m.Spec.DeploymentPlan.Size = 1
@@ -73,18 +75,29 @@ func SetQdrDefaults(m *v1alpha1.Qdr) (bool, bool) {
 		m.Spec.Listeners = append(m.Spec.Listeners, v1alpha1.Listener{
 			Port: 5672,
 		}, v1alpha1.Listener{
-			Port: 5671,
-		}, v1alpha1.Listener{
 			Port: constants.HttpLivenessPort,
 			Http: true,
 		})
+		if certMgrPresent {
+			m.Spec.Listeners = append(m.Spec.Listeners, v1alpha1.Listener{
+				Port:       5671,
+				SslProfile: "default",
+			})
+		}
 		updateDefaults = true
 	}
 	if m.Spec.DeploymentPlan.Role == v1alpha1.RouterRoleInterior {
 		if len(m.Spec.InterRouterListeners) == 0 {
-			m.Spec.InterRouterListeners = append(m.Spec.InterRouterListeners, v1alpha1.Listener{
-				Port: 55672,
-			})
+			if certMgrPresent {
+				m.Spec.InterRouterListeners = append(m.Spec.InterRouterListeners, v1alpha1.Listener{
+					Port:       55671,
+					SslProfile: "default",
+				})
+			} else {
+				m.Spec.InterRouterListeners = append(m.Spec.InterRouterListeners, v1alpha1.Listener{
+					Port: 55672,
+				})
+			}
 			updateDefaults = true
 		}
 		if len(m.Spec.EdgeListeners) == 0 {
@@ -108,7 +121,7 @@ func SetQdrDefaults(m *v1alpha1.Qdr) (bool, bool) {
 			requestCert = true
 		}
 	}
-	return requestCert, updateDefaults
+	return requestCert && certMgrPresent, updateDefaults
 }
 
 func ConfigForQdr(m *v1alpha1.Qdr) string {
