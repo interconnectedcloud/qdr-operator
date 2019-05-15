@@ -3,7 +3,7 @@ kind: ClusterServiceVersion
 metadata:
   annotations:
     alm-examples: >-
-      [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Qdr","metadata":{"name":"amq-interconnect"},"spec":{"deploymentPlan":{"size":2,"role":"interior","placement":"Any","image":"quay.io/interconnectedcloud/qdrouterd:1.7.0"}}}]
+      [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Interconnect","metadata":{"name":"amq-interconnect"},"spec":{"deploymentPlan":{"size":2,"role":"interior","placement":"Any","image":"quay.io/interconnectedcloud/qdrouterd:1.7.0"}}}]
     capabilities: Basic Install
     categories: Messaging
   name: qdr-operator.v0.1.0
@@ -13,10 +13,10 @@ spec:
   customresourcedefinitions:
     owned:
     - version: v1alpha1
-      kind: Qdr
-      description: An instance of Qdr
-      displayName: Qdr
-      name: qdrs.interconnectedcloud.github.io
+      kind: Interconnect
+      description: An instance of Interconnect
+      displayName: Interconnect
+      name: interconnects.interconnectedcloud.github.io
       resources:
       - kind: Service
         version: v1
@@ -24,7 +24,7 @@ spec:
         version: v1
       - kind: ServiceAccount
         version: v1
-      - kind: qdrs
+      - kind: interconnects
         version: v1alpha1
       - kind: rolebindings
         version: v1
@@ -39,7 +39,7 @@ spec:
       - kind: secrets
         version: v1
       specDescriptors:
-      - description: The role and placement plan for the qdr deployment
+      - description: The role and placement plan for the interconnect deployment
         displayName: DeploymentPlan
         path: deploymentPlan
       - description: Listeners for incoming connections to the router
@@ -73,7 +73,7 @@ spec:
         displayName: EdgeConnectors
         path: edgeConnectors
       statusDescriptors:
-      - description: The current revision of the Qdr cluster
+      - description: The current revision of the Interconnect cluster
         displayName: Revision Number
         path: revNumber
       - description: The current pods
@@ -116,9 +116,9 @@ spec:
 
     ### Troubleshooting
 
-    After deploying Qdr, check any of the following to verify that it is operating correctly:
+    After deploying Interconnect, check any of the following to verify that it is operating correctly:
 
-    * The Qdr instance
+    * The Interconnect instance
 
     * The Deployment (or DaemonSet) instance
 

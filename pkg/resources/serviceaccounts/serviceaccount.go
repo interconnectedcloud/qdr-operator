@@ -7,7 +7,7 @@ import (
 )
 
 // Create NewServiceAccountForCR method to create serviceaccount
-func NewServiceAccountForCR(m *v1alpha1.Qdr) *corev1.ServiceAccount {
+func NewServiceAccountForCR(m *v1alpha1.Interconnect) *corev1.ServiceAccount {
 	serviceaccount := &corev1.ServiceAccount{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",

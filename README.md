@@ -4,14 +4,14 @@ A Kubernetes operator for managing Layer 7 (e.g. Application Layer) addressing a
 
 ## Introduction
 
-This operator provides a `Qdr` [Custom Resource Definition](https://kubernetes.io/docs/tasks/access-kubernetes-api/extend-api-custom-resource-definitions/)
+This operator provides an `Interconnect` [Custom Resource Definition](https://kubernetes.io/docs/tasks/access-kubernetes-api/extend-api-custom-resource-definitions/)
 (CRD) that describes a deployment of [Apache Qpid Dispatch Router](https://qpid.apache.org/components/dispatch-router/index.html) allowing developers to expertly
 deploy routers for their infrastructure and middle-ware oriented  messaging requirements. The number of messaging routers, the deployment topology, address
 semantics and other desired options can be specified through the CRD.
 
 ## Usage
 
-Deploy the Qdr Operator into the Kubernetes cluster where it will manage requests for the `Qdr` resource. The Qdr Operator will watch for create, update and delete resource requests and perform the necessary steps to ensure the present cluster state matches the desired state.
+Deploy the Qdr Operator into the Kubernetes cluster where it will manage requests for the `Interconnect` resource. The Qdr Operator will watch for create, update and delete resource requests and perform the necessary steps to ensure the present cluster state matches the desired state.
 
 ### Deploy Qdr Operator
 
@@ -32,10 +32,10 @@ $ kubectl create -f deploy/role.yaml
 $ kubectl create -f deploy/role_binding.yaml
 ```
 
-Deploy the CRD to the cluster that defines the Qdr resource.
+Deploy the CRD to the cluster that defines the Interconnect resource.
 
 ```
-$ kubectl create -f deploy/crds/interconnectedcloud_v1alpha1_qdr_crd.yaml
+$ kubectl create -f deploy/crds/interconnectedcloud_v1alpha1_interconnect_crd.yaml
 ```
 
 Next, deploy the operator into the cluster.
@@ -62,31 +62,31 @@ You will be able to confirm that the new CRD has been registered in the cluster 
 
 ```
 $ kubectl get crd
-$ kubectl describe crd qdrs.interconnectedcloud.github.io
+$ kubectl describe crd interconnects.interconnectedcloud.github.io
 ```
 
-To create a router deployment, you must create a `Qdr` resource representing the desired specification of the deployment. For example, to create a 3-node router mesh deployment you may run:
+To create a router deployment, you must create a `Interconnect` resource representing the desired specification of the deployment. For example, to create a 3-node router mesh deployment you may run:
 
 ```console
 $ cat <<EOF | kubectl create -f -
 apiVersion: interconnectedcloud.github.io/v1alpha1
-kind: Qdr
+kind: Interconnect
 metadata:
   name: example-interconnect
 spec:
   # Add fields here
   deploymentPlan:
-    image: quay.io/interconnectedcloud/qdrouterd:1.6.0
+    image: quay.io/interconnectedcloud/qdrouterd:1.7.0
     role: interior
     size: 3
     placement: Any
 EOF
 ```
 
-The operator will create a deployment of three router instances, all connected together with default address semantics. It will also create a service through which the *interior* router mesh can be accessed. It will configure a default set of *listeners* and *connectors* as described below. You will be able to confirm that the instance has been created in the cluster and you can review its details. To view the Qdr instance, the deployment it manages and the associated pods that are deployed:
+The operator will create a deployment of three router instances, all connected together with default address semantics. It will also create a service through which the *interior* router mesh can be accessed. It will configure a default set of *listeners* and *connectors* as described below. You will be able to confirm that the instance has been created in the cluster and you can review its details. To view the Interconnect instance, the deployment it manages and the associated pods that are deployed:
 
 ```
-$ kubectl describe qdr example-interconnect
+$ kubectl describe interconnect example-interconnect
 $ kubectl describe deploy example-interconnect
 $ kubectl describe svc example-interconnect
 $ kubectl get pods -o yaml
@@ -94,7 +94,7 @@ $ kubectl get pods -o yaml
 
 ### Deployment Plan
 
-The CRD *Deployment Plan* defines the attributes for a Qdr instance.
+The CRD *Deployment Plan* defines the attributes for an Interconnect instance.
 
 #### Role and Placement
 
@@ -168,7 +168,7 @@ Ensure the service account, role, role bindings and CRD are added to  the local 
 $ kubectl create -f deploy/service_account.yaml
 $ kubectl create -f deploy/role.yaml
 $ kubectl create -f deploy/role_binding.yaml
-$ kubectl create -f deploy/crds/interconnectedcloud_v1alpha1_qdr_crd.yaml
+$ kubectl create -f deploy/crds/interconnectedcloud_v1alpha1_interconnect_crd.yaml
 ```
 
 Start the operator locally for development.
@@ -177,17 +177,17 @@ Start the operator locally for development.
 $ operator-sdk up local
 ```
 
-Create a minimal Qdr resource to observe and test your changes.
+Create a minimal Interconnect resource to observe and test your changes.
 
 ```console
 $ cat <<EOF | kubectl create -f -
 apiVersion: interconnectedcloud.github.io/v1alpha1
-kind: Qdr
+kind: Interconnect
 metadata:
   name: example-interconnect
 spec:
   deploymentPlan:
-    image: quay.io/interconnectedcloud/qdrouterd:1.6.0
+    image: quay.io/interconnectedcloud/qdrouterd:1.7.0
     role: interior
     size: 3
     placement: Any

@@ -11,12 +11,12 @@ import (
 )
 
 // Create newIngressForCR method to create exposed ingress
-func NewIngressForCR(m *v1alpha1.Qdr, listener v1alpha1.Listener) *extv1b1.Ingress {
+func NewIngressForCR(m *v1alpha1.Interconnect, listener v1alpha1.Listener) *extv1b1.Ingress {
 	target := listener.Name
 	if target == "" {
 		target = "port-" + strconv.Itoa(int(listener.Port))
 	}
-	labels := selectors.LabelsForQdr(m.Name)
+	labels := selectors.LabelsForInterconnect(m.Name)
 	ingress := &extv1b1.Ingress{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",

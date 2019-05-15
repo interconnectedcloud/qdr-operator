@@ -1,4 +1,4 @@
-package qdr
+package interconnect
 
 import (
 	"context"
@@ -38,11 +38,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_qdr")
+var log = logf.Log.WithName("controller_interconnect")
 
 const maxConditions = 6
 
-// Add creates a new Qdr Controller and adds it to the Manager. The Manager will set fields on the Controller
+// Add creates a new Interconnect Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr))
@@ -59,104 +59,104 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 		utilruntime.Must(routev1.AddToScheme(scheme))
 		utilruntime.Must(scheme.SetVersionPriority(routev1.SchemeGroupVersion))
 	}
-	return &ReconcileQdr{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileInterconnect{client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
-	c, err := controller.New("qdr-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("interconnect-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to primary resource Qdr
-	err = c.Watch(&source.Kind{Type: &v1alpha1.Qdr{}}, &handler.EnqueueRequestForObject{})
+	// Watch for changes to primary resource Interconnect
+	err = c.Watch(&source.Kind{Type: &v1alpha1.Interconnect{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to secondary resource Deployment and requeue the owner Qdr
+	// Watch for changes to secondary resource Deployment and requeue the owner Interconnect
 	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1alpha1.Qdr{},
+		OwnerType:    &v1alpha1.Interconnect{},
 	})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to secondary resource Service and requeue the owner Qdr
+	// Watch for changes to secondary resource Service and requeue the owner Interconnect
 	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1alpha1.Qdr{},
+		OwnerType:    &v1alpha1.Interconnect{},
 	})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to secondary resource ServiceAccount and requeue the owner Qdr
+	// Watch for changes to secondary resource ServiceAccount and requeue the owner Interconnect
 	err = c.Watch(&source.Kind{Type: &corev1.ServiceAccount{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1alpha1.Qdr{},
+		OwnerType:    &v1alpha1.Interconnect{},
 	})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to secondary resource RoleBinding and requeue the owner Qdr
+	// Watch for changes to secondary resource RoleBinding and requeue the owner Interconnect
 	err = c.Watch(&source.Kind{Type: &rbacv1.RoleBinding{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1alpha1.Qdr{},
+		OwnerType:    &v1alpha1.Interconnect{},
 	})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to secondary resource Secreet and requeue the owner Qdr
+	// Watch for changes to secondary resource Secreet and requeue the owner Interconnect
 	err = c.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1alpha1.Qdr{},
+		OwnerType:    &v1alpha1.Interconnect{},
 	})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to secondary resource ConfigMap and requeue the owner Qdr
+	// Watch for changes to secondary resource ConfigMap and requeue the owner Interconnect
 	err = c.Watch(&source.Kind{Type: &corev1.ConfigMap{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1alpha1.Qdr{},
+		OwnerType:    &v1alpha1.Interconnect{},
 	})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to secondary resource Pods and requeue the owner Qdr
+	// Watch for changes to secondary resource Pods and requeue the owner Interconnect
 	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1alpha1.Qdr{},
+		OwnerType:    &v1alpha1.Interconnect{},
 	})
 	if err != nil {
 		return err
 	}
 
 	// TODO(ansmith): Check if there is a cert-manager crd instance, handle err
-	// Watch for changes to secondary resource Issuer and requeue the owner Qdr
+	// Watch for changes to secondary resource Issuer and requeue the owner Interconnect
 	err = c.Watch(&source.Kind{Type: &cmv1alpha1.Issuer{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1alpha1.Qdr{},
+		OwnerType:    &v1alpha1.Interconnect{},
 	})
 
-	// Watch for changes to secondary resource Certificates and requeue the owner Qdr
+	// Watch for changes to secondary resource Certificates and requeue the owner Interconnect
 	err = c.Watch(&source.Kind{Type: &cmv1alpha1.Certificate{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1alpha1.Qdr{},
+		OwnerType:    &v1alpha1.Interconnect{},
 	})
 
 	if openshift.IsOpenShift() {
-		// Watch for changes to secondary resource Route and requeue the owner Qdr
+		// Watch for changes to secondary resource Route and requeue the owner Interconnect
 		err = c.Watch(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestForOwner{
 			IsController: true,
-			OwnerType:    &v1alpha1.Qdr{},
+			OwnerType:    &v1alpha1.Interconnect{},
 		})
 		if err != nil {
 			return err
@@ -166,17 +166,17 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
-var _ reconcile.Reconciler = &ReconcileQdr{}
+var _ reconcile.Reconciler = &ReconcileInterconnect{}
 
-// ReconcileQdr reconciles a Qdr object
-type ReconcileQdr struct {
+// ReconcileInterconnect reconciles a Interconnect object
+type ReconcileInterconnect struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
 	scheme *runtime.Scheme
 }
 
-func addCondition(conditions []v1alpha1.QdrCondition, condition v1alpha1.QdrCondition) []v1alpha1.QdrCondition {
+func addCondition(conditions []v1alpha1.InterconnectCondition, condition v1alpha1.InterconnectCondition) []v1alpha1.InterconnectCondition {
 	size := len(conditions) + 1
 	first := 0
 	if size > maxConditions {
@@ -185,17 +185,17 @@ func addCondition(conditions []v1alpha1.QdrCondition, condition v1alpha1.QdrCond
 	return append(conditions, condition)[first:size]
 }
 
-// Reconcile reads that state of the cluster for a Qdr object and makes changes based on the state read
-// and what is in the Qdr.Spec
+// Reconcile reads that state of the cluster for a Interconnect object and makes changes based on the state read
+// and what is in the Interconnect.Spec
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling Qdr")
+	reqLogger.Info("Reconciling Interconnect")
 
-	// Fetch the Qdr instance
-	instance := &v1alpha1.Qdr{}
+	// Fetch the Interconnect instance
+	instance := &v1alpha1.Interconnect{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -212,8 +212,8 @@ func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, e
 	if instance.Status.RevNumber == "" {
 		instance.Status.RevNumber = instance.ObjectMeta.ResourceVersion
 		// update status
-		condition := v1alpha1.QdrCondition{
-			Type:           v1alpha1.QdrConditionProvisioning,
+		condition := v1alpha1.InterconnectCondition{
+			Type:           v1alpha1.InterconnectConditionProvisioning,
 			Reason:         "provision spec to desired state",
 			TransitionTime: metav1.Now(),
 		}
@@ -221,9 +221,9 @@ func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, e
 		r.client.Status().Update(context.TODO(), instance)
 	}
 
-	requestCert, updateDefaults := configs.SetQdrDefaults(instance)
+	requestCert, updateDefaults := configs.SetInterconnectDefaults(instance)
 	if updateDefaults {
-		reqLogger.Info("Updating qdr instance defaults")
+		reqLogger.Info("Updating interconnect instance defaults")
 		r.client.Update(context.TODO(), instance)
 	}
 
@@ -413,8 +413,8 @@ func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, e
 				return reconcile.Result{}, err
 			}
 			// update status
-			condition := v1alpha1.QdrCondition{
-				Type:           v1alpha1.QdrConditionDeployed,
+			condition := v1alpha1.InterconnectCondition{
+				Type:           v1alpha1.InterconnectConditionDeployed,
 				Reason:         "deployment created",
 				TransitionTime: metav1.Now(),
 			}
@@ -432,14 +432,14 @@ func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, e
 		// delete to recreate pod instances
 		size := instance.Spec.DeploymentPlan.Size
 		if size != 0 && *depFound.Spec.Replicas != size {
-			ct := v1alpha1.QdrConditionScalingUp
+			ct := v1alpha1.InterconnectConditionScalingUp
 			if *depFound.Spec.Replicas > size {
-				ct = v1alpha1.QdrConditionScalingDown
+				ct = v1alpha1.InterconnectConditionScalingDown
 			}
 			*depFound.Spec.Replicas = size
 			r.client.Update(context.TODO(), depFound)
 			// update status
-			condition := v1alpha1.QdrCondition{
+			condition := v1alpha1.InterconnectCondition{
 				Type:           ct,
 				Reason:         "Instance spec count updated",
 				TransitionTime: metav1.Now(),
@@ -450,10 +450,10 @@ func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, e
 			return reconcile.Result{Requeue: true}, nil
 		} else if !deployments.CheckDeployedContainer(&depFound.Spec.Template, instance) {
 			reqLogger.Info("Container config has changed")
-			ct := v1alpha1.QdrConditionProvisioning
+			ct := v1alpha1.InterconnectConditionProvisioning
 			r.client.Update(context.TODO(), depFound)
 			// update status
-			condition := v1alpha1.QdrCondition{
+			condition := v1alpha1.InterconnectCondition{
 				Type:           ct,
 				Reason:         "Configuration changed",
 				TransitionTime: metav1.Now(),
@@ -477,8 +477,8 @@ func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, e
 				return reconcile.Result{}, err
 			}
 			// update status
-			condition := v1alpha1.QdrCondition{
-				Type:           v1alpha1.QdrConditionDeployed,
+			condition := v1alpha1.InterconnectCondition{
+				Type:           v1alpha1.InterconnectConditionDeployed,
 				Reason:         "daemonset created",
 				TransitionTime: metav1.Now(),
 			}
@@ -491,10 +491,10 @@ func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, e
 			return reconcile.Result{}, err
 		} else if !deployments.CheckDeployedContainer(&dsFound.Spec.Template, instance) {
 			reqLogger.Info("Container config has changed")
-			ct := v1alpha1.QdrConditionProvisioning
+			ct := v1alpha1.InterconnectConditionProvisioning
 			r.client.Update(context.TODO(), dsFound)
 			// update status
-			condition := v1alpha1.QdrCondition{
+			condition := v1alpha1.InterconnectCondition{
 				Type:           ct,
 				Reason:         "Configuration changed",
 				TransitionTime: metav1.Now(),
@@ -513,7 +513,7 @@ func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, e
 		// Define a new service
 		svc := services.NewServiceForCR(instance, requestCert)
 		controllerutil.SetControllerReference(instance, svc, r.scheme)
-		reqLogger.Info("Creating service for qdr deployment", "Service", svc)
+		reqLogger.Info("Creating service for interconnect deployment", "Service", svc)
 		err = r.client.Create(context.TODO(), svc)
 		if err != nil {
 			reqLogger.Error(err, "Failed to create new Service")
@@ -527,7 +527,7 @@ func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, e
 	}
 
 	// create route for exposed listeners
-	exposedListeners := configs.GetQdrExposedListeners(instance)
+	exposedListeners := configs.GetInterconnectExposedListeners(instance)
 	for _, listener := range exposedListeners {
 		target := listener.Name
 		if target == "" {
@@ -544,7 +544,7 @@ func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, e
 				}
 				route := routes.NewRouteForCR(instance, target, listener.SslProfile != "")
 				controllerutil.SetControllerReference(instance, route, r.scheme)
-				reqLogger.Info("Creating route for qdr deployment", "listener", listener)
+				reqLogger.Info("Creating route for interconnect deployment", "listener", listener)
 				err = r.client.Create(context.TODO(), route)
 				if err != nil {
 					reqLogger.Error(err, "Failed to create new Route")
@@ -567,7 +567,7 @@ func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, e
 				}
 				ingress := ingresses.NewIngressForCR(instance, listener)
 				controllerutil.SetControllerReference(instance, ingress, r.scheme)
-				reqLogger.Info("Creating Ingress for qdr deployment", "listener", listener)
+				reqLogger.Info("Creating Ingress for interconnect deployment", "listener", listener)
 				err = r.client.Create(context.TODO(), ingress)
 				if err != nil {
 					reqLogger.Error(err, "Failed to create new Ingress")
@@ -584,7 +584,7 @@ func (r *ReconcileQdr) Reconcile(request reconcile.Request) (reconcile.Result, e
 
 	// List the pods for this deployment
 	podList := &corev1.PodList{}
-	labelSelector := selectors.ResourcesByQdrName(instance.Name)
+	labelSelector := selectors.ResourcesByInterconnectName(instance.Name)
 	listOps := &client.ListOptions{Namespace: instance.Namespace, LabelSelector: labelSelector}
 	err = r.client.List(context.TODO(), listOps, podList)
 	if err != nil {

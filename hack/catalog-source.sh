@@ -7,7 +7,7 @@ else
 fi
 
 CSV=`cat deploy/olm-catalog/qdr-operator/0.1.0/qdr-operator.v0.1.0.clusterserviceversion.yaml | sed -e 's/^/          /' | sed '0,/ /{s/          /        - /}'`
-CRD=`cat deploy/crds/interconnectedcloud_v1alpha1_qdr_crd.yaml  | sed -e 's/^/          /' | sed '0,/ /{s/          /        - /}'`
+CRD=`cat deploy/crds/interconnectedcloud_v1alpha1_interconnect_crd.yaml  | sed -e 's/^/          /' | sed '0,/ /{s/          /        - /}'`
 PKG=`cat deploy/olm-catalog/qdr-operator/0.1.0/interconnectedcloud.package.yaml | sed -e 's/^/          /' | sed '0,/ /{s/          /        - /}'`
 
 cat << EOF > deploy/olm-catalog/qdr-operator/0.1.0/catalog-source.yaml

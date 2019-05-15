@@ -27,7 +27,7 @@ func containerPortsForListeners(listeners []v1alpha1.Listener) []corev1.Containe
 	return ports
 }
 
-func containerPortsForQdr(m *v1alpha1.Qdr) []corev1.ContainerPort {
+func containerPortsForInterconnect(m *v1alpha1.Interconnect) []corev1.ContainerPort {
 	ports := containerPortsForListeners(m.Spec.Listeners)
 	ports = append(ports, containerPortsForListeners(m.Spec.InterRouterListeners)...)
 	return ports
@@ -41,10 +41,10 @@ func nameForListener(l *v1alpha1.Listener) string {
 	}
 }
 
-func containerEnvVarsForQdr(m *v1alpha1.Qdr) []corev1.EnvVar {
+func containerEnvVarsForInterconnect(m *v1alpha1.Interconnect) []corev1.EnvVar {
 	envVars := []corev1.EnvVar{}
 	envVars = append(envVars, corev1.EnvVar{Name: "APPLICATION_NAME", Value: m.Name})
-	envVars = append(envVars, corev1.EnvVar{Name: "QDROUTERD_CONF", Value: configs.ConfigForQdr(m)})
+	envVars = append(envVars, corev1.EnvVar{Name: "QDROUTERD_CONF", Value: configs.ConfigForInterconnect(m)})
 	envVars = append(envVars, corev1.EnvVar{Name: "POD_COUNT", Value: strconv.Itoa(int(m.Spec.DeploymentPlan.Size))})
 	envVars = append(envVars, corev1.EnvVar{Name: "POD_NAMESPACE", ValueFrom: &corev1.EnvVarSource{
 		FieldRef: &corev1.ObjectFieldSelector{
@@ -73,23 +73,23 @@ func findEnvVar(env []corev1.EnvVar, name string) *corev1.EnvVar {
 	return nil
 }
 
-func checkQdrConfig(desired []corev1.EnvVar, actual []corev1.EnvVar) bool {
+func checkInterconnectConfig(desired []corev1.EnvVar, actual []corev1.EnvVar) bool {
 	a := findEnvVar(desired, "QDROUTERD_CONF")
 	b := findEnvVar(actual, "QDROUTERD_CONF")
 	return (a == nil && b == nil) || a.Value == b.Value
 }
 
-func CheckQdrContainer(desired *corev1.Container, actual *corev1.Container) bool {
+func CheckInterconnectContainer(desired *corev1.Container, actual *corev1.Container) bool {
 	if desired.Image != actual.Image {
 		return false
 	}
-	if !checkQdrConfig(desired.Env, actual.Env) {
+	if !checkInterconnectConfig(desired.Env, actual.Env) {
 		return false
 	}
 	return true
 }
 
-func ContainerForQdr(m *v1alpha1.Qdr) corev1.Container {
+func ContainerForInterconnect(m *v1alpha1.Interconnect) corev1.Container {
 	var image string
 	if m.Spec.DeploymentPlan.Image != "" {
 		image = m.Spec.DeploymentPlan.Image
@@ -107,8 +107,8 @@ func ContainerForQdr(m *v1alpha1.Qdr) corev1.Container {
 				},
 			},
 		},
-		Env:   containerEnvVarsForQdr(m),
-		Ports: containerPortsForQdr(m),
+		Env:   containerEnvVarsForInterconnect(m),
+		Ports: containerPortsForInterconnect(m),
 	}
 	volumeMounts := []corev1.VolumeMount{}
 	if m.Spec.SslProfiles != nil && len(m.Spec.SslProfiles) > 0 {

@@ -7,7 +7,7 @@ import (
 )
 
 // Create NewRoleBindingForCR method to create rolebinding
-func NewRoleBindingForCR(m *v1alpha1.Qdr) *rbacv1.RoleBinding {
+func NewRoleBindingForCR(m *v1alpha1.Interconnect) *rbacv1.RoleBinding {
 	rolebinding := &rbacv1.RoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",

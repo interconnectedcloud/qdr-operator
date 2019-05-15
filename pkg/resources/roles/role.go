@@ -7,7 +7,7 @@ import (
 )
 
 // Create NewRoleForCR method to create role
-func NewRoleForCR(m *v1alpha1.Qdr) *rbacv1.Role {
+func NewRoleForCR(m *v1alpha1.Interconnect) *rbacv1.Role {
 	role := &rbacv1.Role{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",

@@ -13,7 +13,7 @@ items:
           metadata:
             annotations:
               alm-examples: >-
-                [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Qdr","metadata":{"name":"amq-interconnect"},"spec":{"deploymentPlan":{"size":2,"role":"interior","placement":"Any","image":"quay.io/interconnectedcloud/qdrouterd:1.7.0"}}}]
+                [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Interconnect","metadata":{"name":"amq-interconnect"},"spec":{"deploymentPlan":{"size":2,"role":"interior","placement":"Any","image":"quay.io/interconnectedcloud/qdrouterd:1.7.0"}}}]
               capabilities: Basic Install
               categories: Messaging
             name: qdr-operator.v0.1.0
@@ -23,10 +23,10 @@ items:
             customresourcedefinitions:
               owned:
               - version: v1alpha1
-                kind: Qdr
-                description: An instance of Qdr
-                displayName: Qdr
-                name: qdrs.interconnectedcloud.github.io
+                kind: Interconnect
+                description: An instance of Interconnect
+                displayName: Interconnect
+                name: interconnects.interconnectedcloud.github.io
                 resources:
                 - kind: Service
                   version: v1
@@ -34,7 +34,7 @@ items:
                   version: v1
                 - kind: ServiceAccount
                   version: v1
-                - kind: qdrs
+                - kind: interconnects
                   version: v1alpha1
                 - kind: rolebindings
                   version: v1
@@ -49,7 +49,7 @@ items:
                 - kind: secrets
                   version: v1
                 specDescriptors:
-                - description: The role and placement plan for the qdr deployment
+                - description: The role and placement plan for the interconnect deployment
                   displayName: DeploymentPlan
                   path: deploymentPlan
                 - description: Listeners for incoming connections to the router
@@ -83,7 +83,7 @@ items:
                   displayName: EdgeConnectors
                   path: edgeConnectors
                 statusDescriptors:
-                - description: The current revision of the Qdr cluster
+                - description: The current revision of the Interconnect cluster
                   displayName: Revision Number
                   path: revNumber
                 - description: The current pods
@@ -126,9 +126,9 @@ items:
           
               ### Troubleshooting
           
-              After deploying Qdr, check any of the following to verify that it is operating correctly:
+              After deploying Interconnect, check any of the following to verify that it is operating correctly:
           
-              * The Qdr instance
+              * The Interconnect instance
           
               * The Deployment (or DaemonSet) instance
           
@@ -270,14 +270,14 @@ items:
         - apiVersion: apiextensions.k8s.io/v1beta1
           kind: CustomResourceDefinition
           metadata:
-            name: qdrs.interconnectedcloud.github.io
+            name: interconnects.interconnectedcloud.github.io
           spec:
             group: interconnectedcloud.github.io
             names:
-              kind: Qdr
-              listKind: QdrList
-              plural: qdrs
-              singular: qdr
+              kind: Interconnect
+              listKind: InterconnectList
+              plural: interconnects
+              singular: interconnect
             scope: Namespaced
             version: v1alpha1
             subresources:
@@ -295,20 +295,20 @@ items:
                         properties:
                           image:
                             type: string
-                            description: The image used for the qdr deployment
+                            description: The image used for the interconnect deployment
                           size:
                             type: integer
                             minimum: 1
                             maximum: 16
-                            description: The number of qdr pods to deploy
+                            description: The number of interconnect pods to deploy
                           role:
-                            description: The qdr deployment role
+                            description: The interconnect deployment role
                             type: string
                             enum:
                               - edge
                               - interior
                           placement:
-                            description: The qdr placement plan
+                            description: The interconnect placement plan
                             type: string
                             enum:
                               - Any
@@ -337,11 +337,11 @@ items:
                             description: The externally provided credentials
                       listeners:
                         type: array
-                        description: Configuration of each individual qdr listener
+                        description: Configuration of each individual interconnect listener
                         minItems: 1
                         items:
                           type: object
-                          description: qdr listener configuration
+                          description: interconnect listener configuration
                           properties:
                             name:
                               type: string
@@ -467,7 +467,7 @@ items:
                         description: Configuration of each individual inter router listener
                         items:
                           type: object
-                          description: qdr listener configuration
+                          description: interconnect listener configuration
                           properties:
                             name:
                               type: string
@@ -497,7 +497,7 @@ items:
                         description: Configuration of each individual inter edge listener
                         items:
                           type: object
-                          description: qdr listener configuration
+                          description: interconnect listener configuration
                           properties:
                             name:
                               type: string
@@ -614,7 +614,7 @@ items:
                       phase:
                         type: string
                       conditions:
-                        description: Conditions keeps most recent qdr conditions
+                        description: Conditions keeps most recent interconnect conditions
                         items:
                           properties:
                             reason:

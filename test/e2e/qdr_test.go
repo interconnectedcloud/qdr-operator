@@ -22,39 +22,39 @@ var (
 	cleanupTimeout       = time.Second * 5
 )
 
-func TestQdr(t *testing.T) {
-	qdrList := &v1alpha1.QdrList{
+func TestInterconnect(t *testing.T) {
+	interconnectList := &v1alpha1.InterconnectList{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "Qdr",
+			Kind:       "Interconnect",
 			APIVersion: "interconnectedcloud.github.io/v1alpha1",
 		},
 	}
-	err := framework.AddToFrameworkScheme(apis.AddToScheme, qdrList)
+	err := framework.AddToFrameworkScheme(apis.AddToScheme, interconnectList)
 	if err != nil {
 		t.Fatalf("failed to add custom resource scheme to framework: %v", err)
 	}
 	// run subtests
-	t.Run("qdr-group", func(t *testing.T) {
-		t.Run("Mesh", QdrCluster)
+	t.Run("interconnect-group", func(t *testing.T) {
+		t.Run("Mesh", InterconnectCluster)
 	})
 }
 
-func qdrScaleTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
+func interconnectScaleTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
 	namespace, err := ctx.GetNamespace()
 	if err != nil {
 		return fmt.Errorf("could not get namespace: %v", err)
 	}
-	// create qdr customer resource
-	exampleQdr := &v1alpha1.Qdr{
+	// create interconnect customer resource
+	exampleInterconnect := &v1alpha1.Interconnect{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "Qdr",
+			Kind:       "Interconnect",
 			APIVersion: "interconnectedcloud.github.io/v1alpha1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "example-qdr",
+			Name:      "example-interconnect",
 			Namespace: namespace,
 		},
-		Spec: v1alpha1.QdrSpec{
+		Spec: v1alpha1.InterconnectSpec{
 			DeploymentPlan: v1alpha1.DeploymentPlanType{
 				Size:      3,
 				Image:     "quay.io/interconnectedcloud/qdrouterd:1.6.0",
@@ -64,31 +64,31 @@ func qdrScaleTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) 
 		},
 	}
 	// use TestCtx's create helper to create the object and add a cleanup function for the new object
-	err = f.Client.Create(goctx.TODO(), exampleQdr, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
+	err = f.Client.Create(goctx.TODO(), exampleInterconnect, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
 	if err != nil {
 		return err
 	}
-	// wait for example-qdr to reach 3 replicas
-	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, "example-qdr", 3, retryInterval, timeout)
-	if err != nil {
-		return err
-	}
-
-	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: "example-qdr", Namespace: namespace}, exampleQdr)
-	if err != nil {
-		return err
-	}
-	exampleQdr.Spec.DeploymentPlan.Size = 4
-	err = f.Client.Update(goctx.TODO(), exampleQdr)
+	// wait for example-interconnect to reach 3 replicas
+	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, "example-interconnect", 3, retryInterval, timeout)
 	if err != nil {
 		return err
 	}
 
-	// wait for example-qdr to reach 4 replicas
-	return e2eutil.WaitForDeployment(t, f.KubeClient, namespace, "example-qdr", 4, retryInterval, timeout)
+	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: "example-interconnect", Namespace: namespace}, exampleInterconnect)
+	if err != nil {
+		return err
+	}
+	exampleInterconnect.Spec.DeploymentPlan.Size = 4
+	err = f.Client.Update(goctx.TODO(), exampleInterconnect)
+	if err != nil {
+		return err
+	}
+
+	// wait for example-interconnect to reach 4 replicas
+	return e2eutil.WaitForDeployment(t, f.KubeClient, namespace, "example-interconnect", 4, retryInterval, timeout)
 }
 
-func QdrCluster(t *testing.T) {
+func InterconnectCluster(t *testing.T) {
 	t.Parallel()
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup()
@@ -109,7 +109,7 @@ func QdrCluster(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err = qdrScaleTest(t, f, ctx); err != nil {
+	if err = interconnectScaleTest(t, f, ctx); err != nil {
 		t.Fatal(err)
 	}
 }
