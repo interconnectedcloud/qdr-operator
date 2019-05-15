@@ -1,14 +1,14 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: qdrs.interconnectedcloud.github.io
+  name: interconnects.interconnectedcloud.github.io
 spec:
   group: interconnectedcloud.github.io
   names:
-    kind: Qdr
-    listKind: QdrList
-    plural: qdrs
-    singular: qdr
+    kind: Interconnect
+    listKind: InterconnectList
+    plural: interconnects
+    singular: interconnect
   scope: Namespaced
   version: v1alpha1
   subresources:
@@ -26,20 +26,20 @@ spec:
               properties:
                 image:
                   type: string
-                  description: The image used for the qdr deployment
+                  description: The image used for the interconnect deployment
                 size:
                   type: integer
                   minimum: 1
                   maximum: 16
-                  description: The number of qdr pods to deploy
+                  description: The number of interconnect pods to deploy
                 role:
-                  description: The qdr deployment role
+                  description: The interconnect deployment role
                   type: string
                   enum:
                     - edge
                     - interior
                 placement:
-                  description: The qdr placement plan
+                  description: The interconnect placement plan
                   type: string
                   enum:
                     - Any
@@ -68,11 +68,11 @@ spec:
                   description: The externally provided credentials
             listeners:
               type: array
-              description: Configuration of each individual qdr listener
+              description: Configuration of each individual interconnect listener
               minItems: 1
               items:
                 type: object
-                description: qdr listener configuration
+                description: interconnect listener configuration
                 properties:
                   name:
                     type: string
@@ -198,7 +198,7 @@ spec:
               description: Configuration of each individual inter router listener
               items:
                 type: object
-                description: qdr listener configuration
+                description: interconnect listener configuration
                 properties:
                   name:
                     type: string
@@ -228,7 +228,7 @@ spec:
               description: Configuration of each individual inter edge listener
               items:
                 type: object
-                description: qdr listener configuration
+                description: interconnect listener configuration
                 properties:
                   name:
                     type: string
@@ -345,7 +345,7 @@ spec:
             phase:
               type: string
             conditions:
-              description: Conditions keeps most recent qdr conditions
+              description: Conditions keeps most recent interconnect conditions
               items:
                 properties:
                   reason:

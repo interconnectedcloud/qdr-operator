@@ -9,8 +9,8 @@ import (
 )
 
 // Create newRouteForCR method to create exposed route
-func NewRouteForCR(m *v1alpha1.Qdr, target string, tls bool) *routev1.Route {
-	labels := selectors.LabelsForQdr(m.Name)
+func NewRouteForCR(m *v1alpha1.Interconnect, target string, tls bool) *routev1.Route {
+	labels := selectors.LabelsForInterconnect(m.Name)
 	route := &routev1.Route{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",

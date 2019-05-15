@@ -5,8 +5,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// QdrSpec defines the desired state of Qdr
-type QdrSpec struct {
+// InterconnectSpec defines the desired state of Interconnect
+type InterconnectSpec struct {
 	DeploymentPlan        DeploymentPlanType `json:"deploymentPlan,omitempty"`
 	Listeners             []Listener         `json:"listeners,omitempty"`
 	InterRouterListeners  []Listener         `json:"interRouterListeners,omitempty"`
@@ -23,61 +23,61 @@ type QdrSpec struct {
 type PhaseType string
 
 const (
-	QdrPhaseNone     PhaseType = ""
-	QdrPhaseCreating           = "Creating"
-	QdrPhaseRunning            = "Running"
-	QdrPhaseFailed             = "Failed"
+	InterconnectPhaseNone     PhaseType = ""
+	InterconnectPhaseCreating           = "Creating"
+	InterconnectPhaseRunning            = "Running"
+	InterconnectPhaseFailed             = "Failed"
 )
 
 type ConditionType string
 
 const (
-	QdrConditionProvisioning ConditionType = "Provisioning"
-	QdrConditionDeployed     ConditionType = "Deployed"
-	QdrConditionScalingUp    ConditionType = "ScalingUp"
-	QdrConditionScalingDown  ConditionType = "ScalingDown"
-	QdrConditionUpgrading    ConditionType = "Upgrading"
+	InterconnectConditionProvisioning ConditionType = "Provisioning"
+	InterconnectConditionDeployed     ConditionType = "Deployed"
+	InterconnectConditionScalingUp    ConditionType = "ScalingUp"
+	InterconnectConditionScalingDown  ConditionType = "ScalingDown"
+	InterconnectConditionUpgrading    ConditionType = "Upgrading"
 )
 
-type QdrCondition struct {
+type InterconnectCondition struct {
 	Type           ConditionType `json:"type"`
 	TransitionTime metav1.Time   `json:"transitionTime,omitempty"`
 	Reason         string        `json:"reason,omitempty"`
 }
 
-// QdrStatus defines the observed state of Qdr
-type QdrStatus struct {
+// InterconnectStatus defines the observed state of Interconnect
+type InterconnectStatus struct {
 	Phase     PhaseType `json:"phase,omitempty"`
 	RevNumber string    `json:"revNumber,omitempty"`
 	PodNames  []string  `json:"pods"`
 
-	// Conditions keeps most recent qdr conditions
-	Conditions []QdrCondition `json:"conditions"`
+	// Conditions keeps most recent interconnect conditions
+	Conditions []InterconnectCondition `json:"conditions"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Qdr is the Schema for the qdrs API
+// Interconnect is the Schema for the interconnects API
 // +k8s:openapi-gen=true
-type Qdr struct {
+type Interconnect struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   QdrSpec   `json:"spec,omitempty"`
-	Status QdrStatus `json:"status,omitempty"`
+	Spec   InterconnectSpec   `json:"spec,omitempty"`
+	Status InterconnectStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// QdrList contains a list of Qdr
-type QdrList struct {
+// InterconnectList contains a list of Interconnect
+type InterconnectList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Qdr `json:"items"`
+	Items           []Interconnect `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Qdr{}, &QdrList{})
+	SchemeBuilder.Register(&Interconnect{}, &InterconnectList{})
 }
 
 type RouterRoleType string

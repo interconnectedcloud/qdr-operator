@@ -3,7 +3,7 @@ package test
 import (
 	"github.com/RHsyseng/operator-utils/pkg/validation"
 	"github.com/ghodss/yaml"
-	qdrv1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
+	interconnectv1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"strings"
@@ -11,7 +11,7 @@ import (
 )
 
 var crdTypeMap = map[string]interface{}{
-	"interconnectedcloud_v1alpha1_qdr_crd.yaml": &qdrv1alpha1.Qdr{},
+	"interconnectedcloud_v1alpha1_interconnect_crd.yaml": &interconnectv1alpha1.Interconnect{},
 }
 
 func TestCRDSchemas(t *testing.T) {
@@ -31,7 +31,7 @@ func TestCRDSchemas(t *testing.T) {
 
 func TestSampleCustomResources(t *testing.T) {
 
-	var crFileName, crdFileName string = "interconnectedcloud_v1alpha1_qdr_cr.yaml", "interconnectedcloud_v1alpha1_qdr_crd.yaml"
+	var crFileName, crdFileName string = "interconnectedcloud_v1alpha1_interconnect_cr.yaml", "interconnectedcloud_v1alpha1_interconnect_crd.yaml"
 	assert.NotEmpty(t, crdFileName, "No matching CRD file found for CR suffixed: %s", crFileName)
 
 	schema := getSchema(t, crdFileName)

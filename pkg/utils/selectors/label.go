@@ -7,19 +7,19 @@ import (
 const (
 	LabelAppKey = "application"
 
-	LabelResourceKey = "qdr_cr"
+	LabelResourceKey = "interconnect_cr"
 )
 
 // Set labels in a map
-func LabelsForQdr(name string) map[string]string {
+func LabelsForInterconnect(name string) map[string]string {
 	return map[string]string{
 		LabelAppKey:      name,
 		LabelResourceKey: name,
 	}
 }
 
-// return a selector that matches resources for a qdr resource
-func ResourcesByQdrName(name string) labels.Selector {
+// return a selector that matches resources for a interconnect resource
+func ResourcesByInterconnectName(name string) labels.Selector {
 	set := map[string]string{
 		LabelAppKey:      name,
 		LabelResourceKey: name,

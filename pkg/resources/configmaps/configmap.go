@@ -8,8 +8,8 @@ import (
 )
 
 // Create NewConfigMapForCR method to create configmap
-func NewConfigMapForCR(m *v1alpha1.Qdr) *corev1.ConfigMap {
-	config := configs.ConfigForQdr(m)
+func NewConfigMapForCR(m *v1alpha1.Interconnect) *corev1.ConfigMap {
+	config := configs.ConfigForInterconnect(m)
 	configMap := &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",

@@ -33,7 +33,7 @@ func servicePortsForListeners(listeners []v1alpha1.Listener) []corev1.ServicePor
 	return ports
 }
 
-func servicePortsForRouter(m *v1alpha1.Qdr) []corev1.ServicePort {
+func servicePortsForRouter(m *v1alpha1.Interconnect) []corev1.ServicePort {
 	ports := []corev1.ServicePort{}
 	external := servicePortsForListeners(m.Spec.Listeners)
 	internal := servicePortsForListeners(m.Spec.InterRouterListeners)
@@ -59,8 +59,8 @@ func CheckService(desired *corev1.Service, actual *corev1.Service) bool {
 }
 
 // Create newServiceForCR method to create normal service
-func NewServiceForCR(m *v1alpha1.Qdr, requestCert bool) *corev1.Service {
-	labels := selectors.LabelsForQdr(m.Name)
+func NewServiceForCR(m *v1alpha1.Interconnect, requestCert bool) *corev1.Service {
+	labels := selectors.LabelsForInterconnect(m.Name)
 	service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -84,8 +84,8 @@ func NewServiceForCR(m *v1alpha1.Qdr, requestCert bool) *corev1.Service {
 }
 
 // Create newServiceForCR method to create normal service
-func NewNormalServiceForCR(m *v1alpha1.Qdr, requestCert bool) *corev1.Service {
-	labels := selectors.LabelsForQdr(m.Name)
+func NewNormalServiceForCR(m *v1alpha1.Interconnect, requestCert bool) *corev1.Service {
+	labels := selectors.LabelsForInterconnect(m.Name)
 	service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -109,7 +109,7 @@ func NewNormalServiceForCR(m *v1alpha1.Qdr, requestCert bool) *corev1.Service {
 }
 
 // Create newHeadlessServiceForCR method to create normal service
-func NewHeadlessServiceForCR(m *v1alpha1.Qdr, requestCert bool) *corev1.Service {
+func NewHeadlessServiceForCR(m *v1alpha1.Interconnect, requestCert bool) *corev1.Service {
 	service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -121,7 +121,7 @@ func NewHeadlessServiceForCR(m *v1alpha1.Qdr, requestCert bool) *corev1.Service 
 		},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: "None",
-			Selector:  selectors.LabelsForQdr(m.Name),
+			Selector:  selectors.LabelsForInterconnect(m.Name),
 			Ports:     servicePortsForListeners(m.Spec.InterRouterListeners),
 		},
 	}

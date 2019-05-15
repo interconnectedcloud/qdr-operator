@@ -11,27 +11,25 @@ import (
 
 // move this to util
 // Set labels in a map
-func labelsForQdr(name string) map[string]string {
+func labelsForInterconnect(name string) map[string]string {
 	return map[string]string{
 		selectors.LabelAppKey:      name,
 		selectors.LabelResourceKey: name,
 	}
 }
 
-func CheckDeployedContainer(actual *corev1.PodTemplateSpec, cr *v1alpha1.Qdr) bool {
-	desired := containers.ContainerForQdr(cr)
-	if len(actual.Spec.Containers) != 1 || !containers.CheckQdrContainer(&desired, &actual.Spec.Containers[0]) {
+func CheckDeployedContainer(actual *corev1.PodTemplateSpec, cr *v1alpha1.Interconnect) bool {
+	desired := containers.ContainerForInterconnect(cr)
+	if len(actual.Spec.Containers) != 1 || !containers.CheckInterconnectContainer(&desired, &actual.Spec.Containers[0]) {
 		actual.Spec.Containers = []corev1.Container{desired}
 		return false
 	}
 	return true
 }
 
-
-
 // Create NewDeploymentForCR method to create deployment
-func NewDeploymentForCR(m *v1alpha1.Qdr) *appsv1.Deployment {
-	labels := selectors.LabelsForQdr(m.Name)
+func NewDeploymentForCR(m *v1alpha1.Interconnect) *appsv1.Deployment {
+	labels := selectors.LabelsForInterconnect(m.Name)
 	replicas := m.Spec.DeploymentPlan.Size
 	affinity := &corev1.Affinity{}
 	if m.Spec.DeploymentPlan.Placement == v1alpha1.PlacementAntiAffinity {
@@ -75,7 +73,7 @@ func NewDeploymentForCR(m *v1alpha1.Qdr) *appsv1.Deployment {
 				Spec: corev1.PodSpec{
 					ServiceAccountName: m.Name,
 					Affinity:           affinity,
-					Containers:         []corev1.Container{containers.ContainerForQdr(m)},
+					Containers:         []corev1.Container{containers.ContainerForInterconnect(m)},
 				},
 			},
 		},
@@ -109,8 +107,8 @@ func NewDeploymentForCR(m *v1alpha1.Qdr) *appsv1.Deployment {
 }
 
 // Create NewDaemonSetForCR method to create daemonset
-func NewDaemonSetForCR(m *v1alpha1.Qdr) *appsv1.DaemonSet {
-	labels := selectors.LabelsForQdr(m.Name)
+func NewDaemonSetForCR(m *v1alpha1.Interconnect) *appsv1.DaemonSet {
+	labels := selectors.LabelsForInterconnect(m.Name)
 
 	ds := &appsv1.DaemonSet{
 		TypeMeta: metav1.TypeMeta{
@@ -131,7 +129,7 @@ func NewDaemonSetForCR(m *v1alpha1.Qdr) *appsv1.DaemonSet {
 				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: m.Name,
-					Containers:         []corev1.Container{containers.ContainerForQdr(m)},
+					Containers:         []corev1.Container{containers.ContainerForInterconnect(m)},
 				},
 			},
 		},

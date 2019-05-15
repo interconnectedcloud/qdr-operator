@@ -9,7 +9,7 @@ import (
 	"github.com/interconnectedcloud/qdr-operator/pkg/resources/certificates"
 )
 
-func isDefaultSslProfileDefined(m *v1alpha1.Qdr) bool {
+func isDefaultSslProfileDefined(m *v1alpha1.Interconnect) bool {
 	for _, profile := range m.Spec.SslProfiles {
 		if profile.Name == "default" {
 			return true
@@ -18,7 +18,7 @@ func isDefaultSslProfileDefined(m *v1alpha1.Qdr) bool {
 	return false
 }
 
-func isDefaultSslProfileUsed(m *v1alpha1.Qdr) bool {
+func isDefaultSslProfileUsed(m *v1alpha1.Interconnect) bool {
 	for _, listener := range m.Spec.Listeners {
 		if listener.SslProfile == "default" {
 			return true
@@ -42,7 +42,7 @@ func getExposedListeners(listeners []v1alpha1.Listener) []v1alpha1.Listener {
 	return exposedListeners
 }
 
-func GetQdrExposedListeners(m *v1alpha1.Qdr) []v1alpha1.Listener {
+func GetInterconnectExposedListeners(m *v1alpha1.Interconnect) []v1alpha1.Listener {
 	listeners := []v1alpha1.Listener{}
 	normal := getExposedListeners(m.Spec.Listeners)
 	internal := getExposedListeners(m.Spec.InterRouterListeners)
@@ -53,7 +53,7 @@ func GetQdrExposedListeners(m *v1alpha1.Qdr) []v1alpha1.Listener {
 	return listeners
 }
 
-func SetQdrDefaults(m *v1alpha1.Qdr) (bool, bool) {
+func SetInterconnectDefaults(m *v1alpha1.Interconnect) (bool, bool) {
 	requestCert := false
 	updateDefaults := false
 	certMgrPresent := certificates.DetectCertmgrIssuer()
@@ -124,7 +124,7 @@ func SetQdrDefaults(m *v1alpha1.Qdr) (bool, bool) {
 	return requestCert && certMgrPresent, updateDefaults
 }
 
-func ConfigForQdr(m *v1alpha1.Qdr) string {
+func ConfigForInterconnect(m *v1alpha1.Interconnect) string {
 	config := `
 router {
     mode: {{.DeploymentPlan.Role}}
