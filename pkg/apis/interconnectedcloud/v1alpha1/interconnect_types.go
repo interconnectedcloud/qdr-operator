@@ -55,6 +55,7 @@ type InterconnectStatus struct {
 	Conditions []InterconnectCondition `json:"conditions"`
 }
 
+// +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Interconnect is the Schema for the interconnects API
