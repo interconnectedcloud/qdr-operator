@@ -220,11 +220,34 @@ Ensure there is a cluster running before running the test.
 $ make cluster-test
 ```
 
-## Manage the operator using the Operator Lifecycle Manager
+## Manage the operator using the Operator Lifecycle Manager in OpenShift 4.0 or above
+To install this operator on OpenShift 4 for end-to-end testing, make sure you have access to a quay.io account to create an application repository. Follow the [authentication](https://github.com/operator-framework/operator-courier/#authentication) instructions for Operator Courier to obtain an account token. This token is in the form of "basic XXXXXXXXX" and both words are required for the command.
+Mainly you need to install `operator-courier` and generate the quay token before you proceed to the next steps.
+
+Edit file `deploy/olm-catalog/courier/qdr-operatorsource.yaml`, Remember to replace `registryNamespace` with your quay username id. The name, display name and publisher of the operator are the only other attributes that may be modified.
+
+Edit file `deploy/olm-catalog/courier/bundle_dir/<version>/interconnectedcloud.package.yaml`, and point the `packagename` to your quay application namespace.
+
+Push the operator bundle to your quay application repository as seen below:
+
+```bash
+operator-courier --verbose push deploy/olm-catalog/courier/bundle_dir/0.1.0 <quay_username_id> qdrapp-operator 0.1.0 "basic XXXXXXXXX"
+```
+
+Note that the push command does not overwrite an existing repository, and it needs to be deleted before a new version can be built and uploaded. 
+
+Once the bundle has been uploaded, create an [Operator Source](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#linking-the-quay-application-repository-to-your-openshift-40-cluster) or use the command below to load your operator bundle in OpenShift.
+
+```bash
+oc create -f deploy/olm-catalog/courier/qdr-operatorsource.yaml
+```
+It will take a few minutes for the operator to become visible under the _OperatorHub_ section of the OpenShift console _Catalog_. It can be easily found by filtering the provider type to _Custom_.
+
+## Manage the operator using the Operator Lifecycle Manager below Openshift 4.0
 
 Ensure the Operator Lifecycle Manager is installed in the local cluster.  By default, the `catalog-source.sh` will install the operator catalog resources in `operator-lifecycle-manager` namespace.  You may also specify different namespace where you have the Operator Lifecycle Manager installed.
 
 ```
-$ ./hack/catalog-source.sh [namespace]
+$ ./hack/catalog-source.sh <namespace>
 $ oc apply -f deploy/olm-catalog/qdr-operator/0.1.0/catalog-source.yaml
 ```

@@ -1,45 +1,37 @@
 package openshift
 
 import (
-	"k8s.io/client-go/discovery"
+	"github.com/RHsyseng/operator-utils/pkg/platform"
 	"k8s.io/client-go/rest"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
-var log = logf.Log.WithName("env")
-
+/*
+IsOpenShift tests the Kubernetes-based environment for indicators that the running platform is OpenShift.
+Accepts <nil> or instantiated 'cfg' rest config parameter.
+*/
 func IsOpenShift(cfg *rest.Config) (bool, error) {
-	log.Info("attempting detection of OpenShift platform...")
+	return platform.DetectOpenShift(nil, cfg)
+}
 
-	if cfg == nil {
-		var err error
-		cfg, err = config.GetConfig()
-		if err != nil {
-			log.Error(err, "error in fetching config, returning false")
-			return false, err
-		}
-	}
+/*
+GetPlatformInfo examines the Kubernetes-based environment and determines the running platform, version, & OS.
+Returned PlatformInfo.OCPVersion is derived from underlying PlatformInfo.K8SVersion.
+Accepts <nil> or instantiated 'cfg' rest config parameter.
 
-	discoveryClient, err := discovery.NewDiscoveryClientForConfig(cfg)
-	if err != nil {
-		log.Error(err, "error in fetching discovery client, returning false")
-		return false, err
-	}
+Result: PlatformInfo{ Name: OpenShift, OCPVersion: 4.1, K8SVersion: 1.13+, OS: linux/amd64 }
+*/
+func GetPlatformInfo(cfg *rest.Config) (platform.PlatformInfo, error) {
+	return platform.K8SBasedPlatformVersioner{}.GetPlatformInfo(nil, cfg)
+}
 
-	apiList, err := discoveryClient.ServerGroups()
-	if err != nil {
-		log.Error(err, "error in getting ServerGroups from discovery client, returning false")
-		return false, err
-	}
+/*
+LookupOpenShiftVersion refines PlatformInfo.OCPVersion info based on API calls, rather than deriving from K8SVersion.
+*** NOTE: OCP 4.1+ requires elevated user permissions, see PlatformVersioner for details
+Accepts <nil> or instantiated 'cfg' rest config parameter.
+Accepts prepopulated or empty PlatformInfo{}
 
-	for _, v := range apiList.Groups {
-		if v.Name == "route.openshift.io" {
-			log.Info("OpenShift route detected in api groups, returning true")
-			return true, nil
-		}
-	}
-
-	log.Info("OpenShift route not found in groups, returning false")
-	return false, nil
+Result: PlatformInfo{ Name: OpenShift, OCPVersion: 4.1.2, K8SVersion: 1.13+, OS: linux/amd64 }
+*/
+func LookupOpenShiftVersion(cfg *rest.Config, info platform.PlatformInfo) (platform.PlatformInfo, error) {
+	return platform.K8SBasedPlatformVersioner{}.LookupOpenShiftVersion(nil, cfg, info)
 }

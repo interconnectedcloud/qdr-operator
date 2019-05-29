@@ -1,5 +1,5 @@
 #! package-manifest: deploy/olm-catalog/qdr-operator/0.1.0/qdr-operator.v0.1.0.clusterserviceversion.yaml
-packageName: qdr-operator
+packageName: qdrapp-operator
 channels:
   - name: beta
-    currentCSV: qdr-operator.v0.1.0
+    currentCSV: qdr-operator.0.1.0

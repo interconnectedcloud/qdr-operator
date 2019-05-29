@@ -138,7 +138,6 @@ spec:
                 type: object
               type: array
             connectors:
-              type: array
               description: Configuration of each individual router connnector
               items:
                 properties:
@@ -165,7 +164,6 @@ spec:
                 type: object
               type: array
             interRouterConnectors:
-              type: array
               description: Configuration of each individual inter router connector
               items:
                 properties:
@@ -192,7 +190,6 @@ spec:
                 type: object
               type: array
             edgeConnectors:
-              type: array
               description: Configuration of each individual edge uplink connector
               items:
                 properties:
@@ -384,9 +381,20 @@ spec:
             revNumber:
               type: string
             pods:
-              items:
-                type: string
-              type: array
+              properties:
+                ready:
+                  items:
+                    type: string
+                  type: array
+                starting:
+                  items:
+                    type: string
+                  type: array
+                stopped:
+                  items:
+                    type: string
+                  type: array
+              type: object
             phase:
               type: string
             conditions:

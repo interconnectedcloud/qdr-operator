@@ -26,14 +26,16 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
-  digest = "1:59885960e76f85af51ee8407be4512eb53d77db5f6843420b9c1a4202082b9b1"
+  digest = "1:b0c94aea1797e0a93e644ee6a6937bb2402e2ab418154ece436cee737eec1c2d"
   name = "github.com/RHsyseng/operator-utils"
   packages = [
+    "pkg/olm",
+    "pkg/platform",
     "pkg/utils/openshift",
     "pkg/validation",
   ]
   pruneopts = "NT"
-  revision = "9b235fef216357d7620259eadb9af40a43391819"
+  revision = "232650febd728455482b3c780c79a9ac0be62b50"
 
 [[projects]]
   digest = "1:5a23cd3a5496a0b2da7e3b348d14e77b11a210738c398200d7d6f04ea8cf3bd8"
@@ -1057,6 +1059,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/RHsyseng/operator-utils/pkg/olm",
     "github.com/RHsyseng/operator-utils/pkg/utils/openshift",
     "github.com/RHsyseng/operator-utils/pkg/validation",
     "github.com/ghodss/yaml",
