@@ -1,0 +1,12 @@
+apiVersion: interconnectedcloud.github.io/v1alpha1
+kind: Interconnect
+metadata:
+  name: edge-any-interconnect
+  namespace:  < your namespace>
+spec:
+  # Add fields here
+  deploymentPlan:
+    image: quay.io/interconnectedcloud/qdrouterd:1.7.0
+    role: edge
+    size: 3
+    placement: Any    #Any/Every/AntiAffinity/Node

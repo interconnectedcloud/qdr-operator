@@ -1,0 +1,28 @@
+apiVersion: interconnectedcloud.github.io/v1alpha1
+kind: Interconnect
+metadata:
+  name: ssl-cert-interconnect
+  namespace:  < your namespace>
+spec:
+  # Add fields here
+  deploymentPlan:
+    image: quay.io/interconnectedcloud/qdrouterd:1.7.0
+    role: interior
+    size: 2
+    placement: Any
+  listeners:
+    - host: 0.0.0.0
+      port: 5672
+    - host: 0.0.0.0
+      port: 5671
+      expose: true
+      sslProfile: tryme
+    - host: 0.0.0.0
+      port: 8672
+      http: true
+  interRouterListeners:
+    - host: 0.0.0.0
+      port: 55672
+      sslProfile: default
+  sslProfiles:
+    - name: tryme

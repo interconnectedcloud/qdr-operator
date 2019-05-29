@@ -47,12 +47,17 @@ type InterconnectCondition struct {
 
 // InterconnectStatus defines the observed state of Interconnect
 type InterconnectStatus struct {
-	Phase     PhaseType `json:"phase,omitempty"`
-	RevNumber string    `json:"revNumber,omitempty"`
-	PodNames  []string  `json:"pods"`
+	Phase     PhaseType             `json:"phase,omitempty"`
+	RevNumber string                `json:"revNumber,omitempty"`
+	PodStatus InterconnectPodStatus `json:"pods"`
 
 	// Conditions keeps most recent interconnect conditions
 	Conditions []InterconnectCondition `json:"conditions"`
+}
+
+type InterconnectPodStatus struct {
+	Ready       []string `json:"ready,omitempty"`
+	Unavailable []string `json:"unavailable,omitempty"`
 }
 
 // +genclient

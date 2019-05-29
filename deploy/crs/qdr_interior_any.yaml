@@ -1,0 +1,19 @@
+apiVersion: interconnectedcloud.github.io/v1alpha1
+kind: Interconnect
+metadata:
+  name: interior-any-interconnect
+  namespace:  < your namespace>
+spec:
+  # Add fields here
+  deploymentPlan:
+    image: quay.io/interconnectedcloud/qdrouterd:1.7.0
+    role: interior
+    size: 3
+    placement: Any     #Any/Every/AntiAffinity/Node
+  addresses:
+    - prefix: balanced
+      distribution: balanced
+    - prefix: closest
+      distribution: closest
+    - prefix: multicast
+      distribution: multicast

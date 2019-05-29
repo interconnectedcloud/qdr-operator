@@ -1,0 +1,57 @@
+apiVersion: interconnectedcloud.github.io/v1alpha1
+kind: Interconnect
+metadata:
+  name: interior-interconnect
+  namespace:  < your namespace>
+spec:
+  # Add fields here
+  deploymentPlan:
+    image: quay.io/interconnectedcloud/qdrouterd:1.7.0
+    role: interior
+    size: 3
+    placement: Any
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+  interRouterListeners:
+    - host: 0.0.0.0
+      port: 55672
+  edgeListeners:
+    - host: 0.0.0.0
+      port: 45672
+      expose: true
+  addresses:
+    - prefix: balanced
+      distribution: balanced
+    - prefix: closest
+      distribution: closest
+    - prefix: multicast
+      distribution: multicast
+---
+apiVersion: interconnectedcloud.github.io/v1alpha1
+kind: Interconnect
+metadata:
+  name: edge-interconnect
+  namespace:  < your namespace>
+spec:
+  # Add fields here
+  deploymentPlan:
+    image: quay.io/interconnectedcloud/qdrouterd:1.7.0
+    role: edge
+    size: 2
+    placement: Any
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+  edgeConnectors:
+    - host: interior-interconnect.default.svc.cluster.local
+      port: 45672
+  addresses:
+    - prefix: balanced
+      distribution: balanced
+    - prefix: closest
+      distribution: closest
+    - prefix: multicast
+      distribution: multicast

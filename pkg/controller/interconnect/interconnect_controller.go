@@ -16,7 +16,6 @@ import (
 	"github.com/interconnectedcloud/qdr-operator/pkg/resources/services"
 	"github.com/interconnectedcloud/qdr-operator/pkg/utils/configs"
 	"github.com/interconnectedcloud/qdr-operator/pkg/utils/openshift"
-	"github.com/interconnectedcloud/qdr-operator/pkg/utils/selectors"
 	cmv1alpha1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -461,7 +460,6 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 				TransitionTime: metav1.Now(),
 			}
 			instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
-			instance.Status.PodNames = instance.Status.PodNames[:0]
 			r.client.Status().Update(context.TODO(), instance)
 			return reconcile.Result{Requeue: true}, nil
 		} else if !deployments.CheckDeployedContainer(&depFound.Spec.Template, instance) {
@@ -475,7 +473,6 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 				TransitionTime: metav1.Now(),
 			}
 			instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
-			instance.Status.PodNames = instance.Status.PodNames[:0]
 			r.client.Status().Update(context.TODO(), instance)
 			return reconcile.Result{Requeue: true}, nil
 		}
@@ -516,7 +513,6 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 				TransitionTime: metav1.Now(),
 			}
 			instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
-			instance.Status.PodNames = instance.Status.PodNames[:0]
 			r.client.Status().Update(context.TODO(), instance)
 			return reconcile.Result{Requeue: true}, nil
 		}
@@ -598,20 +594,14 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 		}
 	}
 
-	// List the pods for this deployment
-	podList := &corev1.PodList{}
-	labelSelector := selectors.ResourcesByInterconnectName(instance.Name)
-	listOps := &client.ListOptions{Namespace: instance.Namespace, LabelSelector: labelSelector}
-	err = r.client.List(context.TODO(), listOps, podList)
-	if err != nil {
-		reqLogger.Error(err, "Failed to list pods")
-		return reconcile.Result{}, err
-	}
-	podNames := getPodNames(podList.Items)
+	reqLogger.Info("Collecting Pod Status")
+	podStatus := getPodStatus(r, instance)
 
 	// Update status.PodNames if needed
-	if !reflect.DeepEqual(podNames, instance.Status.PodNames) {
-		instance.Status.PodNames = podNames
+	if instance.Spec.DeploymentPlan.Placement == v1alpha1.PlacementEvery ||
+		!reflect.DeepEqual(podStatus, instance.Status.PodStatus) {
+
+		instance.Status.PodStatus = podStatus
 		err := r.client.Status().Update(context.TODO(), instance)
 		if err != nil {
 			reqLogger.Error(err, "Failed to update pod names")
@@ -642,13 +632,35 @@ func ensureCAIssuer(r *ReconcileInterconnect, instance *v1alpha1.Interconnect, n
 	return nil
 }
 
-// getPodNames returns the pod names of the array of pods passed in
-func getPodNames(pods []corev1.Pod) []string {
-	var podNames []string
-	for _, pod := range pods {
-		if pod.GetObjectMeta().GetDeletionTimestamp() == nil {
-			podNames = append(podNames, pod.Name)
+func getPodStatus(r *ReconcileInterconnect, instance *v1alpha1.Interconnect) v1alpha1.InterconnectPodStatus {
+	// List the pods for this deployment
+	var ready, unavailable []string
+	var startingCnt int32 = 0
+	var readyCnt int32 = 0
+
+	depFound := &appsv1.Deployment{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, depFound)
+	if err == nil {
+		readyCnt = depFound.Status.ReadyReplicas
+		startingCnt = depFound.Status.Replicas - readyCnt
+	} else {
+		dsFound := &appsv1.DaemonSet{}
+		err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, dsFound)
+		if err == nil {
+			readyCnt = dsFound.Status.NumberReady
+			startingCnt = dsFound.Status.NumberAvailable - readyCnt
 		}
 	}
-	return podNames
+	for i := int32(0); i < startingCnt; {
+		unavailable = append(unavailable, "pod")
+		i++
+	}
+	for i := int32(0); i < readyCnt; {
+		ready = append(ready, "pod")
+		i++
+	}
+	return v1alpha1.InterconnectPodStatus{
+		Ready:       ready,
+		Unavailable: unavailable,
+	}
 }

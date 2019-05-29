@@ -16,7 +16,8 @@ items:
                 [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Interconnect","metadata":{"name":"amq-interconnect"},"spec":{"deploymentPlan":{"size":2,"role":"interior","placement":"Any","image":"quay.io/interconnectedcloud/qdrouterd:1.7.0"}}}]
               capabilities: Basic Install
               categories: Messaging
-            name: qdr-operator.v0.1.0
+              containerImage: quay.io/interconnectedcloud/qdr-operator:latest
+            name: qdr-operator.0.1.0
             namespace: placeholder
           spec:
             apiservicedefinitions: {}
@@ -50,38 +51,75 @@ items:
                   version: v1
                 specDescriptors:
                 - description: The role and placement plan for the interconnect deployment
-                  displayName: DeploymentPlan
-                  path: deploymentPlan
+                  displayName: Deployment Plan Image
+                  path: deploymentPlan.image
+                  x-descriptors:
+                    - "urn:alm:descriptor:com.tectonic.ui:label"
+                - description: The role and placement plan for the interconnect deployment
+                  displayName: Deployment Placement
+                  path: deploymentPlan.placement
+                  x-descriptors:
+                    - "urn:alm:descriptor:com.tectonic.ui:label"
+                - description: The role and placement plan for the interconnect deployment
+                  displayName: Deployment Role
+                  path: deploymentPlan.role
+                  x-descriptors:
+                    - "urn:alm:descriptor:com.tectonic.ui:label"
                 - description: Listeners for incoming connections to the router
-                  displayName: Listeners
-                  path: listeners
+                  displayName: Listener Port
+                  path: listeners.port
+                  x-descriptors:
+                    - "urn:alm:descriptor:com.tectonic.ui:label"
+                - description: Listeners for incoming connections to the router
+                  displayName: Listener http
+                  path: listeners.http
+                  x-descriptors:
+                    - "urn:alm:descriptor:com.tectonic.ui:label"
                 - description: Listeners for inter router mesh connections
-                  displayName: InterRouterListeners
-                  path: interRouterListeners
+                  displayName: InterRouterListeners Port
+                  path: interRouterListeners.port
+                  x-descriptors:
+                    - "urn:alm:descriptor:com.tectonic.ui:label"
                 - description: Listeners for edge downlink connections
-                  displayName: EdgeListeners
-                  path: edgeListeners
+                  displayName: EdgeListener Port
+                  path: edgeListeners.port
+                  x-descriptors:
+                    - "urn:alm:descriptor:com.tectonic.ui:label"
                 - description: TLS/SSL configuration for connections
-                  displayName: SslProfiles
-                  path: sslProfiles
+                  displayName: SslProfiles Name
+                  path: sslProfiles.name
+                  x-descriptors:
+                    - "urn:alm:descriptor:com.tectonic.ui:label"
                 - description: Address configuration for distribution and phasing
-                  displayName: Addresses
-                  path: addresses
+                  displayName: Addresse Prefix
+                  path: addresses.prefix
+                  x-descriptors:
+                    - "urn:alm:descriptor:com.tectonic.ui:label"
                 - description: Auto links address configuration
-                  displayName: AutoLinks
-                  path: autoLinks
+                  displayName: AutoLinks Address
+                  path: autoLinks.address
+                  x-descriptors:
+                    - "urn:alm:descriptor:com.tectonic.ui:label"
                 - description: Link routes address configuration
-                  displayName: LinkRoutes
-                  path: linkRoutes
+                  displayName: LinkRoute Prefix
+                  path: linkRoutes.prefix
+                  x-descriptors:
+                    - "urn:alm:descriptor:com.tectonic.ui:label"
                 - description: Outbound client connections to AMQP 1.0 entity
-                  displayName: Connectors
-                  path: connectors
+                  displayName: Connector Name
+                  path: connectors.Name
+                  x-descriptors:
+                    - "urn:alm:descriptor:com.tectonic.ui:label"
                 - description: Outbound interior router connections for mesh operation
-                  displayName: InterRouterConnectors
-                  path: interRouterConnectors
+                  displayName: InterRouterConnector Name
+                  path: interRouterConnectors.name
+                  x-descriptors:
+                    - "urn:alm:descriptor:com.tectonic.ui:label"
                 - description: Outbound edge router connections for edge uplink
-                  displayName: EdgeConnectors
-                  path: edgeConnectors
+                  displayName: EdgeConnector Name
+                  path: edgeConnectors.name
+                  x-descriptors:
+                    - "urn:alm:descriptor:com.tectonic.ui:label"
                 statusDescriptors:
                 - description: The current revision of the Interconnect cluster
                   displayName: Revision Number
@@ -89,9 +127,8 @@ items:
                 - description: The current pods
                   displayName: Pods
                   path: pods
-                - description: The current conditions
-                  displayName: Conditions
-                  path: conditions
+                  x-descriptors:
+                    - "urn:alm:descriptor:com.tectonic.ui:podStatuses"
             description: |
           
               The Qdr Operator is a lightweight [AMQP 1.0](https://www.amqp.org/) message router for building large, highly resilient messaging networks for hybrid cloud and IoT/edge deployments. Qdr transparently learns the addresses of messaging endpoints (such as clients, servers, and message brokers) and flexibly routes messages between them.
@@ -252,6 +289,16 @@ items:
                     - '*'
                     verbs:
                     - '*'
+                  - apiGroups:
+                    - "extensions"
+                    resources:
+                    - ingresses
+                    verbs:
+                    - get
+                    - list
+                    - watch
+                    - create
+                    - delete
                   serviceAccountName: qdr-operator
               strategy: deployment
             installModes:
@@ -396,7 +443,6 @@ items:
                           type: object
                         type: array
                       connectors:
-                        type: array
                         description: Configuration of each individual router connnector
                         items:
                           properties:
@@ -423,7 +469,6 @@ items:
                           type: object
                         type: array
                       interRouterConnectors:
-                        type: array
                         description: Configuration of each individual inter router connector
                         items:
                           properties:
@@ -450,7 +495,6 @@ items:
                           type: object
                         type: array
                       edgeConnectors:
-                        type: array
                         description: Configuration of each individual edge uplink connector
                         items:
                           properties:
@@ -635,9 +679,16 @@ items:
                       revNumber:
                         type: string
                       pods:
-                        items:
-                          type: string
-                        type: array
+                        properties:
+                          ready:
+                            items:
+                              type: string
+                            type: array
+                          unavailable:
+                            items:
+                              type: string
+                            type: array
+                        type: object
                       phase:
                         type: string
                       conditions:
@@ -657,10 +708,10 @@ items:
                         type: array
       packages: >
         - #! package-manifest: deploy/olm-catalog/qdr-operator/0.1.0/qdr-operator.v0.1.0.clusterserviceversion.yaml
-          packageName: qdr-operator
+          packageName: qdrapp-operator
           channels:
             - name: beta
-              currentCSV: qdr-operator.v0.1.0
+              currentCSV: qdr-operator.0.1.0
 
   - apiVersion: operators.coreos.com/v1alpha1
     kind: CatalogSource
