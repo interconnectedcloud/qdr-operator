@@ -99,6 +99,12 @@ spec:
                     type: boolean
                   expose:
                     type: boolean
+                  authenticatePeer:
+                    type: boolean
+                    description: Require incoming connections to authenticate
+                  saslMechanisms:
+                    type: string
+                    description: List of space separate SASL mechanisms to offer
             autoLinks:
               items:
                 properties:
@@ -139,6 +145,9 @@ spec:
                     type: boolean
                   sslProfile:
                     type: string
+                  verifyHostname:
+                    type: boolean
+                    description: Verify hostname of server when using TLS
                 required:
                   - host
                   - port
@@ -163,6 +172,9 @@ spec:
                     type: boolean
                   sslProfile:
                     type: string
+                  verifyHostname:
+                    type: boolean
+                    description: Verify hostname of server when using TLS
                 required:
                   - host
                   - port
@@ -188,6 +200,9 @@ spec:
                     description: Indicator for a router-broker connection
                   sslProfile:
                     type: string
+                  verifyHostname:
+                    type: boolean
+                    description: Verify hostname of server when using TLS
                 required:
                   - host
                   - port
@@ -223,6 +238,12 @@ spec:
                     description: Name of the ssl profile to use
                   expose:
                     type: boolean
+                  authenticatePeer:
+                    type: boolean
+                    description: Require incoming connections to authenticate
+                  saslMechanisms:
+                    type: string
+                    description: List of space separate SASL mechanisms to offer
             edgeListeners:
               type: array
               description: Configuration of each individual inter edge listener
@@ -253,6 +274,12 @@ spec:
                     description: Name of the ssl profile to use
                   expose:
                     type: boolean
+                  authenticatePeer:
+                    type: boolean
+                    description: Require incoming connections to authenticate
+                  saslMechanisms:
+                    type: string
+                    description: List of space separate SASL mechanisms to offer
             addresses:
               type: array
               description: Configuration of each address distribution and phasing

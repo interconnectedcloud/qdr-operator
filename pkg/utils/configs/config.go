@@ -151,6 +151,12 @@ listener {
     {{- if .Http}}
     http: true
     {{- end}}
+    {{- if .AuthenticatePeer}}
+    authenticatePeer: true
+    {{- end}}
+    {{- if .SaslMechanisms}}
+    saslMechanisms: {{.SaslMechanisms}}
+    {{- end}}
     {{- if .SslProfile}}
     sslProfile: {{.SslProfile}}
     {{- end}}
@@ -172,6 +178,12 @@ listener {
     {{- end}}
     {{- if .Cost}}
     cost: {{.Cost}}
+    {{- end}}
+    {{- if .SaslMechanisms}}
+    saslMechanisms: {{.SaslMechanisms}}
+    {{- end}}
+    {{- if .AuthenticatePeer}}
+    authenticatePeer: true
     {{- end}}
     {{- if .SslProfile}}
     sslProfile: {{.SslProfile}}
@@ -195,6 +207,12 @@ listener {
     {{- if .Cost}}
     cost: {{.Cost}}
     {{- end}}
+    {{- if .SaslMechanisms}}
+    saslMechanisms: {{.SaslMechanisms}}
+    {{- end}}
+    {{- if .AuthenticatePeer}}
+    authenticatePeer: true
+    {{- end}}
     {{- if .SslProfile}}
     sslProfile: {{.SslProfile}}
     {{- end}}
@@ -208,9 +226,11 @@ sslProfile {
    privateKeyFile: /etc/qpid-dispatch-certs/{{.Name}}/{{.Credentials}}/tls.key
    {{- end}}
    {{- if .CaCert}}
+       {{- if eq .CaCert .Credentials}}
    caCertFile: /etc/qpid-dispatch-certs/{{.Name}}/{{.CaCert}}/ca.crt
-   {{- else if .RequireClientCerts}}
-   caCertFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+       {{- else}}
+   caCertFile: /etc/qpid-dispatch-certs/{{.Name}}/{{.CaCert}}/tls.crt
+       {{- end}}
    {{- end}}
 }
 {{- end}}
@@ -305,6 +325,9 @@ connector {
     {{- if .SslProfile}}
     sslProfile: {{.SslProfile}}
     {{- end}}
+    {{- if eq .VerifyHostname false}}
+    verifyHostname: false
+    {{- end}}
 }
 {{- end}}
 {{range .InterRouterConnectors}}
@@ -325,6 +348,9 @@ connector {
     {{- if .SslProfile}}
     sslProfile: {{.SslProfile}}
     {{- end}}
+    {{- if eq .VerifyHostname false}}
+    verifyHostname: false
+    {{- end}}
 }
 {{- end}}
 {{range .EdgeConnectors}}
@@ -344,6 +370,9 @@ connector {
     {{- end}}
     {{- if .SslProfile}}
     sslProfile: {{.SslProfile}}
+    {{- end}}
+    {{- if eq .VerifyHostname false}}
+    verifyHostname: false
     {{- end}}
 }
 {{- end}}`

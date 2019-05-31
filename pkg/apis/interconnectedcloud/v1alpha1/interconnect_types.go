@@ -117,14 +117,16 @@ type Address struct {
 }
 
 type Listener struct {
-	Name           string `json:"name,omitempty"`
-	Host           string `json:"host,omitempty"`
-	Port           int32  `json:"port"`
-	RouteContainer bool   `json:"routeContainer,omitempty"`
-	Http           bool   `json:"http,omitempty"`
-	Cost           int32  `json:"cost,omitempty"`
-	SslProfile     string `json:"sslProfile,omitempty"`
-	Expose         bool   `json:"expose,omitempty"`
+	Name             string `json:"name,omitempty"`
+	Host             string `json:"host,omitempty"`
+	Port             int32  `json:"port"`
+	RouteContainer   bool   `json:"routeContainer,omitempty"`
+	Http             bool   `json:"http,omitempty"`
+	Cost             int32  `json:"cost,omitempty"`
+	SslProfile       string `json:"sslProfile,omitempty"`
+	SaslMechanisms   string `json:"saslMechanisms,omitempty"`
+	AuthenticatePeer bool   `json:"authenticatePeer,omitempty"`
+	Expose           bool   `json:"expose,omitempty"`
 }
 
 type SslProfile struct {
@@ -152,6 +154,7 @@ type Connector struct {
 	Port           int32  `json:"port"`
 	RouteContainer bool   `json:"routeContainer,omitempty"`
 	Cost           int32  `json:"cost,omitempty"`
+	VerifyHostname bool   `json:"verifyHostname,omitempty"`
 	SslProfile     string `json:"sslProfile,omitempty"`
 }
 
