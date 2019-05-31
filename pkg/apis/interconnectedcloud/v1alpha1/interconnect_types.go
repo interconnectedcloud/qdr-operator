@@ -154,6 +154,7 @@ type Connector struct {
 	Port           int32  `json:"port"`
 	RouteContainer bool   `json:"routeContainer,omitempty"`
 	Cost           int32  `json:"cost,omitempty"`
+	VerifyHostname bool   `json:"verifyHostname,omitempty"`
 	SslProfile     string `json:"sslProfile,omitempty"`
 }
 

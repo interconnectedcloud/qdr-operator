@@ -325,6 +325,9 @@ connector {
     {{- if .SslProfile}}
     sslProfile: {{.SslProfile}}
     {{- end}}
+    {{- if eq .VerifyHostname false}}
+    verifyHostname: false
+    {{- end}}
 }
 {{- end}}
 {{range .InterRouterConnectors}}
@@ -345,6 +348,9 @@ connector {
     {{- if .SslProfile}}
     sslProfile: {{.SslProfile}}
     {{- end}}
+    {{- if eq .VerifyHostname false}}
+    verifyHostname: false
+    {{- end}}
 }
 {{- end}}
 {{range .EdgeConnectors}}
@@ -364,6 +370,9 @@ connector {
     {{- end}}
     {{- if .SslProfile}}
     sslProfile: {{.SslProfile}}
+    {{- end}}
+    {{- if eq .VerifyHostname false}}
+    verifyHostname: false
     {{- end}}
 }
 {{- end}}`

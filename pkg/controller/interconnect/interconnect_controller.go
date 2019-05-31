@@ -350,28 +350,6 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 
 		// As needed, create certs for SslProfiles
 		for i := range instance.Spec.SslProfiles {
-			if instance.Spec.SslProfiles[i].Credentials == "" {
-				certFound := &cmv1alpha1.Certificate{}
-				err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-" + instance.Spec.SslProfiles[i].Name + "-tls", Namespace: instance.Namespace}, certFound)
-				if err != nil && errors.IsNotFound(err) {
-					// Create a new certificate
-					cert := certificates.NewCertificateForCR(instance, instance.Spec.SslProfiles[i].Name)
-					controllerutil.SetControllerReference(instance, cert, r.scheme)
-					reqLogger.Info("Creating a new cert %s%s\n", cert.Namespace, cert.Name)
-					err = r.client.Create(context.TODO(), cert)
-					if err != nil {
-						reqLogger.Info("Failed to create new cert", "error", err)
-						return reconcile.Result{}, err
-					}
-					// Cert created successfully - set credential return and requeue
-					instance.Spec.SslProfiles[i].Credentials = instance.Name + "-" + instance.Spec.SslProfiles[i].Name + "-tls"
-					r.client.Update(context.TODO(), instance)
-					return reconcile.Result{Requeue: true}, nil
-				} else if err != nil {
-					reqLogger.Info("Failed to create cert", "error", err)
-					return reconcile.Result{}, err
-				}
-			}
 			if instance.Spec.SslProfiles[i].RequireClientCerts && instance.Spec.SslProfiles[i].CaCert == "" {
 				caCertFound := &cmv1alpha1.Certificate{}
 				err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-" + instance.Spec.SslProfiles[i].Name + "-ca", Namespace: instance.Namespace}, caCertFound)
@@ -385,12 +363,50 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 						reqLogger.Info("Failed to create new ca cert", "error", err)
 						return reconcile.Result{}, err
 					}
-					// ca cert created successfully - set cacert return and requeue
-					instance.Spec.SslProfiles[i].CaCert = instance.Name + "-" + instance.Spec.SslProfiles[i].Name + "-ca"
+					if instance.Spec.SslProfiles[i].Credentials != "" {
+						// ca cert created successfully - set cacert return and requeue
+						instance.Spec.SslProfiles[i].CaCert = instance.Name + "-" + instance.Spec.SslProfiles[i].Name + "-ca"
+						r.client.Update(context.TODO(), instance)
+						return reconcile.Result{Requeue: true}, nil
+					}
+				} else if err != nil {
+					reqLogger.Info("Failed to create ca cert", "error", err)
+					return reconcile.Result{}, err
+				}
+			}
+			if instance.Spec.SslProfiles[i].Credentials == "" {
+				certFound := &cmv1alpha1.Certificate{}
+				err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-" + instance.Spec.SslProfiles[i].Name + "-tls", Namespace: instance.Namespace}, certFound)
+				if err != nil && errors.IsNotFound(err) {
+					var issuerName string
+					//if we generated a ca for this profile, use that to generate the credentials, else use the top level issuer
+					if instance.Spec.SslProfiles[i].RequireClientCerts {
+						//ensure we have the necessary issuer
+						issuerName = instance.Name + "-" + instance.Spec.SslProfiles[i].Name + "-ca"
+						err = ensureCAIssuer(r, instance, issuerName, instance.Namespace, issuerName)
+						if err != nil {
+							reqLogger.Info("Failed to reconcile CA issuer", "error", err)
+							return reconcile.Result{}, err
+						}
+						reqLogger.Info("Reconciled CA issuer", "profile", instance.Spec.SslProfiles[i].Name)
+						instance.Spec.SslProfiles[i].CaCert = instance.Name + "-" + instance.Spec.SslProfiles[i].Name + "-tls"
+					}
+
+					// Create a new certificate
+					cert := certificates.NewCertificateForCR(instance, instance.Spec.SslProfiles[i].Name, issuerName)
+					controllerutil.SetControllerReference(instance, cert, r.scheme)
+					reqLogger.Info("Creating a new cert %s%s\n", cert.Namespace, cert.Name, "issuer", issuerName)
+					err = r.client.Create(context.TODO(), cert)
+					if err != nil {
+						reqLogger.Info("Failed to create new cert", "error", err)
+						return reconcile.Result{}, err
+					}
+					// Cert created successfully - set credential return and requeue
+					instance.Spec.SslProfiles[i].Credentials = instance.Name + "-" + instance.Spec.SslProfiles[i].Name + "-tls"
 					r.client.Update(context.TODO(), instance)
 					return reconcile.Result{Requeue: true}, nil
 				} else if err != nil {
-					reqLogger.Info("Failed to create ca cert", "error", err)
+					reqLogger.Info("Failed to create cert", "error", err)
 					return reconcile.Result{}, err
 				}
 			}
@@ -606,6 +622,24 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func ensureCAIssuer(r *ReconcileInterconnect, instance *v1alpha1.Interconnect, name string, namespace string, secret string) error {
+	caIssuerFound := &cmv1alpha1.Issuer{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, caIssuerFound)
+	if err != nil && errors.IsNotFound(err) {
+		log.Info("Creating CA Issuer")
+		newIssuer := certificates.NewCAIssuer(name, namespace, secret)
+		controllerutil.SetControllerReference(instance, newIssuer, r.scheme)
+		return r.client.Create(context.TODO(), newIssuer)
+	} else if err != nil {
+		return err
+	} else if caIssuerFound.Spec.IssuerConfig.CA.SecretName != secret {
+		log.Info("Updating CA Issuer")
+		caIssuerFound.Spec.IssuerConfig.CA.SecretName = secret
+		return r.client.Update(context.TODO(), caIssuerFound)
+	}
+	return nil
 }
 
 // getPodNames returns the pod names of the array of pods passed in

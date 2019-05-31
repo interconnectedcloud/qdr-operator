@@ -90,6 +90,27 @@ func NewCAIssuerForCR(m *v1alpha1.Interconnect, secret string) *cmv1alpha1.Issue
 	return issuer
 }
 
+func NewCAIssuer(name string, namespace string, secret string) *cmv1alpha1.Issuer {
+	issuer := &cmv1alpha1.Issuer{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "certmanager.k8s.io/v1alpha1",
+			Kind:       "Issuer",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: cmv1alpha1.IssuerSpec{
+			IssuerConfig: cmv1alpha1.IssuerConfig{
+				CA: &cmv1alpha1.CAIssuer{
+					SecretName: secret,
+				},
+			},
+		},
+	}
+	return issuer
+}
+
 func NewSelfSignedCACertificateForCR(m *v1alpha1.Interconnect) *cmv1alpha1.Certificate {
 	cert := &cmv1alpha1.Certificate{
 		TypeMeta: metav1.TypeMeta{
@@ -112,7 +133,16 @@ func NewSelfSignedCACertificateForCR(m *v1alpha1.Interconnect) *cmv1alpha1.Certi
 	return cert
 }
 
-func NewCertificateForCR(m *v1alpha1.Interconnect, profileName string) *cmv1alpha1.Certificate {
+func issuerName(m *v1alpha1.Interconnect, name string) string {
+	if name == "" {
+		return m.Name + "-ca"
+	} else {
+		return name
+	}
+
+}
+
+func NewCertificateForCR(m *v1alpha1.Interconnect, profileName string, issuer string) *cmv1alpha1.Certificate {
 	cert := &cmv1alpha1.Certificate{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "certmanager.k8s.io/v1alpha1",
@@ -129,7 +159,7 @@ func NewCertificateForCR(m *v1alpha1.Interconnect, profileName string) *cmv1alph
 				m.Name + "." + m.Namespace + ".svc.cluster.local",
 			},
 			IssuerRef: cmv1alpha1.ObjectReference{
-				Name: m.Name + "-ca",
+				Name: issuerName(m, issuer),
 			},
 		},
 	}
