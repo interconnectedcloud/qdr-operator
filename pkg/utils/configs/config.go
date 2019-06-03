@@ -70,12 +70,16 @@ func SetInterconnectDefaults(m *v1alpha1.Interconnect) (bool, bool) {
 		m.Spec.DeploymentPlan.Placement = v1alpha1.PlacementAny
 		updateDefaults = true
 	}
+	if m.Spec.DeploymentPlan.LivenessPort == 0 {
+		m.Spec.DeploymentPlan.LivenessPort = constants.HttpLivenessPort
+		updateDefaults = true
+	}
 
 	if len(m.Spec.Listeners) == 0 {
 		m.Spec.Listeners = append(m.Spec.Listeners, v1alpha1.Listener{
 			Port: 5672,
 		}, v1alpha1.Listener{
-			Port: constants.HttpLivenessPort,
+			Port: m.Spec.DeploymentPlan.LivenessPort,
 			Http: true,
 		})
 		if certMgrPresent {

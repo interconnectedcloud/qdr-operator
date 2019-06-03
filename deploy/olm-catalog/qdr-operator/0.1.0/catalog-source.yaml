@@ -335,6 +335,9 @@ items:
                           issuer:
                             type: string
                             description: The externally provided credentials
+                          livenessPort:
+                            type: integer
+                            description: The liveness probe port number
                       listeners:
                         type: array
                         description: Configuration of each individual interconnect listener
