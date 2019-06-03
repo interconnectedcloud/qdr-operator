@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
-	"github.com/interconnectedcloud/qdr-operator/pkg/constants"
 	"github.com/interconnectedcloud/qdr-operator/pkg/utils/configs"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -103,7 +102,7 @@ func ContainerForInterconnect(m *v1alpha1.Interconnect) corev1.Container {
 			InitialDelaySeconds: 60,
 			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
-					Port: intstr.FromInt(constants.HttpLivenessPort),
+					Port: intstr.FromInt(int(m.Spec.DeploymentPlan.LivenessPort)),
 				},
 			},
 		},

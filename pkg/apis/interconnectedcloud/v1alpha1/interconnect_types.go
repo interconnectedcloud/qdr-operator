@@ -98,12 +98,13 @@ const (
 )
 
 type DeploymentPlanType struct {
-	Image     string                      `json:"image,omitempty"`
-	Size      int32                       `json:"size,omitempty"`
-	Role      RouterRoleType              `json:"role,omitempty"`
-	Placement PlacementType               `json:"placement,omitempty"`
-	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
-	Issuer    string                      `json:"issuer,omitempty"`
+	Image        string                      `json:"image,omitempty"`
+	Size         int32                       `json:"size,omitempty"`
+	Role         RouterRoleType              `json:"role,omitempty"`
+	Placement    PlacementType               `json:"placement,omitempty"`
+	Resources    corev1.ResourceRequirements `json:"resources,omitempty"`
+	Issuer       string                      `json:"issuer,omitempty"`
+	LivenessPort int32                       `json:"livenessPort,omitempty"`
 }
 
 type Address struct {
