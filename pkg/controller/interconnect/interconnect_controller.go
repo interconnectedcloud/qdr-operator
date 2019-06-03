@@ -139,18 +139,19 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// TODO(ansmith): Check if there is a cert-manager crd instance, handle err
-	// Watch for changes to secondary resource Issuer and requeue the owner Interconnect
-	err = c.Watch(&source.Kind{Type: &cmv1alpha1.Issuer{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1alpha1.Interconnect{},
-	})
+	if certificates.DetectCertmgrIssuer() {
+		// Watch for changes to secondary resource Issuer and requeue the owner Interconnect
+		err = c.Watch(&source.Kind{Type: &cmv1alpha1.Issuer{}}, &handler.EnqueueRequestForOwner{
+			IsController: true,
+			OwnerType:    &v1alpha1.Interconnect{},
+		})
 
-	// Watch for changes to secondary resource Certificates and requeue the owner Interconnect
-	err = c.Watch(&source.Kind{Type: &cmv1alpha1.Certificate{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1alpha1.Interconnect{},
-	})
+		// Watch for changes to secondary resource Certificates and requeue the owner Interconnect
+		err = c.Watch(&source.Kind{Type: &cmv1alpha1.Certificate{}}, &handler.EnqueueRequestForOwner{
+			IsController: true,
+			OwnerType:    &v1alpha1.Interconnect{},
+		})
+	}
 
 	if openshift.IsOpenShift() {
 		// Watch for changes to secondary resource Route and requeue the owner Interconnect
