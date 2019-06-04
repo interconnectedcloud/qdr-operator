@@ -6,6 +6,6 @@ metadata:
 spec:
   type: appregistry
   endpoint: https://quay.io/cnr
-  registryNamespace: myeung
-  displayName: "Qdr Operators"
+  registryNamespace: interconnectedcloud
+  displayName: "Qdr Operator"
   publisher: "Red Hat"
