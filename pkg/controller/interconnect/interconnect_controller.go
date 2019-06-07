@@ -52,8 +52,10 @@ func Add(mgr manager.Manager) error {
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	// TODO(ansmith): verify this is still needed if cert-manager is fully installed
 	scheme := mgr.GetScheme()
-	utilruntime.Must(cmv1alpha1.AddToScheme(scheme))
-	utilruntime.Must(scheme.SetVersionPriority(cmv1alpha1.SchemeGroupVersion))
+	if certificates.DetectCertmgrIssuer() {
+		utilruntime.Must(cmv1alpha1.AddToScheme(scheme))
+		utilruntime.Must(scheme.SetVersionPriority(cmv1alpha1.SchemeGroupVersion))
+	}
 
 	if openshift.IsOpenShift() {
 		utilruntime.Must(routev1.AddToScheme(scheme))
