@@ -1,6 +1,8 @@
 package deployments
 
 import (
+	"strconv"
+
 	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/pkg/resources/containers"
 	"github.com/interconnectedcloud/qdr-operator/pkg/utils/selectors"
@@ -69,6 +71,10 @@ func NewDeploymentForCR(m *v1alpha1.Interconnect) *appsv1.Deployment {
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
+					Annotations: map[string]string{
+						"prometheus.io/port":   strconv.Itoa(int(m.Spec.DeploymentPlan.LivenessPort)),
+						"prometheus.io/scrape": "true",
+					},
 				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: m.Name,
@@ -126,6 +132,10 @@ func NewDaemonSetForCR(m *v1alpha1.Interconnect) *appsv1.DaemonSet {
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
+					Annotations: map[string]string{
+						"prometheus.io/port":   strconv.Itoa(int(m.Spec.DeploymentPlan.LivenessPort)),
+						"prometheus.io/scrape": "true",
+					},
 				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: m.Name,
