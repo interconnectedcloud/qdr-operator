@@ -132,6 +132,10 @@ func NewDaemonSetForCR(m *v1alpha1.Interconnect) *appsv1.DaemonSet {
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
+					Annotations: map[string]string{
+						"prometheus.io/port":   strconv.Itoa(int(m.Spec.DeploymentPlan.LivenessPort)),
+						"prometheus.io/scrape": "true",
+					},
 				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: m.Name,
