@@ -131,12 +131,12 @@ type Listener struct {
 }
 
 type SslProfile struct {
-	Name               string `json:"name,omitempty"`
-	Credentials        string `json:"credentials,omitempty"`
-	CaCert             string `json:"caCert,omitempty"`
-	RequireClientCerts bool   `json:"requireClientCerts,omitempty"`
-	Ciphers            string `json:"ciphers,omitempty"`
-	Protocols          string `json:"protocols,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Credentials string `json:"credentials,omitempty"`
+	CaCert      string `json:"caCert,omitempty"`
+	MutualAuth  bool   `json:"mutualAuth,omitempty"`
+	Ciphers     string `json:"ciphers,omitempty"`
+	Protocols   string `json:"protocols,omitempty"`
 }
 
 type LinkRoute struct {

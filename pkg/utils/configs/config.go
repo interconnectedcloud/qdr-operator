@@ -119,9 +119,11 @@ func SetInterconnectDefaults(m *v1alpha1.Interconnect) (bool, bool) {
 		requestCert = true
 	}
 	for i := range m.Spec.SslProfiles {
-		if m.Spec.SslProfiles[i].Credentials == "" {
+		if m.Spec.SslProfiles[i].Credentials == "" && m.Spec.SslProfiles[i].CaCert == "" {
 			requestCert = true
-		} else if m.Spec.SslProfiles[i].RequireClientCerts && m.Spec.SslProfiles[i].CaCert == "" {
+		} else if m.Spec.SslProfiles[i].Credentials == "" && m.Spec.SslProfiles[i].MutualAuth {
+			requestCert = true
+		} else if m.Spec.SslProfiles[i].CaCert == "" && m.Spec.SslProfiles[i].MutualAuth {
 			requestCert = true
 		}
 	}

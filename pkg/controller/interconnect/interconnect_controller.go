@@ -350,7 +350,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 
 		// As needed, create certs for SslProfiles
 		for i := range instance.Spec.SslProfiles {
-			if instance.Spec.SslProfiles[i].RequireClientCerts && instance.Spec.SslProfiles[i].CaCert == "" {
+			if instance.Spec.SslProfiles[i].MutualAuth && instance.Spec.SslProfiles[i].CaCert == "" {
 				caCertFound := &cmv1alpha1.Certificate{}
 				err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-" + instance.Spec.SslProfiles[i].Name + "-ca", Namespace: instance.Namespace}, caCertFound)
 				if err != nil && errors.IsNotFound(err) {
@@ -364,23 +364,23 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 						return reconcile.Result{}, err
 					}
 					if instance.Spec.SslProfiles[i].Credentials != "" {
-						// ca cert created successfully - set cacert return and requeue
+						// ca cert created successfully, no need to generate credentials - set cacert return and requeue
 						instance.Spec.SslProfiles[i].CaCert = instance.Name + "-" + instance.Spec.SslProfiles[i].Name + "-ca"
 						r.client.Update(context.TODO(), instance)
 						return reconcile.Result{Requeue: true}, nil
-					}
+					} // else, proceed to check credentials
 				} else if err != nil {
 					reqLogger.Info("Failed to create ca cert", "error", err)
 					return reconcile.Result{}, err
 				}
 			}
-			if instance.Spec.SslProfiles[i].Credentials == "" {
+			if instance.Spec.SslProfiles[i].Credentials == "" && (instance.Spec.SslProfiles[i].CaCert == "" || instance.Spec.SslProfiles[i].MutualAuth) {
 				certFound := &cmv1alpha1.Certificate{}
 				err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-" + instance.Spec.SslProfiles[i].Name + "-tls", Namespace: instance.Namespace}, certFound)
 				if err != nil && errors.IsNotFound(err) {
 					var issuerName string
 					//if we generated a ca for this profile, use that to generate the credentials, else use the top level issuer
-					if instance.Spec.SslProfiles[i].RequireClientCerts {
+					if instance.Spec.SslProfiles[i].CaCert == "" && instance.Spec.SslProfiles[i].MutualAuth {
 						//ensure we have the necessary issuer
 						issuerName = instance.Name + "-" + instance.Spec.SslProfiles[i].Name + "-ca"
 						err = ensureCAIssuer(r, instance, issuerName, instance.Namespace, issuerName)
@@ -389,6 +389,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 							return reconcile.Result{}, err
 						}
 						reqLogger.Info("Reconciled CA issuer", "profile", instance.Spec.SslProfiles[i].Name)
+						// set CaCert but only update below along with Credentials
 						instance.Spec.SslProfiles[i].CaCert = instance.Name + "-" + instance.Spec.SslProfiles[i].Name + "-tls"
 					}
 
