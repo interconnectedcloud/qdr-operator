@@ -1,6 +1,6 @@
-# Qdr Operator
+# QDR Operator
 
-A Kubernetes operator for managing Layer 7 (e.g. Application Layer) addressing and routing within and across clusters. The operator manages *interior* and *edge* Qdr deployments automating resource creation and administration.
+A Kubernetes operator for managing Layer 7 (e.g. Application Layer) addressing and routing within and across clusters. The operator manages *interior* and *edge* QDR deployments automating resource creation and administration.
 
 ## Introduction
 
@@ -11,9 +11,9 @@ semantics and other desired options can be specified through the CRD.
 
 ## Usage
 
-Deploy the Qdr Operator into the Kubernetes cluster where it will manage requests for the `Interconnect` resource. The Qdr Operator will watch for create, update and delete resource requests and perform the necessary steps to ensure the present cluster state matches the desired state.
+Deploy the QDR Operator into the Kubernetes cluster where it will manage requests for the `Interconnect` resource. The QDR Operator will watch for create, update and delete resource requests and perform the necessary steps to ensure the present cluster state matches the desired state.
 
-### Deploy Qdr Operator
+### Deploy QDR Operator
 
 The `deploy` directory contains the manifests needed to properly install the
 Operator.
@@ -44,7 +44,7 @@ Next, deploy the operator into the cluster.
 $ kubectl create -f deploy/operator.yaml
 ```
 
-This step will create a pod on the Kubernetes cluster for the Qdr Operator.
+This step will create a pod on the Kubernetes cluster for the QDR Operator.
 Observe the `qdr-operator` pod and verify it is in the running state.
 
 ```
