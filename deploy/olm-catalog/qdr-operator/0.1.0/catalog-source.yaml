@@ -603,7 +603,7 @@ items:
                               type: string
                             protocols:
                               type: string
-                            requireClientCerts:
+                            mutualAuth:
                               type: boolean
                           type: object
                         type: array
