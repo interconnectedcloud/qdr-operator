@@ -2,6 +2,7 @@ package certificates
 
 import (
 	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
+	"github.com/interconnectedcloud/qdr-operator/pkg/utils/configs"
 	cmv1alpha1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
 	apiextv1b1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -143,6 +144,7 @@ func issuerName(m *v1alpha1.Interconnect, name string) string {
 }
 
 func NewCertificateForCR(m *v1alpha1.Interconnect, profileName string, issuer string) *cmv1alpha1.Certificate {
+	hostNames := configs.GetInterconnectExposedHostnames(m, profileName)
 	cert := &cmv1alpha1.Certificate{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "certmanager.k8s.io/v1alpha1",
@@ -154,10 +156,8 @@ func NewCertificateForCR(m *v1alpha1.Interconnect, profileName string, issuer st
 		},
 		Spec: cmv1alpha1.CertificateSpec{
 			SecretName: m.Name + "-" + profileName + "-tls",
-			CommonName: m.Name + "." + m.Namespace + ".svc.cluster.local",
-			DNSNames: []string{
-				m.Name + "." + m.Namespace + ".svc.cluster.local",
-			},
+			CommonName: m.Name + "." + m.Namespace,
+			DNSNames:   hostNames,
 			IssuerRef: cmv1alpha1.ObjectReference{
 				Name: issuerName(m, issuer),
 			},
@@ -167,6 +167,7 @@ func NewCertificateForCR(m *v1alpha1.Interconnect, profileName string, issuer st
 }
 
 func NewCACertificateForCR(m *v1alpha1.Interconnect, profileName string) *cmv1alpha1.Certificate {
+	hostNames := configs.GetInterconnectExposedHostnames(m, profileName)
 	cert := &cmv1alpha1.Certificate{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "certmanager.k8s.io/v1alpha1",
@@ -178,11 +179,9 @@ func NewCACertificateForCR(m *v1alpha1.Interconnect, profileName string) *cmv1al
 		},
 		Spec: cmv1alpha1.CertificateSpec{
 			SecretName: m.Name + "-" + profileName + "-ca",
-			CommonName: m.Name + "." + m.Namespace + ".svc.cluster.local",
-			DNSNames: []string{
-				m.Name + "." + m.Namespace + ".svc.cluster.local",
-			},
-			IsCA: true,
+			CommonName: m.Name + "." + m.Namespace,
+			DNSNames:   hostNames,
+			IsCA:       true,
 			IssuerRef: cmv1alpha1.ObjectReference{
 				Name: m.Name + "-ca",
 			},

@@ -2,11 +2,13 @@ package configs
 
 import (
 	"bytes"
+	"strconv"
 	"text/template"
 
 	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/pkg/constants"
-	"github.com/interconnectedcloud/qdr-operator/pkg/resources/certificates"
+	//"github.com/interconnectedcloud/qdr-operator/pkg/resources/certificates"
+	"github.com/interconnectedcloud/qdr-operator/pkg/utils/openshift"
 )
 
 func isDefaultSslProfileDefined(m *v1alpha1.Interconnect) bool {
@@ -53,10 +55,29 @@ func GetInterconnectExposedListeners(m *v1alpha1.Interconnect) []v1alpha1.Listen
 	return listeners
 }
 
-func SetInterconnectDefaults(m *v1alpha1.Interconnect) (bool, bool) {
+func GetInterconnectExposedHostnames(m *v1alpha1.Interconnect, profileName string) []string {
+	var hostNames []string
+	exposedListeners := GetInterconnectExposedListeners(m)
+	dns := openshift.GetDnsConfig()
+
+	for _, listener := range exposedListeners {
+		if listener.SslProfile == profileName {
+			target := listener.Name
+			if target == "" {
+				target = "port-" + strconv.Itoa(int(listener.Port))
+			}
+			hostNames = append(hostNames, m.Name+"-"+target+"."+m.Namespace+"."+dns.Spec.BaseDomain)
+		}
+	}
+	hostNames = append(hostNames, m.Name+"."+m.Namespace+".svc.cluster.local")
+
+	return hostNames
+}
+
+func SetInterconnectDefaults(m *v1alpha1.Interconnect, certMgrPresent bool) (bool, bool) {
 	requestCert := false
 	updateDefaults := false
-	certMgrPresent := certificates.DetectCertmgrIssuer()
+	//certMgrPresent := certificates.DetectCertmgrIssuer()
 
 	if m.Spec.DeploymentPlan.Size == 0 {
 		m.Spec.DeploymentPlan.Size = 1

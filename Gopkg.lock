@@ -405,12 +405,27 @@
   version = "1.0.1"
 
 [[projects]]
-  digest = "1:8bc8f43d2332d035857c92581df240f247c287629d5f60c751df609f9b6215c5"
+  branch = "master"
+  digest = "1:912ce7773e1d6d3a3fac3426f00108564c930b99e0a6f15944f7337e81edd014"
   name = "github.com/openshift/api"
-  packages = ["route/v1"]
+  packages = [
+    "config/v1",
+    "route/v1",
+  ]
   pruneopts = "NT"
-  revision = "0d921e363e951d89f583292c60d013c318df64dc"
-  version = "v3.9.0"
+  revision = "5114e14c97ff18657b68d15224a520a278861e8a"
+
+[[projects]]
+  branch = "master"
+  digest = "1:009c58ea6fe78d8714ea9fbd026099048d77d086989707840de87de8ea305ad8"
+  name = "github.com/openshift/client-go"
+  packages = [
+    "config/clientset/versioned",
+    "config/clientset/versioned/scheme",
+    "config/clientset/versioned/typed/config/v1",
+  ]
+  pruneopts = "NT"
+  revision = "f4b242dfe08529a11803996e325ab6dc127d4e1d"
 
 [[projects]]
   branch = "master"
@@ -1021,7 +1036,9 @@
     "github.com/RHsyseng/operator-utils/pkg/validation",
     "github.com/ghodss/yaml",
     "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1",
+    "github.com/openshift/api/config/v1",
     "github.com/openshift/api/route/v1",
+    "github.com/openshift/client-go/config/clientset/versioned",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/pkg/leader",
     "github.com/operator-framework/operator-sdk/pkg/test",

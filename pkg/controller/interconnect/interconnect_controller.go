@@ -221,7 +221,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 		r.client.Status().Update(context.TODO(), instance)
 	}
 
-	requestCert, updateDefaults := configs.SetInterconnectDefaults(instance)
+	requestCert, updateDefaults := configs.SetInterconnectDefaults(instance, certificates.DetectCertmgrIssuer())
 	if updateDefaults {
 		reqLogger.Info("Updating interconnect instance defaults")
 		r.client.Update(context.TODO(), instance)
