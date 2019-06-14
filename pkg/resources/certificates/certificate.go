@@ -156,7 +156,7 @@ func NewCertificateForCR(m *v1alpha1.Interconnect, profileName string, issuer st
 		},
 		Spec: cmv1alpha1.CertificateSpec{
 			SecretName: m.Name + "-" + profileName + "-tls",
-			CommonName: m.Name + "." + m.Namespace,
+			CommonName: m.Name,
 			DNSNames:   hostNames,
 			IssuerRef: cmv1alpha1.ObjectReference{
 				Name: issuerName(m, issuer),
@@ -179,7 +179,7 @@ func NewCACertificateForCR(m *v1alpha1.Interconnect, profileName string) *cmv1al
 		},
 		Spec: cmv1alpha1.CertificateSpec{
 			SecretName: m.Name + "-" + profileName + "-ca",
-			CommonName: m.Name + "." + m.Namespace,
+			CommonName: m.Name,
 			DNSNames:   hostNames,
 			IsCA:       true,
 			IssuerRef: cmv1alpha1.ObjectReference{

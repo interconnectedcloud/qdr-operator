@@ -7,7 +7,6 @@ import (
 
 	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/pkg/constants"
-	//"github.com/interconnectedcloud/qdr-operator/pkg/resources/certificates"
 	"github.com/interconnectedcloud/qdr-operator/pkg/utils/openshift"
 )
 
