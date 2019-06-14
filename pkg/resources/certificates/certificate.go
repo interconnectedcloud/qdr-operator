@@ -41,7 +41,7 @@ func detectCertmgr() bool {
 	crd := &apiextv1b1.CustomResourceDefinition{}
 	crd, err = extClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get("issuers.certmanager.k8s.io", metav1.GetOptions{})
 	if err != nil {
-		log.Error(err, "Error getting certmanager issuer crd: %v")
+		log.Info("Issuer crd for cert-manager not present, qdr-operator will be unable to request certificate generation")
 		return false
 	} else {
 		log.Info("Detected certmanager issuer crd", "issuer", crd)

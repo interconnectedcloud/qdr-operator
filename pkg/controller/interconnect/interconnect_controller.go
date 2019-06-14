@@ -52,8 +52,10 @@ func Add(mgr manager.Manager) error {
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	// TODO(ansmith): verify this is still needed if cert-manager is fully installed
 	scheme := mgr.GetScheme()
-	utilruntime.Must(cmv1alpha1.AddToScheme(scheme))
-	utilruntime.Must(scheme.SetVersionPriority(cmv1alpha1.SchemeGroupVersion))
+	if certificates.DetectCertmgrIssuer() {
+		utilruntime.Must(cmv1alpha1.AddToScheme(scheme))
+		utilruntime.Must(scheme.SetVersionPriority(cmv1alpha1.SchemeGroupVersion))
+	}
 
 	isOpenShift, err := utils.IsOpenShift(nil)
 	if err == nil && isOpenShift {
@@ -145,18 +147,19 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// TODO(ansmith): Check if there is a cert-manager crd instance, handle err
-	// Watch for changes to secondary resource Issuer and requeue the owner Interconnect
-	err = c.Watch(&source.Kind{Type: &cmv1alpha1.Issuer{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1alpha1.Interconnect{},
-	})
+	if certificates.DetectCertmgrIssuer() {
+		// Watch for changes to secondary resource Issuer and requeue the owner Interconnect
+		err = c.Watch(&source.Kind{Type: &cmv1alpha1.Issuer{}}, &handler.EnqueueRequestForOwner{
+			IsController: true,
+			OwnerType:    &v1alpha1.Interconnect{},
+		})
 
-	// Watch for changes to secondary resource Certificates and requeue the owner Interconnect
-	err = c.Watch(&source.Kind{Type: &cmv1alpha1.Certificate{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1alpha1.Interconnect{},
-	})
+		// Watch for changes to secondary resource Certificates and requeue the owner Interconnect
+		err = c.Watch(&source.Kind{Type: &cmv1alpha1.Certificate{}}, &handler.EnqueueRequestForOwner{
+			IsController: true,
+			OwnerType:    &v1alpha1.Interconnect{},
+		})
+	}
 
 	isOpenShift, err := utils.IsOpenShift(nil)
 	if err == nil && isOpenShift {
