@@ -34,12 +34,14 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
-  branch = "master"
-  digest = "1:71aa8bdd52833ef34ce166318292c9a99967a5b7b8070658f870ae49b4a9562f"
+  digest = "1:59885960e76f85af51ee8407be4512eb53d77db5f6843420b9c1a4202082b9b1"
   name = "github.com/RHsyseng/operator-utils"
-  packages = ["pkg/validation"]
+  packages = [
+    "pkg/utils/openshift",
+    "pkg/validation",
+  ]
   pruneopts = "NT"
-  revision = "3725530e9c7aeff1e1c5dee00574200940360370"
+  revision = "9b235fef216357d7620259eadb9af40a43391819"
 
 [[projects]]
   digest = "1:5a23cd3a5496a0b2da7e3b348d14e77b11a210738c398200d7d6f04ea8cf3bd8"
@@ -646,7 +648,6 @@
     "internal/triegen",
     "internal/ucd",
     "language",
-    "search",
     "secure/bidirule",
     "transform",
     "unicode/bidi",
@@ -1018,6 +1019,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/RHsyseng/operator-utils/pkg/utils/openshift",
     "github.com/RHsyseng/operator-utils/pkg/validation",
     "github.com/ghodss/yaml",
     "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1",
@@ -1028,8 +1030,6 @@
     "github.com/operator-framework/operator-sdk/pkg/test/e2eutil",
     "github.com/operator-framework/operator-sdk/version",
     "github.com/stretchr/testify/assert",
-    "golang.org/x/text/language",
-    "golang.org/x/text/search",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/extensions/v1beta1",
@@ -1048,7 +1048,6 @@
     "k8s.io/apimachinery/pkg/watch",
     "k8s.io/client-go/discovery",
     "k8s.io/client-go/discovery/fake",
-    "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp",
     "k8s.io/client-go/rest",
     "k8s.io/client-go/testing",
