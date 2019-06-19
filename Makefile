@@ -24,7 +24,7 @@ test:
 
 .PHONY: cluster-test
 cluster-test:
-	operator-sdk test local "./test/e2e"
+	operator-sdk test local --verbose --go-test-flags "-ginkgo.v -ginkgo.progress" "./test/e2e"
 
 .PHONY: build
 build:
