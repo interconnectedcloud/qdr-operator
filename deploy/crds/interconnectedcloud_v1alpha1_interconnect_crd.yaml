@@ -72,6 +72,9 @@ spec:
                 serviceType:
                   type: string
                   description: The type of service to create
+            users:
+              type: string
+              description: The name of a secret holding user and password details
             listeners:
               type: array
               description: Configuration of each individual interconnect listener

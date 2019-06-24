@@ -8,6 +8,7 @@ import (
 // InterconnectSpec defines the desired state of Interconnect
 type InterconnectSpec struct {
 	DeploymentPlan        DeploymentPlanType `json:"deploymentPlan,omitempty"`
+	Users                 string             `json:"users,omitempty"`
 	Listeners             []Listener         `json:"listeners,omitempty"`
 	InterRouterListeners  []Listener         `json:"interRouterListeners,omitempty"`
 	EdgeListeners         []Listener         `json:"edgeListeners,omitempty"`

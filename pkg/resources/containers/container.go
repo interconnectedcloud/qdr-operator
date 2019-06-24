@@ -44,6 +44,10 @@ func containerEnvVarsForInterconnect(m *v1alpha1.Interconnect) []corev1.EnvVar {
 	envVars := []corev1.EnvVar{}
 	envVars = append(envVars, corev1.EnvVar{Name: "APPLICATION_NAME", Value: m.Name})
 	envVars = append(envVars, corev1.EnvVar{Name: "QDROUTERD_CONF", Value: configs.ConfigForInterconnect(m)})
+	if m.Spec.Users != "" {
+		envVars = append(envVars, corev1.EnvVar{Name: "QDROUTERD_AUTO_CREATE_SASLDB_SOURCE", Value: "/etc/qpid-dispatch/sasl-users/"})
+		envVars = append(envVars, corev1.EnvVar{Name: "QDROUTERD_AUTO_CREATE_SASLDB_PATH", Value: "/tmp/qdrouterd.sasldb"})
+	}
 	envVars = append(envVars, corev1.EnvVar{Name: "POD_COUNT", Value: strconv.Itoa(int(m.Spec.DeploymentPlan.Size))})
 	envVars = append(envVars, corev1.EnvVar{Name: "POD_NAMESPACE", ValueFrom: &corev1.EnvVarSource{
 		FieldRef: &corev1.ObjectFieldSelector{
@@ -80,9 +84,11 @@ func checkInterconnectConfig(desired []corev1.EnvVar, actual []corev1.EnvVar) bo
 
 func CheckInterconnectContainer(desired *corev1.Container, actual *corev1.Container) bool {
 	if desired.Image != actual.Image {
+		log.Info("Name changed", "desired", desired.Image, "actual", actual.Image)
 		return false
 	}
 	if !checkInterconnectConfig(desired.Env, actual.Env) {
+		log.Info("Config changed", "desired", desired.Env, "actual", actual.Env)
 		return false
 	}
 	return true
@@ -127,6 +133,17 @@ func ContainerForInterconnect(m *v1alpha1.Interconnect) corev1.Container {
 
 		}
 	}
+	if len(m.Spec.Users) > 0 {
+		volumeMounts = append(volumeMounts, corev1.VolumeMount{
+			Name:      "sasl-users",
+			MountPath: "/etc/qpid-dispatch/sasl-users",
+		})
+		volumeMounts = append(volumeMounts, corev1.VolumeMount{
+			Name:      "sasl-config",
+			MountPath: "/etc/sasl2",
+		})
+	}
+
 	container.VolumeMounts = volumeMounts
 	container.Resources = m.Spec.DeploymentPlan.Resources
 	return container
