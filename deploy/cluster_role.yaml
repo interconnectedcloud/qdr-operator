@@ -11,3 +11,11 @@ rules:
   verbs:
   - get
   - list
+- apiGroups:
+  - "config.openshift.io"
+  resources:
+  - dnses
+  verbs:
+  - get
+  - list
+  - watch
