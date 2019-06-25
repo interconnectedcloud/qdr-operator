@@ -105,6 +105,7 @@ type DeploymentPlanType struct {
 	Resources    corev1.ResourceRequirements `json:"resources,omitempty"`
 	Issuer       string                      `json:"issuer,omitempty"`
 	LivenessPort int32                       `json:"livenessPort,omitempty"`
+	ServiceType  string                      `json:"serviceType,omitempty"`
 }
 
 type Address struct {

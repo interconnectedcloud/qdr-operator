@@ -10,6 +10,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+)
+
+var (
+	log = logf.Log.WithName("services")
 )
 
 func nameForListener(l *v1alpha1.Listener) string {
@@ -72,13 +77,17 @@ func NewServiceForCR(m *v1alpha1.Interconnect, requestCert bool) *corev1.Service
 			Namespace: m.Namespace,
 		},
 		Spec: corev1.ServiceSpec{
-			Type:     "LoadBalancer",
 			Selector: labels,
 			Ports:    servicePortsForRouter(m),
 		},
 	}
 	if requestCert {
 		service.Annotations = map[string]string{constants.CertRequestAnnotation: m.Name + "-cert"}
+	}
+	if m.Spec.DeploymentPlan.ServiceType == "ClusterIP" || m.Spec.DeploymentPlan.ServiceType == "NodePort" || m.Spec.DeploymentPlan.ServiceType == "LoadBalancer" {
+		service.Spec.Type = corev1.ServiceType(m.Spec.DeploymentPlan.ServiceType)
+	} else if m.Spec.DeploymentPlan.ServiceType != "" {
+		log.Info("Unrecognised ServiceType", "ServiceType", m.Spec.DeploymentPlan.ServiceType)
 	}
 	return service
 }
