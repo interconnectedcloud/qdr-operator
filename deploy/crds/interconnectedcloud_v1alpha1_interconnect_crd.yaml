@@ -69,6 +69,9 @@ spec:
                 livenessPort:
                   type: integer
                   description: The liveness probe port number
+                serviceType:
+                  type: string
+                  description: The type of service to create
             listeners:
               type: array
               description: Configuration of each individual interconnect listener
