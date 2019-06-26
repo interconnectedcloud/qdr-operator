@@ -10,27 +10,43 @@ import (
 	"github.com/interconnectedcloud/qdr-operator/pkg/utils/openshift"
 )
 
-func isDefaultSslProfileDefined(m *v1alpha1.Interconnect) bool {
+func isSslProfileDefined(m *v1alpha1.Interconnect, name string) bool {
 	for _, profile := range m.Spec.SslProfiles {
-		if profile.Name == "default" {
+		if profile.Name == name {
 			return true
 		}
 	}
 	return false
 }
 
-func isDefaultSslProfileUsed(m *v1alpha1.Interconnect) bool {
+func isSslProfileUsed(m *v1alpha1.Interconnect, name string) bool {
 	for _, listener := range m.Spec.Listeners {
-		if listener.SslProfile == "default" {
+		if listener.SslProfile == name {
 			return true
 		}
 	}
 	for _, listener := range m.Spec.InterRouterListeners {
-		if listener.SslProfile == "default" {
+		if listener.SslProfile == name {
 			return true
 		}
 	}
 	return false
+}
+
+func isDefaultSslProfileDefined(m *v1alpha1.Interconnect) bool {
+	return isSslProfileDefined(m, "default")
+}
+
+func isDefaultSslProfileUsed(m *v1alpha1.Interconnect) bool {
+	return isSslProfileUsed(m, "default")
+}
+
+func isInterRouterSslProfileDefined(m *v1alpha1.Interconnect) bool {
+	return isSslProfileDefined(m, "inter-router")
+}
+
+func isInterRouterSslProfileUsed(m *v1alpha1.Interconnect) bool {
+	return isSslProfileUsed(m, "inter-router")
 }
 
 func getExposedListeners(listeners []v1alpha1.Listener) []v1alpha1.Listener {
@@ -114,8 +130,11 @@ func SetInterconnectDefaults(m *v1alpha1.Interconnect, certMgrPresent bool) (boo
 		if len(m.Spec.InterRouterListeners) == 0 {
 			if certMgrPresent {
 				m.Spec.InterRouterListeners = append(m.Spec.InterRouterListeners, v1alpha1.Listener{
-					Port:       55671,
-					SslProfile: "default",
+					Port:             55671,
+					SslProfile:       "inter-router",
+					Expose:           true,
+					AuthenticatePeer: true,
+					SaslMechanisms:   "EXTERNAL",
 				})
 			} else {
 				m.Spec.InterRouterListeners = append(m.Spec.InterRouterListeners, v1alpha1.Listener{
@@ -134,6 +153,14 @@ func SetInterconnectDefaults(m *v1alpha1.Interconnect, certMgrPresent bool) (boo
 	if !isDefaultSslProfileDefined(m) && isDefaultSslProfileUsed(m) {
 		m.Spec.SslProfiles = append(m.Spec.SslProfiles, v1alpha1.SslProfile{
 			Name: "default",
+		})
+		updateDefaults = true
+		requestCert = true
+	}
+	if !isInterRouterSslProfileDefined(m) && isInterRouterSslProfileUsed(m) {
+		m.Spec.SslProfiles = append(m.Spec.SslProfiles, v1alpha1.SslProfile{
+			Name:       "inter-router",
+			MutualAuth: true,
 		})
 		updateDefaults = true
 		requestCert = true
