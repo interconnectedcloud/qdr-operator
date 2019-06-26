@@ -109,6 +109,7 @@ func ContainerForInterconnect(m *v1alpha1.Interconnect) corev1.Container {
 			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Port: intstr.FromInt(int(m.Spec.DeploymentPlan.LivenessPort)),
+					Path: "/healthz",
 				},
 			},
 		},

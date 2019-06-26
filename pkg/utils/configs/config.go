@@ -119,8 +119,10 @@ func SetInterconnectDefaults(m *v1alpha1.Interconnect, certMgrPresent bool) (boo
 		m.Spec.Listeners = append(m.Spec.Listeners, v1alpha1.Listener{
 			Port: 5672,
 		}, v1alpha1.Listener{
-			Port: m.Spec.DeploymentPlan.LivenessPort,
-			Http: true,
+			Port:             8080,
+			Http:             true,
+			Expose:           true,
+			AuthenticatePeer: true,
 		})
 		if certMgrPresent {
 			m.Spec.Listeners = append(m.Spec.Listeners, v1alpha1.Listener{
@@ -219,6 +221,15 @@ listener {
     {{- end}}
 }
 {{- end}}
+listener {
+    name: health-and-stats
+    port: {{.DeploymentPlan.LivenessPort}}
+    http: true
+    healthz: true
+    metrics: true
+    websockets: false
+    httpRootDir: invalid
+}
 {{range .InterRouterListeners}}
 listener {
     {{- if .Name}}
