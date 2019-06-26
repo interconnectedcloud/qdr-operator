@@ -4,10 +4,12 @@ import (
 	"context"
 	"reflect"
 	"strconv"
+	"strings"
 
 	utils "github.com/RHsyseng/operator-utils/pkg/utils/openshift"
 	"github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/pkg/resources/certificates"
+	"github.com/interconnectedcloud/qdr-operator/pkg/resources/configmaps"
 	"github.com/interconnectedcloud/qdr-operator/pkg/resources/deployments"
 	"github.com/interconnectedcloud/qdr-operator/pkg/resources/ingresses"
 	"github.com/interconnectedcloud/qdr-operator/pkg/resources/rolebindings"
@@ -16,6 +18,7 @@ import (
 	"github.com/interconnectedcloud/qdr-operator/pkg/resources/serviceaccounts"
 	"github.com/interconnectedcloud/qdr-operator/pkg/resources/services"
 	"github.com/interconnectedcloud/qdr-operator/pkg/utils/configs"
+	"github.com/interconnectedcloud/qdr-operator/pkg/utils/random"
 	"github.com/interconnectedcloud/qdr-operator/pkg/utils/selectors"
 	cmv1alpha1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -120,7 +123,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to secondary resource Secreet and requeue the owner Interconnect
+	// Watch for changes to secondary resource Secret and requeue the owner Interconnect
 	err = c.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &v1alpha1.Interconnect{},
@@ -613,6 +616,57 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 				return reconcile.Result{}, err
 			}
 		}
+	}
+
+	if !(strings.EqualFold(instance.Spec.Users, "none") || strings.EqualFold(instance.Spec.Users, "false")) {
+		// Check if the secret containing users already exists, if not create it
+		userSecret := &corev1.Secret{}
+		err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Spec.Users, Namespace: instance.Namespace}, userSecret)
+		if err != nil && errors.IsNotFound(err) {
+			labels := selectors.LabelsForInterconnect(instance.Name)
+			users := &corev1.Secret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Labels:    labels,
+					Name:      instance.Spec.Users,
+					Namespace: instance.Namespace,
+				},
+				StringData: map[string]string{"guest": random.GenerateRandomString(8)},
+			}
+
+			controllerutil.SetControllerReference(instance, users, r.scheme)
+			reqLogger.Info("Creating user secret for interconnect deployment", "Secret", users)
+			err = r.client.Create(context.TODO(), users)
+			if err != nil {
+				reqLogger.Error(err, "Failed to create user secret")
+				return reconcile.Result{}, err
+			}
+			return reconcile.Result{Requeue: true}, nil
+		} else if err != nil {
+			reqLogger.Error(err, "Failed to get Secret")
+			return reconcile.Result{}, err
+		}
+
+		saslConfig := &corev1.ConfigMap{}
+		err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Spec.Users, Namespace: instance.Namespace}, saslConfig)
+		if err != nil && errors.IsNotFound(err) {
+			saslConfig = configmaps.NewConfigMapForSaslConfig(instance)
+			controllerutil.SetControllerReference(instance, saslConfig, r.scheme)
+			reqLogger.Info("Creating ConfigMap for sasl config", "ConfigMap", saslConfig)
+			err = r.client.Create(context.TODO(), saslConfig)
+			if err != nil {
+				reqLogger.Error(err, "Failed to create ConfigMap for sasl config")
+				return reconcile.Result{}, err
+			}
+			return reconcile.Result{Requeue: true}, nil
+		} else if err != nil {
+			reqLogger.Error(err, "Failed to get ConfigMap for sasl config")
+			return reconcile.Result{}, err
+		}
+
 	}
 
 	// List the pods for this deployment

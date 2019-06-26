@@ -107,6 +107,27 @@ func NewDeploymentForCR(m *v1alpha1.Interconnect) *appsv1.Deployment {
 			})
 		}
 	}
+	if len(m.Spec.Users) > 0 {
+		volumes = append(volumes, corev1.Volume{
+			Name: "sasl-users",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: m.Spec.Users,
+				},
+			},
+		})
+		volumes = append(volumes, corev1.Volume{
+			Name: "sasl-config",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: m.Name + "-sasl-config",
+					},
+				},
+			},
+		})
+	}
+
 	dep.Spec.Template.Spec.Volumes = volumes
 
 	return dep

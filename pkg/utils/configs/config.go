@@ -111,6 +111,10 @@ func SetInterconnectDefaults(m *v1alpha1.Interconnect, certMgrPresent bool) (boo
 		updateDefaults = true
 	}
 
+	if m.Spec.Users == "" {
+		m.Spec.Users = m.Name + "-users"
+	}
+
 	if len(m.Spec.Listeners) == 0 {
 		m.Spec.Listeners = append(m.Spec.Listeners, v1alpha1.Listener{
 			Port: 5672,
@@ -433,4 +437,13 @@ connector {
 	qdrconfig := template.Must(template.New("qdrconfig").Parse(config))
 	qdrconfig.Execute(&buff, m.Spec)
 	return buff.String()
+}
+
+func ConfigForSasl(m *v1alpha1.Interconnect) string {
+	config := `
+pwcheck_method: auxprop
+auxprop_plugin: sasldb
+sasldb_path: /tmp/qdrouterd.sasldb
+`
+	return config
 }
