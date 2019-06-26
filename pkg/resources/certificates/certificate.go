@@ -167,7 +167,6 @@ func NewCertificateForCR(m *v1alpha1.Interconnect, profileName string, issuer st
 }
 
 func NewCACertificateForCR(m *v1alpha1.Interconnect, profileName string) *cmv1alpha1.Certificate {
-	hostNames := configs.GetInterconnectExposedHostnames(m, profileName)
 	cert := &cmv1alpha1.Certificate{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "certmanager.k8s.io/v1alpha1",
@@ -179,11 +178,10 @@ func NewCACertificateForCR(m *v1alpha1.Interconnect, profileName string) *cmv1al
 		},
 		Spec: cmv1alpha1.CertificateSpec{
 			SecretName: m.Name + "-" + profileName + "-ca",
-			CommonName: m.Name,
-			DNSNames:   hostNames,
+			CommonName: m.Name + "-" + profileName + "-ca",
 			IsCA:       true,
 			IssuerRef: cmv1alpha1.ObjectReference{
-				Name: m.Name + "-ca",
+				Name: m.Name + "-selfsigned",
 			},
 		},
 	}
