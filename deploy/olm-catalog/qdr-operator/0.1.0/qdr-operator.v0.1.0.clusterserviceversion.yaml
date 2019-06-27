@@ -3,7 +3,7 @@ kind: ClusterServiceVersion
 metadata:
   annotations:
     alm-examples: >-
-      [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Interconnect","metadata":{"name":"amq-interconnect"},"spec":{"deploymentPlan":{"size":2,"role":"interior","placement":"Any","image":"quay.io/interconnectedcloud/qdrouterd:1.7.0"}}}]
+      [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Interconnect","metadata":{"name":"amq-interconnect"},"spec":{"deploymentPlan":{"size":2,"role":"interior","placement":"Any"}}}]
     capabilities: Basic Install
     categories: Messaging
   name: qdr-operator.v0.1.0
