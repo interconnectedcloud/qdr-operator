@@ -483,7 +483,13 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 		} else if !deployments.CheckDeployedContainer(&depFound.Spec.Template, instance) {
 			reqLogger.Info("Container config has changed")
 			ct := v1alpha1.InterconnectConditionProvisioning
-			r.client.Update(context.TODO(), depFound)
+			err = r.client.Update(context.TODO(), depFound)
+			if err != nil {
+				reqLogger.Error(err, "Failed to update Deployment", "error", err)
+				return reconcile.Result{}, err
+			} else {
+				reqLogger.Info("Deployment updated", "name", depFound.Name)
+			}
 			// update status
 			condition := v1alpha1.InterconnectCondition{
 				Type:           ct,
