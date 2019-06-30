@@ -1009,6 +1009,14 @@
   revision = "ced9eb3070a5f1c548ef46e8dfe2a97c208d9f03"
 
 [[projects]]
+  branch = "master"
+  digest = "1:9d4cf9e47f4571be17d7ce10150998567e0b28b4c84d46f7f52f689790cb5719"
+  name = "k8s.io/utils"
+  packages = ["exec"]
+  pruneopts = "NT"
+  revision = "c55fbcfc754a5b2ec2fbae8fb9dcac36bdba6a12"
+
+[[projects]]
   digest = "1:e03ddaf9f31bccbbb8c33eabad2c85025a95ca98905649fd744e0a54c630a064"
   name = "sigs.k8s.io/controller-runtime"
   packages = [
@@ -1101,6 +1109,7 @@
     "k8s.io/code-generator/cmd/openapi-gen",
     "k8s.io/gengo/args",
     "k8s.io/klog",
+    "k8s.io/utils/exec",
     "sigs.k8s.io/controller-runtime/pkg/client",
     "sigs.k8s.io/controller-runtime/pkg/client/config",
     "sigs.k8s.io/controller-runtime/pkg/controller",

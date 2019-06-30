@@ -1,6 +1,8 @@
 package e2e
 
 import (
+	"time"
+
 	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework"
 
@@ -46,6 +48,11 @@ func testEdgeDefaults(f *framework.Framework) {
 	Expect(ei.Spec.DeploymentPlan.Role).To(Equal(v1alpha1.RouterRoleType("edge")))
 	Expect(ei.Spec.DeploymentPlan.Placement).To(Equal(v1alpha1.PlacementAny))
 
+	By("Creating an Interconnect resource in the namespace")
+	dep, err := f.GetDeployment("edge-interconnect")
+	Expect(err).NotTo(HaveOccurred())
+	Expect(*dep.Spec.Replicas).To(Equal(int32(1)))
+
 	By("Creating a service for the interconnect default listeners")
 	svc, err := f.GetService("edge-interconnect")
 	Expect(err).NotTo(HaveOccurred())
@@ -54,4 +61,25 @@ func testEdgeDefaults(f *framework.Framework) {
 	Expect(svc.OwnerReferences[0].APIVersion).To(Equal(framework.GVR))
 	Expect(svc.OwnerReferences[0].Name).To(Equal("edge-interconnect"))
 	Expect(*svc.OwnerReferences[0].Controller).To(Equal(true))
+
+	By("Setting up default listener on qdr instances")
+	pods, err := f.ListPodsForDeployment(dep)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(len(pods.Items)).To(Equal(1))
+	for _, pod := range pods.Items {
+		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Router started in Edge mode", time.Second*5)
+		Expect(err).NotTo(HaveOccurred())
+		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Version: 1.8.0", time.Second*5)
+		Expect(err).NotTo(HaveOccurred())
+		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Configured Listener: 0.0.0.0:5672 proto=any, role=normal", time.Second*1)
+		Expect(err).NotTo(HaveOccurred())
+		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Configured Listener: 0.0.0.0:8080 proto=any, role=normal, http", time.Second*1)
+		Expect(err).NotTo(HaveOccurred())
+		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Configured Listener: :8888 proto=any, role=normal, http", time.Second*1)
+		Expect(err).NotTo(HaveOccurred())
+		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Configured Listener: 0.0.0.0:55672 proto=any, role=inter-router", time.Second*1)
+		Expect(err).To(HaveOccurred())
+		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Configured Listener: 0.0.0.0:45672 proto=any, role=edge", time.Second*1)
+		Expect(err).To(HaveOccurred())
+	}
 }

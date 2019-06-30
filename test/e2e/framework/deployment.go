@@ -21,6 +21,7 @@ import (
 
 	e2elog "github.com/interconnectedcloud/qdr-operator/test/e2e/framework/log"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -31,6 +32,15 @@ import (
 
 func (f *Framework) GetDeployment(name string) (*appsv1.Deployment, error) {
 	return f.KubeClient.AppsV1().Deployments(f.Namespace).Get(name, metav1.GetOptions{})
+}
+
+func (f *Framework) ListPodsForDeployment(deployment *appsv1.Deployment) (*corev1.PodList, error) {
+	selector, err := metav1.LabelSelectorAsSelector(deployment.Spec.Selector)
+	if err != nil {
+		return nil, err
+	}
+	listOps := metav1.ListOptions{LabelSelector: selector.String()}
+	return f.KubeClient.CoreV1().Pods(f.Namespace).List(listOps)
 }
 
 func WaitForDeployment(kubeclient kubernetes.Interface, namespace, name string, replicas int, retryInterval, timeout time.Duration) error {
@@ -54,6 +64,34 @@ func WaitForDeployment(kubeclient kubernetes.Interface, namespace, name string, 
 		return err
 	}
 	e2elog.Logf("Deployment available (%d/%d)\n", replicas, replicas)
+	return nil
+}
+
+func (f *Framework) GetDaemonSet(name string) (*appsv1.DaemonSet, error) {
+	return f.KubeClient.AppsV1().DaemonSets(f.Namespace).Get(name, metav1.GetOptions{})
+}
+
+func WaitForDaemonSet(kubeclient kubernetes.Interface, namespace, name string, count int, retryInterval, timeout time.Duration) error {
+	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
+		ds, err := kubeclient.AppsV1().DaemonSets(namespace).Get(name, metav1.GetOptions{IncludeUninitialized: true})
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				e2elog.Logf("Waiting for availability of %s daemon set\n", name)
+				return false, nil
+			}
+			return false, err
+		}
+
+		if int(ds.Status.NumberReady) >= count {
+			return true, nil
+		}
+		e2elog.Logf("Waiting for full availability of %s daemonset (%d/%d)\n", name, ds.Status.NumberReady, count)
+		return false, nil
+	})
+	if err != nil {
+		return err
+	}
+	e2elog.Logf("Daemonset ready (%d)\n", count)
 	return nil
 }
 
