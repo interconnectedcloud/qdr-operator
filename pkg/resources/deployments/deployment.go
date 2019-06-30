@@ -188,7 +188,6 @@ func NewDaemonSetForCR(m *v1alpha1.Interconnect) *appsv1.DaemonSet {
 			})
 		}
 	}
-
 	if len(m.Spec.Users) > 0 {
 		volumes = append(volumes, corev1.Volume{
 			Name: "sasl-users",
