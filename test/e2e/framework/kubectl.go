@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -95,6 +96,26 @@ func LookForStringInLog(ns, podName, container, expectedString string, timeout t
 	})
 }
 
+// LookForRegexp looks for the given regexp in results from given "func() string"
+func LookForRegexp(expectedRegexp string, timeout time.Duration, fn func() string) (result string, err error) {
+	var expRegexp = regexp.MustCompile(expectedRegexp)
+	for t := time.Now(); time.Since(t) < timeout; time.Sleep(Poll) {
+		result = fn()
+		if expRegexp.MatchString(result) {
+			return
+		}
+	}
+	err = fmt.Errorf("Failed to find \"%s\", last result: \"%s\"", expectedRegexp, result)
+	return
+}
+
+// LookForRegexpInLog looks for the given regexp in the log of a specific pod container
+func LookForRegexpInLog(ns, podName, container, expectedRegexp string, timeout time.Duration) (result string, err error) {
+	return LookForRegexp(expectedRegexp, timeout, func() string {
+		return RunKubectlOrDie("logs", podName, container, fmt.Sprintf("--namespace=%v", ns))
+	})
+}
+
 // KubectlBuilder is used to build, customize and execute a kubectl Command.
 // Add more functions to customize the builder as needed.
 type KubectlBuilder struct {
@@ -104,9 +125,23 @@ type KubectlBuilder struct {
 
 // NewKubectlCommand returns a KubectlBuilder for running kubectl.
 func NewKubectlCommand(args ...string) *KubectlBuilder {
+	return NewKubectlCommandTimeout(Timeout, args...)
+}
+
+// NewKubectlCommandTimeout returns a KubectlBuilder with a timeout defined, for running kubectl.
+func NewKubectlCommandTimeout(timeout time.Duration, args ...string) *KubectlBuilder {
 	b := new(KubectlBuilder)
 	b.cmd = KubectlCmd(args...)
+	b.timeout = time.After(timeout)
 	return b
+}
+
+// NewKubectlExecCommand returns a KubectlBuilder prepared to execute a given command in a running pod.
+func NewKubectlExecCommand(f *Framework, pod string, timeout time.Duration, commandArgs ...string) *KubectlBuilder {
+	defaultArgs := []string{}
+	defaultArgs = append(defaultArgs, "--namespace", f.Namespace, "exec", pod, "--")
+	defaultArgs = append(defaultArgs, commandArgs...)
+	return NewKubectlCommandTimeout(timeout, defaultArgs...)
 }
 
 // ExecOrDie runs the kubectl executable or dies if error occurs.
@@ -167,7 +202,7 @@ func (b KubectlBuilder) Exec() (string, error) {
 			}
 		}
 	case <-b.timeout:
-		b.cmd.Process.Kill()
+		_ = b.cmd.Process.Kill()
 		return "", fmt.Errorf("timed out waiting for command %v:\nCommand stdout:\n%v\nstderr:\n%v", cmd, cmd.Stdout, cmd.Stderr)
 	}
 	// Note: these help to debug

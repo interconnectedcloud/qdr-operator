@@ -24,7 +24,7 @@ test:
 
 .PHONY: cluster-test
 cluster-test:
-	go test -v "./test/e2e"
+	go test --count=1 -v "./test/e2e"
 
 .PHONY: build
 build:
