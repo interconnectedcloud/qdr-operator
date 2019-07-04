@@ -89,10 +89,16 @@ func GetInterconnectExposedHostnames(m *v1alpha1.Interconnect, profileName strin
 	return hostNames
 }
 
+func IsCaSecretNeeded(profile *v1alpha1.SslProfile) bool {
+	// If the ca and credentials are in the same secret, don't need to mount it twice
+	// If the credentials were generated and signed by the ca in the profile, then the credentials
+	// secret will contain the ca public key, so the ca secret doesn't need to be mounted
+	return profile.CaCert != profile.Credentials && !(profile.MutualAuth && profile.GenerateCredentials)
+}
+
 func SetInterconnectDefaults(m *v1alpha1.Interconnect, certMgrPresent bool) (bool, bool) {
 	requestCert := false
 	updateDefaults := false
-	//certMgrPresent := certificates.DetectCertmgrIssuer()
 
 	if m.Spec.DeploymentPlan.Size == 0 {
 		m.Spec.DeploymentPlan.Size = 1
@@ -158,26 +164,49 @@ func SetInterconnectDefaults(m *v1alpha1.Interconnect, certMgrPresent bool) (boo
 	}
 	if !isDefaultSslProfileDefined(m) && isDefaultSslProfileUsed(m) {
 		m.Spec.SslProfiles = append(m.Spec.SslProfiles, v1alpha1.SslProfile{
-			Name: "default",
+			Name:                "default",
+			Credentials:         m.Name + "-default-credentials",
+			GenerateCredentials: true,
 		})
 		updateDefaults = true
 		requestCert = true
 	}
 	if !isInterRouterSslProfileDefined(m) && isInterRouterSslProfileUsed(m) {
 		m.Spec.SslProfiles = append(m.Spec.SslProfiles, v1alpha1.SslProfile{
-			Name:       "inter-router",
-			MutualAuth: true,
+			Name:                "inter-router",
+			Credentials:         m.Name + "-inter-router-credentials",
+			CaCert:              m.Name + "-inter-router-ca",
+			GenerateCredentials: true,
+			GenerateCaCert:      true,
+			MutualAuth:          true,
 		})
 		updateDefaults = true
 		requestCert = true
 	}
-	for i := range m.Spec.SslProfiles {
-		if m.Spec.SslProfiles[i].Credentials == "" && m.Spec.SslProfiles[i].CaCert == "" {
-			requestCert = true
-		} else if m.Spec.SslProfiles[i].Credentials == "" && m.Spec.SslProfiles[i].MutualAuth {
-			requestCert = true
-		} else if m.Spec.SslProfiles[i].CaCert == "" && m.Spec.SslProfiles[i].MutualAuth {
-			requestCert = true
+	if certMgrPresent {
+		for i := range m.Spec.SslProfiles {
+			if m.Spec.SslProfiles[i].Credentials == "" && m.Spec.SslProfiles[i].CaCert == "" {
+				m.Spec.SslProfiles[i].Credentials = m.Name + "-" + m.Spec.SslProfiles[i].Name + "-credentials"
+				m.Spec.SslProfiles[i].GenerateCredentials = true
+				if m.Spec.SslProfiles[i].MutualAuth {
+					m.Spec.SslProfiles[i].CaCert = m.Name + "-" + m.Spec.SslProfiles[i].Name + "-ca"
+					m.Spec.SslProfiles[i].GenerateCaCert = true
+				}
+				updateDefaults = true
+				requestCert = true
+			} else if m.Spec.SslProfiles[i].Credentials == "" && m.Spec.SslProfiles[i].MutualAuth {
+				m.Spec.SslProfiles[i].Credentials = m.Name + "-" + m.Spec.SslProfiles[i].Name + "-credentials"
+				m.Spec.SslProfiles[i].GenerateCredentials = true
+				updateDefaults = true
+				requestCert = true
+			} else if m.Spec.SslProfiles[i].CaCert == "" && m.Spec.SslProfiles[i].MutualAuth {
+				m.Spec.SslProfiles[i].CaCert = m.Name + "-" + m.Spec.SslProfiles[i].Name + "-ca"
+				m.Spec.SslProfiles[i].GenerateCaCert = true
+				updateDefaults = true
+				requestCert = true
+			} else if m.Spec.SslProfiles[i].GenerateCredentials || m.Spec.SslProfiles[i].GenerateCaCert {
+				requestCert = true
+			}
 		}
 	}
 	return requestCert && certMgrPresent, updateDefaults
@@ -296,6 +325,8 @@ sslProfile {
    {{- if .CaCert}}
        {{- if eq .CaCert .Credentials}}
    caCertFile: /etc/qpid-dispatch-certs/{{.Name}}/{{.CaCert}}/ca.crt
+       {{- else if and .GenerateCredentials .MutualAuth}}
+   caCertFile: /etc/qpid-dispatch-certs/{{.Name}}/{{.Credentials}}/ca.crt
        {{- else}}
    caCertFile: /etc/qpid-dispatch-certs/{{.Name}}/{{.CaCert}}/tls.crt
        {{- end}}

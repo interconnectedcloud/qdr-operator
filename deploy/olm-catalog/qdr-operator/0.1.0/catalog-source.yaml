@@ -605,6 +605,10 @@ items:
                               type: string
                             credentials:
                               type: string
+                            generateCredentials:
+                              type: boolean
+                            generateCaCert:
+                              type: boolean
                             name:
                               type: string
                             protocols:

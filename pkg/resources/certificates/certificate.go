@@ -143,7 +143,7 @@ func issuerName(m *v1alpha1.Interconnect, name string) string {
 
 }
 
-func NewCertificateForCR(m *v1alpha1.Interconnect, profileName string, issuer string) *cmv1alpha1.Certificate {
+func NewCertificateForCR(m *v1alpha1.Interconnect, profileName string, certName string, issuer string) *cmv1alpha1.Certificate {
 	hostNames := configs.GetInterconnectExposedHostnames(m, profileName)
 	cert := &cmv1alpha1.Certificate{
 		TypeMeta: metav1.TypeMeta{
@@ -151,11 +151,11 @@ func NewCertificateForCR(m *v1alpha1.Interconnect, profileName string, issuer st
 			Kind:       "Certificate",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      m.Name + "-" + profileName + "-tls",
+			Name:      certName,
 			Namespace: m.Namespace,
 		},
 		Spec: cmv1alpha1.CertificateSpec{
-			SecretName: m.Name + "-" + profileName + "-tls",
+			SecretName: certName,
 			CommonName: m.Name,
 			DNSNames:   hostNames,
 			IssuerRef: cmv1alpha1.ObjectReference{
@@ -166,19 +166,19 @@ func NewCertificateForCR(m *v1alpha1.Interconnect, profileName string, issuer st
 	return cert
 }
 
-func NewCACertificateForCR(m *v1alpha1.Interconnect, profileName string) *cmv1alpha1.Certificate {
+func NewCACertificateForCR(m *v1alpha1.Interconnect, name string) *cmv1alpha1.Certificate {
 	cert := &cmv1alpha1.Certificate{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "certmanager.k8s.io/v1alpha1",
 			Kind:       "Certificate",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      m.Name + "-" + profileName + "-ca",
+			Name:      name,
 			Namespace: m.Namespace,
 		},
 		Spec: cmv1alpha1.CertificateSpec{
-			SecretName: m.Name + "-" + profileName + "-ca",
-			CommonName: m.Name + "-" + profileName + "-ca",
+			SecretName: name,
+			CommonName: name,
 			IsCA:       true,
 			IssuerRef: cmv1alpha1.ObjectReference{
 				Name: m.Name + "-selfsigned",
