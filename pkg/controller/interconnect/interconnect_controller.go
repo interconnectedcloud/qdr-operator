@@ -657,7 +657,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 		}
 
 		saslConfig := &corev1.ConfigMap{}
-		err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Spec.Users, Namespace: instance.Namespace}, saslConfig)
+		err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-sasl-config", Namespace: instance.Namespace}, saslConfig)
 		if err != nil && errors.IsNotFound(err) {
 			saslConfig = configmaps.NewConfigMapForSaslConfig(instance)
 			controllerutil.SetControllerReference(instance, saslConfig, r.scheme)
