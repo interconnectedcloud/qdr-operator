@@ -125,7 +125,7 @@ func ContainerForInterconnect(m *v1alpha1.Interconnect) corev1.Container {
 					MountPath: "/etc/qpid-dispatch-certs/" + profile.Name + "/" + profile.Credentials,
 				})
 			}
-			if len(profile.CaCert) > 0 && profile.CaCert != profile.Credentials {
+			if len(profile.CaCert) > 0 && configs.IsCaSecretNeeded(&profile) {
 				volumeMounts = append(volumeMounts, corev1.VolumeMount{
 					Name:      profile.CaCert,
 					MountPath: "/etc/qpid-dispatch-certs/" + profile.Name + "/" + profile.CaCert,
