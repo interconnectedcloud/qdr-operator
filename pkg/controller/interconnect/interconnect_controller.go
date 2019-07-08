@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	utils "github.com/RHsyseng/operator-utils/pkg/utils/openshift"
+	rhseutils "github.com/RHsyseng/operator-utils/pkg/utils/openshift"
 	"github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/pkg/resources/certificates"
 	"github.com/interconnectedcloud/qdr-operator/pkg/resources/configmaps"
@@ -41,9 +41,23 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_interconnect")
+var (
+	log                = logf.Log.WithName("controller_interconnect")
+	openshift_detected *bool
+)
 
 const maxConditions = 6
+
+func isOpenShift() bool {
+	if openshift_detected == nil {
+		isos, err := rhseutils.IsOpenShift(nil)
+		if err != nil {
+			log.Error(err, "Failed to detect cluster type")
+		}
+		openshift_detected = &isos
+	}
+	return *openshift_detected
+}
 
 // Add creates a new Interconnect Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -60,15 +74,9 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 		utilruntime.Must(scheme.SetVersionPriority(cmv1alpha1.SchemeGroupVersion))
 	}
 
-	isOpenShift, err := utils.IsOpenShift(nil)
-	if err == nil && isOpenShift {
+	if isOpenShift() {
 		utilruntime.Must(routev1.AddToScheme(scheme))
 		utilruntime.Must(scheme.SetVersionPriority(routev1.SchemeGroupVersion))
-		log.Info("Is an openshift: ", isOpenShift)
-	} else if err != nil {
-		log.Error(err, "failed to detect cluster type, use the launching cluster.")
-	} else {
-		log.Info("Not an openshift")
 	}
 	return &ReconcileInterconnect{client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
@@ -164,8 +172,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		})
 	}
 
-	isOpenShift, err := utils.IsOpenShift(nil)
-	if err == nil && isOpenShift {
+	if isOpenShift() {
 		// Watch for changes to secondary resource Route and requeue the owner Interconnect
 		err = c.Watch(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestForOwner{
 			IsController: true,
@@ -174,8 +181,6 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		if err != nil {
 			return err
 		}
-	} else if err != nil {
-		log.Error(err, "failed to detect cluster type, use the launching cluster.")
 	}
 
 	return nil
@@ -561,11 +566,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 		if target == "" {
 			target = "port-" + strconv.Itoa(int(listener.Port))
 		}
-		isOpenShift, err := utils.IsOpenShift(nil)
-		if err != nil {
-			reqLogger.Error(err, "Failed to detect cluster type. ")
-		}
-		if err == nil && isOpenShift {
+		if isOpenShift() {
 			routeFound := &routev1.Route{}
 			err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name + "-" + target, Namespace: instance.Namespace}, routeFound)
 			if err != nil && errors.IsNotFound(err) {
