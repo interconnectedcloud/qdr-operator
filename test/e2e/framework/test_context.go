@@ -45,6 +45,8 @@ type TestContextType struct {
 	ReportDir                string
 	ReportPrefix             string
 	Prefix                   string
+	QdrImage                 string
+	OpImage                  string
 	DeleteNamespace          bool
 	DeleteNamespaceOnFailure bool
 	CleanStart               bool
@@ -77,6 +79,8 @@ func RegisterFlags() {
 	flag.StringVar(&TestContext.OutputDir, "e2e-output-dir", "/tmp", "Output directory for interesting/useful test data, like performance data, benchmarks, and other metrics.")
 	flag.StringVar(&TestContext.Prefix, "prefix", "e2e", "A prefix to be added to cloud resources created during testing.")
 	flag.BoolVar(&TestContext.CleanStart, "clean-start", false, "If true, purge all namespaces except default and system before running tests. This serves to Cleanup test namespaces from failed/interrupted e2e runs in a long-lived cluster.")
+	flag.StringVar(&TestContext.QdrImage, "qdr-image", qdrImage, fmt.Sprintf("The qdrouterd image to use. Default: %s", qdrImage))
+	flag.StringVar(&TestContext.OpImage, "op-image", opImage, fmt.Sprintf("The operator image to use. Default: %s", opImage))
 }
 
 // HandleFlags sets up all flags and parses the command line.

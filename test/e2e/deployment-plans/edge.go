@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("[interior] Interconnect edge deployment tests", func() {
+var _ = Describe("[edge] Interconnect edge deployment tests", func() {
 
 	f := framework.NewFramework("basic-edge", nil)
 
@@ -69,7 +69,7 @@ func testEdgeDefaults(f *framework.Framework) {
 	for _, pod := range pods.Items {
 		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Router started in Edge mode", time.Second*5)
 		Expect(err).NotTo(HaveOccurred())
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Version: 1.8.0", time.Second*5)
+		_, err = framework.LookForRegexpInLog(f.Namespace, pod.Name, "edge-interconnect", `Version:.*1\.8\.0`, time.Second*5)
 		Expect(err).NotTo(HaveOccurred())
 		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Configured Listener: 0.0.0.0:5672 proto=any, role=normal", time.Second*1)
 		Expect(err).NotTo(HaveOccurred())

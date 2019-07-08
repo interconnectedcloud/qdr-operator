@@ -1,6 +1,9 @@
 package e2e
 
 import (
+	router_mgmt "github.com/interconnectedcloud/qdr-operator/test/e2e/router-mgmt"
+	"github.com/interconnectedcloud/qdr-operator/test/e2e/router-mgmt/entities"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"time"
 
 	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
@@ -77,7 +80,9 @@ func testInteriorDefaults(f *framework.Framework) {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(len(pods.Items)).To(Equal(1))
 	for _, pod := range pods.Items {
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "interior-interconnect", "Version: 1.8.0", time.Second*5)
+		// TODO Better not checking the version as this would cause a failure if we test using
+		//      an different version for the interconnect image
+		_, err = framework.LookForRegexpInLog(f.Namespace, pod.Name, "interior-interconnect", `Version:.*1\.8\.0`, time.Second*5)
 		Expect(err).NotTo(HaveOccurred())
 		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "interior-interconnect", "Configured Listener: 0.0.0.0:5672 proto=any, role=normal", time.Second*1)
 		Expect(err).NotTo(HaveOccurred())
@@ -113,6 +118,10 @@ func testInteriorScaleUp(f *framework.Framework) {
 	ei, err = f.GetInterconnect("interior-interconnect")
 	Expect(err).NotTo(HaveOccurred())
 
+	By("Verifying the deployment in the namespace")
+	dep, err := f.GetDeployment("interior-interconnect")
+	Expect(err).NotTo(HaveOccurred())
+
 	By("Verifying the deployment plan")
 	Expect(ei.Name).To(Equal("interior-interconnect"))
 	Expect(ei.Spec.DeploymentPlan.Size).To(Equal(int32(3)))
@@ -127,6 +136,43 @@ func testInteriorScaleUp(f *framework.Framework) {
 	By("Verifying the Deployment has reached 4 replicas")
 	err = framework.WaitForDeployment(f.KubeClient, f.Namespace, "interior-interconnect", 4, framework.RetryInterval, framework.Timeout)
 	Expect(err).NotTo(HaveOccurred())
+
+	By("Verifying the Deployment contains 4 pods")
+	pods, err := f.ListPodsForDeployment(dep)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(len(pods.Items)).To(Equal(4))
+
+	By("Verifying the Network contains 4 nodes on each pod")
+	for _, pod := range pods.Items {
+		var nodes []entities.Node
+		// Retry logic to retrieve nodes
+		err = wait.Poll(5*time.Second, 20*time.Second, func() (done bool, err error) {
+			if nodes, err = router_mgmt.QdmanageQueryNodes(f, pod.Name); err != nil {
+				return false, err
+			}
+			if len(nodes) != 4 {
+				return false, nil
+			}
+			return true, nil
+		})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(len(nodes)).To(Equal(4))
+	}
+
+	By("Verifying each node has 3 inter-router connections")
+	for _, pod := range pods.Items {
+		// Retrieving inter-router connections 3 on each of the 4 nodes
+		conns, err := router_mgmt.QdmanageQueryConnectionsFilter(f, pod.Name, func(entity interface{}) bool {
+			conn := entity.(entities.Connection)
+			if conn.Role == "inter-router" && conn.Opened {
+				return true
+			}
+			return false
+		})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(len(conns)).To(Equal(3))
+	}
+
 }
 
 func testInteriorScaleDown(f *framework.Framework) {
