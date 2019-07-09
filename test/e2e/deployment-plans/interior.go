@@ -1,12 +1,10 @@
 package e2e
 
 import (
-	router_mgmt "github.com/interconnectedcloud/qdr-operator/test/e2e/router-mgmt"
-	"github.com/interconnectedcloud/qdr-operator/test/e2e/router-mgmt/entities"
-	"k8s.io/apimachinery/pkg/util/wait"
+	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement"
 	"time"
 
-	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
+	"github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework"
 
 	. "github.com/onsi/ginkgo"
@@ -144,17 +142,9 @@ func testInteriorScaleUp(f *framework.Framework) {
 
 	By("Verifying the Network contains 4 nodes on each pod")
 	for _, pod := range pods.Items {
-		var nodes []entities.Node
-		// Retry logic to retrieve nodes
-		err = wait.Poll(5*time.Second, 20*time.Second, func() (done bool, err error) {
-			if nodes, err = router_mgmt.QdmanageQueryNodes(f, pod.Name); err != nil {
-				return false, err
-			}
-			if len(nodes) != 4 {
-				return false, nil
-			}
-			return true, nil
-		})
+		err := qdrmanagement.WaitForQdrNodesInPod(f, pod, 4)
+		Expect(err).NotTo(HaveOccurred())
+		nodes, err := qdrmanagement.QdmanageQueryNodes(f, pod.Name)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(len(nodes)).To(Equal(4))
 	}
@@ -162,13 +152,7 @@ func testInteriorScaleUp(f *framework.Framework) {
 	By("Verifying each node has 3 inter-router connections")
 	for _, pod := range pods.Items {
 		// Retrieving inter-router connections 3 on each of the 4 nodes
-		conns, err := router_mgmt.QdmanageQueryConnectionsFilter(f, pod.Name, func(entity interface{}) bool {
-			conn := entity.(entities.Connection)
-			if conn.Role == "inter-router" && conn.Opened {
-				return true
-			}
-			return false
-		})
+		conns, err := qdrmanagement.ListInterRouterConnectionsForPod(f, pod)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(len(conns)).To(Equal(3))
 	}
