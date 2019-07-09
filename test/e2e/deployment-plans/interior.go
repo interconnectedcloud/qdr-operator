@@ -88,9 +88,23 @@ func testInteriorDefaults(f *framework.Framework) {
 		Expect(err).NotTo(HaveOccurred())
 		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "interior-interconnect", "Configured Listener: :8888 proto=any, role=normal, http", time.Second*1)
 		Expect(err).NotTo(HaveOccurred())
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "interior-interconnect", "Configured Listener: 0.0.0.0:55672 proto=any, role=inter-router", time.Second*1)
+		if f.CertManagerPresent {
+			_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "interior-interconnect", "Configured Listener: 0.0.0.0:55671 proto=any, role=inter-router, sslProfile=inter-router", time.Second*1)
+		} else {
+			_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "interior-interconnect", "Configured Listener: 0.0.0.0:55672 proto=any, role=inter-router", time.Second*1)
+		}
 		Expect(err).NotTo(HaveOccurred())
 		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "interior-interconnect", "Configured Listener: 0.0.0.0:45672 proto=any, role=edge", time.Second*1)
+		Expect(err).NotTo(HaveOccurred())
+	}
+
+	if f.CertManagerPresent {
+		By("Automatically generating credentials")
+		_, err = f.GetSecret("interior-interconnect-default-credentials")
+		Expect(err).NotTo(HaveOccurred())
+		_, err = f.GetSecret("interior-interconnect-inter-router-credentials")
+		Expect(err).NotTo(HaveOccurred())
+		_, err = f.GetSecret("interior-interconnect-inter-router-ca")
 		Expect(err).NotTo(HaveOccurred())
 	}
 }
@@ -142,7 +156,7 @@ func testInteriorScaleUp(f *framework.Framework) {
 
 	By("Verifying the Network contains 4 nodes on each pod")
 	for _, pod := range pods.Items {
-		err := qdrmanagement.WaitForQdrNodesInPod(f, pod, 4)
+		err := qdrmanagement.WaitForQdrNodesInPod(f, pod, 4, framework.RetryInterval, framework.Timeout)
 		Expect(err).NotTo(HaveOccurred())
 		nodes, err := qdrmanagement.QdmanageQueryNodes(f, pod.Name)
 		Expect(err).NotTo(HaveOccurred())

@@ -11,10 +11,10 @@ import (
 // WaitForQdrNodesInPod attempts to retrieve the list of Node Entities
 // present on the given pod till the expected amount of nodes are present
 // or an error or timeout occurs.
-func WaitForQdrNodesInPod(f *framework.Framework, pod v1.Pod, expected int) error {
+func WaitForQdrNodesInPod(f *framework.Framework, pod v1.Pod, expected int, retryInterval, timeout time.Duration) error {
 	var nodes []entities.Node
 	// Retry logic to retrieve nodes
-	err := wait.Poll(5*time.Second, 20*time.Second, func() (done bool, err error) {
+	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
 		if nodes, err = QdmanageQueryNodes(f, pod.Name); err != nil {
 			return false, err
 		}

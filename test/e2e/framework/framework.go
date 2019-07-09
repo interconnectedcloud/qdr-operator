@@ -1,4 +1,4 @@
-// Copyright 2019 The interconnectedcloud Authors
+// Copyright 2019 The Interconnectedcloud Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,11 +60,11 @@ type Framework struct {
 	// test multiple times in parallel.
 	UniqueName string
 
-	opImage    string
 	KubeClient clientset.Interface
 	ExtClient  apiextension.Interface
 	QdrClient  qdrclient.Interface
 
+	CertManagerPresent    bool // if crd is detected
 	SkipNamespaceCreation bool // Whether to skip creating a namespace
 	Namespace             string
 	namespacesToDelete    []*corev1.Namespace // Some tests have more than one
@@ -99,7 +99,6 @@ func (f *Framework) BeforeEach() {
 		f.QdrClient, err = qdrclient.NewForConfig(config)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 	}
-	f.opImage = TestContext.OperatorImage
 
 	if !f.SkipNamespaceCreation {
 		ginkgo.By(fmt.Sprintf("Building namespace api objects, basename %s", f.BaseName))
@@ -118,8 +117,13 @@ func (f *Framework) BeforeEach() {
 		f.UniqueName = string(uuid.NewUUID())
 	}
 
+	_, err := f.ExtClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get("issuers.certmanager.k8s.io", metav1.GetOptions{})
+	if err == nil {
+		f.CertManagerPresent = true
+	}
+
 	// setup the operator
-	err := f.Setup()
+	err = f.Setup()
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 }
 
@@ -168,7 +172,7 @@ func (f *Framework) AfterEach() {
 func (f *Framework) Teardown() error {
 
 	// Skip the qdr-operator teardown if the operator image was not specified
-	if len(f.opImage) == 0 {
+	if len(TestContext.OperatorImage) == 0 {
 		return nil
 	}
 
@@ -439,7 +443,7 @@ func (f *Framework) setupQdrDeployment() error {
 						{
 							Command:         []string{qdrOperatorName},
 							Name:            qdrOperatorName,
-							Image:           f.opImage,
+							Image:           TestContext.OperatorImage,
 							ImagePullPolicy: corev1.PullAlways,
 							Env: []corev1.EnvVar{
 								{

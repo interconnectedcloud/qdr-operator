@@ -73,6 +73,10 @@ func testEdgeDefaults(f *framework.Framework) {
 		Expect(err).NotTo(HaveOccurred())
 		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Configured Listener: 0.0.0.0:5672 proto=any, role=normal", time.Second*1)
 		Expect(err).NotTo(HaveOccurred())
+		if f.CertManagerPresent {
+			_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Configured Listener: 0.0.0.0:5671 proto=any, role=normal, sslProfile=default", time.Second*1)
+			Expect(err).NotTo(HaveOccurred())
+		}
 		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Configured Listener: 0.0.0.0:8080 proto=any, role=normal, http", time.Second*1)
 		Expect(err).NotTo(HaveOccurred())
 		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Configured Listener: :8888 proto=any, role=normal, http", time.Second*1)
