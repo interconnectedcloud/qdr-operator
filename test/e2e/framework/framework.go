@@ -42,7 +42,6 @@ const (
 	crdName         = "interconnects.interconnectedcloud.github.io"
 	groupName       = "interconnectedcloud.github.io"
 	apiVersion      = "v1alpha1"
-	opImage         = "quay.io/interconnectedcloud/qdr-operator"
 )
 
 var (
@@ -100,7 +99,7 @@ func (f *Framework) BeforeEach() {
 		f.QdrClient, err = qdrclient.NewForConfig(config)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 	}
-	f.opImage = opImage
+	f.opImage = TestContext.OperatorImage
 
 	if !f.SkipNamespaceCreation {
 		ginkgo.By(fmt.Sprintf("Building namespace api objects, basename %s", f.BaseName))

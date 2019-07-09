@@ -39,7 +39,7 @@ func (f *Framework) CreateInterconnect(namespace string, size int32, fn ...Inter
 		Spec: v1alpha1.InterconnectSpec{
 			DeploymentPlan: v1alpha1.DeploymentPlanType{
 				Size:      size,
-				Image:     "quay.io/interconnectedcloud/qdrouterd:1.8.0",
+				Image:     TestContext.QdrImage,
 				Role:      "interior",
 				Placement: "Any",
 			},
