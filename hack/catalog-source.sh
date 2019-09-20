@@ -6,11 +6,11 @@ else
     CATALOG_NS=${1}
 fi
 
-CSV=`cat deploy/olm-catalog/qdr-operator/0.1.0/qdr-operator.v0.1.0.clusterserviceversion.yaml | sed -e 's/^/          /' | sed '0,/ /{s/          /        - /}'`
+CSV=`cat deploy/olm-catalog/qdr-operator/0.2.0/qdr-operator.v0.2.0.clusterserviceversion.yaml | sed -e 's/^/          /' | sed '0,/ /{s/          /        - /}'`
 CRD=`cat deploy/crds/interconnectedcloud_v1alpha1_interconnect_crd.yaml  | sed -e 's/^/          /' | sed '0,/ /{s/          /        - /}'`
-PKG=`cat deploy/olm-catalog/qdr-operator/0.1.0/interconnectedcloud.package.yaml | sed -e 's/^/          /' | sed '0,/ /{s/          /        - /}'`
+PKG=`cat deploy/olm-catalog/qdr-operator/0.2.0/interconnectedcloud.package.yaml | sed -e 's/^/          /' | sed '0,/ /{s/          /        - /}'`
 
-cat << EOF > deploy/olm-catalog/qdr-operator/0.1.0/catalog-source.yaml
+cat << EOF > deploy/olm-catalog/qdr-operator/0.2.0/catalog-source.yaml
 apiVersion: v1
 kind: List
 items:

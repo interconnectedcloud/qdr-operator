@@ -79,7 +79,7 @@ func GetInterconnectExposedHostnames(m *v1alpha1.Interconnect, profileName strin
 		if listener.SslProfile == profileName {
 			target := listener.Name
 			if target == "" {
-				target = "port-" + strconv.Itoa(int(listener.Port))
+				target = strconv.Itoa(int(listener.Port))
 			}
 			hostNames = append(hostNames, m.Name+"-"+target+"."+m.Namespace+"."+dns.Spec.BaseDomain)
 		}
@@ -119,6 +119,29 @@ func SetInterconnectDefaults(m *v1alpha1.Interconnect, certMgrPresent bool) (boo
 
 	if m.Spec.Users == "" {
 		m.Spec.Users = m.Name + "-users"
+	}
+
+	if len(m.Spec.Addresses) == 0 {
+		m.Spec.Addresses = append(m.Spec.Addresses, v1alpha1.Address{
+			Prefix:       "closest",
+			Distribution: "closest",
+		})
+		m.Spec.Addresses = append(m.Spec.Addresses, v1alpha1.Address{
+			Prefix:       "multicast",
+			Distribution: "multicast",
+		})
+		m.Spec.Addresses = append(m.Spec.Addresses, v1alpha1.Address{
+			Prefix:       "unicast",
+			Distribution: "closest",
+		})
+		m.Spec.Addresses = append(m.Spec.Addresses, v1alpha1.Address{
+			Prefix:       "exclusive",
+			Distribution: "closest",
+		})
+		m.Spec.Addresses = append(m.Spec.Addresses, v1alpha1.Address{
+			Prefix:       "broadcast",
+			Distribution: "multicast",
+		})
 	}
 
 	if len(m.Spec.Listeners) == 0 {
@@ -353,6 +376,12 @@ address {
     {{- if .EgressPhase}}
     egressPhase: {{.EgressPhase}}
     {{- end}}
+    {{- if .Priority}}
+    priority: {{.Priority}}
+    {{- end}}
+    {{- if .EnableFallback}}
+    enableFallback: {{.EnableFallback}}
+    {{- end}}
 }
 {{- end}}
 {{range .AutoLinks}}
@@ -373,7 +402,10 @@ autoLink {
     externalPrefix: {{.ExternalPrefix}}
     {{- end}}
     {{- if .Phase}}
-    Phase: {{.Phase}}
+    phase: {{.Phase}}
+    {{- end}}
+    {{- if .Fallback}}
+    fallback: {{.Fallback}}
     {{- end}}
 }
 {{- end}}
