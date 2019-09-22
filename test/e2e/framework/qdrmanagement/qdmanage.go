@@ -24,6 +24,28 @@ func QdmanageQuery(f *framework.Framework, pod string, entity string) (string, e
 	return kubeExec.Exec()
 }
 
+// QdmanageQueryAddresses use qdmanage to query existing addresses on the given pod
+func QdmanageQueryAddresses(f *framework.Framework, pod string) ([]entities2.Address, error) {
+	return QdmanageQueryAddressesFilter(f, pod, nil)
+}
+
+// QdmanageQueryAddressesFilter use qdmanage to query existing addresses on the given pod
+// filtering entities using the provided filter function (if one is given)
+func QdmanageQueryAddressesFilter(f *framework.Framework, pod string, filter func(entity interface{}) bool) ([]entities2.Address, error) {
+	jsonString, err := QdmanageQuery(f, pod, entities2.Address{}.GetEntityId())
+	var addresses []entities2.Address
+	if err == nil {
+		err = json.Unmarshal([]byte(jsonString), &addresses)
+		filtered := FilterEntities(addresses, filter)
+		addresses = nil
+		for _, v := range filtered {
+			addresses = append(addresses, v.(entities2.Address))
+		}
+	}
+
+	return addresses, err
+}
+
 // QdmanageQueryConnections use qdmanage to query existing connections on the given pod
 func QdmanageQueryConnections(f *framework.Framework, pod string) ([]entities2.Connection, error) {
 	return QdmanageQueryConnectionsFilter(f, pod, nil)

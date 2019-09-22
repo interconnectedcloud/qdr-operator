@@ -130,6 +130,8 @@ spec:
                   phase:
                     format: int32
                     type: integer
+                  fallback:
+                    type: boolean
                 required:
                   - address
                   - direction
@@ -327,6 +329,9 @@ spec:
                     minimum: 0
                     maximum: 9
                     description: Priority assigned to address for inter router transfer
+                  enableFallback:
+                    type: boolean
+                    description: Indicator for treatment of undeliverable messages
             sslProfiles:
               items:
                 properties:

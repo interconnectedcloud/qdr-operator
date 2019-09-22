@@ -110,13 +110,14 @@ type DeploymentPlanType struct {
 }
 
 type Address struct {
-	Prefix       string `json:"prefix,omitempty"`
-	Pattern      string `json:"pattern,omitempty"`
-	Distribution string `json:"distribution,omitempty"`
-	Waypoint     bool   `json:"waypoint,omitempty"`
-	IngressPhase *int32 `json:"ingressPhase,omitempty"`
-	EgressPhase  *int32 `json:"egressPhase,omitempty"`
-	Priority     *int32 `json:"priority,omitempty"`
+	Prefix         string `json:"prefix,omitempty"`
+	Pattern        string `json:"pattern,omitempty"`
+	Distribution   string `json:"distribution,omitempty"`
+	Waypoint       bool   `json:"waypoint,omitempty"`
+	IngressPhase   *int32 `json:"ingressPhase,omitempty"`
+	EgressPhase    *int32 `json:"egressPhase,omitempty"`
+	Priority       *int32 `json:"priority,omitempty"`
+	EnableFallback bool   `json:"enableFallback,omitempty"`
 }
 
 type Listener struct {
@@ -170,4 +171,5 @@ type AutoLink struct {
 	Connection     string `json:"connection,omitempty"`
 	ExternalPrefix string `json:"externalPrefix,omitempty"`
 	Phase          *int32 `json:"phase,omitempty"`
+	Fallback       bool   `json:"fallback,omitempty"`
 }

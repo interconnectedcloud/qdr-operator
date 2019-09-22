@@ -14,7 +14,7 @@ import (
 func NewIngressForCR(m *v1alpha1.Interconnect, listener v1alpha1.Listener) *extv1b1.Ingress {
 	target := listener.Name
 	if target == "" {
-		target = "port-" + strconv.Itoa(int(listener.Port))
+		target = strconv.Itoa(int(listener.Port))
 	}
 	labels := selectors.LabelsForInterconnect(m.Name)
 	ingress := &extv1b1.Ingress{

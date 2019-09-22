@@ -15,9 +15,16 @@
 package framework
 
 import (
+	"time"
+
 	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+const (
+	timeout time.Duration = 60 * time.Second
 )
 
 // InterconnectCustomizer represents a function that allows for
@@ -64,4 +71,10 @@ func (f *Framework) GetInterconnect(name string) (*v1alpha1.Interconnect, error)
 
 func (f *Framework) UpdateInterconnect(interconnect *v1alpha1.Interconnect) (*v1alpha1.Interconnect, error) {
 	return f.QdrClient.InterconnectedcloudV1alpha1().Interconnects(f.Namespace).Update(interconnect)
+}
+
+func (f *Framework) VersionForPod(pod corev1.Pod) (string, error) {
+	command := []string{"qdrouterd", "--version"}
+	kubeExec := NewKubectlExecCommand(f, pod.Name, timeout, command...)
+	return kubeExec.Exec()
 }

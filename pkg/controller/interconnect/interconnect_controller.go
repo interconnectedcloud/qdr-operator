@@ -256,7 +256,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 		controllerutil.SetControllerReference(instance, role, r.scheme)
 		reqLogger.Info("Creating a new Role", "role", role)
 		err = r.client.Create(context.TODO(), role)
-		if err != nil {
+		if err != nil && !errors.IsAlreadyExists(err) {
 			reqLogger.Error(err, "Failed to create new Role")
 			return reconcile.Result{}, err
 		}
@@ -275,7 +275,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 		controllerutil.SetControllerReference(instance, rolebinding, r.scheme)
 		reqLogger.Info("Creating a new RoleBinding", "RoleBinding", rolebinding)
 		err = r.client.Create(context.TODO(), rolebinding)
-		if err != nil {
+		if err != nil && !errors.IsAlreadyExists(err) {
 			reqLogger.Error(err, "Failed to create new RoleBinding")
 			return reconcile.Result{}, err
 		}
@@ -294,7 +294,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 		controllerutil.SetControllerReference(instance, svcaccnt, r.scheme)
 		reqLogger.Info("Creating a new ServiceAccount", "ServiceAccount", svcaccnt)
 		err = r.client.Create(context.TODO(), svcaccnt)
-		if err != nil {
+		if err != nil && !errors.IsAlreadyExists(err) {
 			reqLogger.Error(err, "Failed to create new ServiceAccount")
 			return reconcile.Result{}, err
 		}
@@ -316,7 +316,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 				controllerutil.SetControllerReference(instance, newIssuer, r.scheme)
 				reqLogger.Info("Creating a new self signed issuer %s%s\n", newIssuer.Namespace, newIssuer.Name)
 				err = r.client.Create(context.TODO(), newIssuer)
-				if err != nil {
+				if err != nil && !errors.IsAlreadyExists(err) {
 					reqLogger.Info("Failed to create new self signed issuer", "error", err)
 					return reconcile.Result{}, err
 				}
@@ -335,7 +335,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 				controllerutil.SetControllerReference(instance, cert, r.scheme)
 				reqLogger.Info("Creating a new self signed cert %s%s\n", cert.Namespace, cert.Name)
 				err = r.client.Create(context.TODO(), cert)
-				if err != nil {
+				if err != nil && !errors.IsAlreadyExists(err) {
 					reqLogger.Info("Failed to create new self signed cert", "error", err)
 					return reconcile.Result{}, err
 				}
@@ -357,7 +357,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 			controllerutil.SetControllerReference(instance, newIssuer, r.scheme)
 			reqLogger.Info("Creating a new ca issuer %s%s\n", newIssuer.Namespace, newIssuer.Name)
 			err = r.client.Create(context.TODO(), newIssuer)
-			if err != nil {
+			if err != nil && !errors.IsAlreadyExists(err) {
 				reqLogger.Info("Failed to create new ca issuer", "error", err)
 				return reconcile.Result{}, err
 			}
@@ -379,7 +379,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 					controllerutil.SetControllerReference(instance, cert, r.scheme)
 					reqLogger.Info("Creating a new ca cert %s%s\n", cert.Namespace, cert.Name)
 					err = r.client.Create(context.TODO(), cert)
-					if err != nil {
+					if err != nil && !errors.IsAlreadyExists(err) {
 						reqLogger.Info("Failed to create new ca cert", "error", err)
 						return reconcile.Result{}, err
 					}
@@ -410,7 +410,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 					controllerutil.SetControllerReference(instance, cert, r.scheme)
 					reqLogger.Info("Creating a new cert %s%s\n", cert.Namespace, cert.Name, "issuer", issuerName)
 					err = r.client.Create(context.TODO(), cert)
-					if err != nil {
+					if err != nil && !errors.IsAlreadyExists(err) {
 						reqLogger.Info("Failed to create new cert", "error", err)
 						return reconcile.Result{}, err
 					}
@@ -435,7 +435,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 			controllerutil.SetControllerReference(instance, dep, r.scheme)
 			reqLogger.Info("Creating a new Deployment", "Deployment", dep)
 			err = r.client.Create(context.TODO(), dep)
-			if err != nil {
+			if err != nil && !errors.IsAlreadyExists(err) {
 				reqLogger.Error(err, "Failed to create new Deployment")
 				return reconcile.Result{}, err
 			}
@@ -505,7 +505,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 			controllerutil.SetControllerReference(instance, ds, r.scheme)
 			reqLogger.Info("Creating a new DaemonSet", "DaemonSet", ds)
 			err = r.client.Create(context.TODO(), ds)
-			if err != nil {
+			if err != nil && !errors.IsAlreadyExists(err) {
 				reqLogger.Error(err, "Failed to create new DaemonSet")
 				return reconcile.Result{}, err
 			}
@@ -548,7 +548,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 		controllerutil.SetControllerReference(instance, svc, r.scheme)
 		reqLogger.Info("Creating service for interconnect deployment", "Service", svc)
 		err = r.client.Create(context.TODO(), svc)
-		if err != nil {
+		if err != nil && !errors.IsAlreadyExists(err) {
 			reqLogger.Error(err, "Failed to create new Service")
 			return reconcile.Result{}, err
 		}
@@ -564,7 +564,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 	for _, listener := range exposedListeners {
 		target := listener.Name
 		if target == "" {
-			target = "port-" + strconv.Itoa(int(listener.Port))
+			target = strconv.Itoa(int(listener.Port))
 		}
 		if isOpenShift() {
 			routeFound := &routev1.Route{}
@@ -575,11 +575,11 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 					// create the route but issue warning
 					reqLogger.Info("Warning an exposed listener should be http or ssl enabled", "listener", listener)
 				}
-				route := routes.NewRouteForCR(instance, target, listener.SslProfile != "")
+				route := routes.NewRouteForCR(instance, listener)
 				controllerutil.SetControllerReference(instance, route, r.scheme)
 				reqLogger.Info("Creating route for interconnect deployment", "listener", listener)
 				err = r.client.Create(context.TODO(), route)
-				if err != nil {
+				if err != nil && !errors.IsAlreadyExists(err) {
 					reqLogger.Error(err, "Failed to create new Route")
 					return reconcile.Result{}, err
 				}
@@ -602,7 +602,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 				controllerutil.SetControllerReference(instance, ingress, r.scheme)
 				reqLogger.Info("Creating Ingress for interconnect deployment", "listener", listener)
 				err = r.client.Create(context.TODO(), ingress)
-				if err != nil {
+				if err != nil && !errors.IsAlreadyExists(err) {
 					reqLogger.Error(err, "Failed to create new Ingress")
 					return reconcile.Result{}, err
 				}
@@ -637,7 +637,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 			controllerutil.SetControllerReference(instance, users, r.scheme)
 			reqLogger.Info("Creating user secret for interconnect deployment", "Secret", users)
 			err = r.client.Create(context.TODO(), users)
-			if err != nil {
+			if err != nil && !errors.IsAlreadyExists(err) {
 				reqLogger.Error(err, "Failed to create user secret")
 				return reconcile.Result{}, err
 			}
@@ -654,7 +654,7 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 			controllerutil.SetControllerReference(instance, saslConfig, r.scheme)
 			reqLogger.Info("Creating ConfigMap for sasl config", "ConfigMap", saslConfig)
 			err = r.client.Create(context.TODO(), saslConfig)
-			if err != nil {
+			if err != nil && !errors.IsAlreadyExists(err) {
 				reqLogger.Error(err, "Failed to create ConfigMap for sasl config")
 				return reconcile.Result{}, err
 			}

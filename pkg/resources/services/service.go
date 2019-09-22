@@ -19,7 +19,7 @@ var (
 
 func nameForListener(l *v1alpha1.Listener) string {
 	if l.Name == "" {
-		return "port-" + strconv.Itoa(int(l.Port))
+		return strconv.Itoa(int(l.Port))
 	} else {
 		return l.Name
 	}

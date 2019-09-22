@@ -26,9 +26,6 @@ import (
 	// "github.com/onsi/ginkgo"
 
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework"
-
-	// test sources
-	_ "github.com/interconnectedcloud/qdr-operator/test/e2e/deployment-plans"
 )
 
 func init() {
