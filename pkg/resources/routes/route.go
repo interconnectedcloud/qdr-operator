@@ -46,7 +46,7 @@ func NewRouteForCR(m *v1alpha1.Interconnect, listener v1alpha1.Listener) *routev
 	} else {
 		route.Spec.TLS = &routev1.TLSConfig{
 			Termination:                   routev1.TLSTerminationEdge,
-			InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow,
+			InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyRedirect,
 		}
 	}
 	return route
