@@ -15,9 +15,11 @@
 package framework
 
 import (
+	"context"
 	"time"
 
 	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
+	"github.com/interconnectedcloud/qdr-operator/pkg/utils/selectors"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -73,8 +75,81 @@ func (f *Framework) UpdateInterconnect(interconnect *v1alpha1.Interconnect) (*v1
 	return f.QdrClient.InterconnectedcloudV1alpha1().Interconnects(f.Namespace).Update(interconnect)
 }
 
+func (f *Framework) InterconnectHasExpectedSize(interconnect *v1alpha1.Interconnect, expectedSize int) (bool, error) {
+	dep, err := f.GetDeployment(interconnect.Name)
+	if err != nil {
+		return false, err
+	}
+
+	if int(dep.Status.AvailableReplicas) == expectedSize {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
+func (f *Framework) InterconnectHasExpectedVersion(interconnect *v1alpha1.Interconnect, expectedVersion string) (bool, error) {
+	pods, err := f.PodsForInterconnect(interconnect)
+	if err != nil {
+		return false, err
+	}
+
+	for _, pod := range pods {
+		version, err := f.VersionForPod(pod)
+		if err != nil {
+			return false, err
+		}
+		if version != expectedVersion {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+func (f *Framework) PodsForInterconnect(interconnect *v1alpha1.Interconnect) ([]corev1.Pod, error) {
+	selector := selectors.ResourcesByInterconnectName(interconnect.Name)
+	listOps := metav1.ListOptions{LabelSelector: selector.String()}
+	pods, err := f.KubeClient.CoreV1().Pods(interconnect.Namespace).List(listOps)
+	if err != nil {
+		return nil, err
+	}
+	return pods.Items, nil
+}
+
 func (f *Framework) VersionForPod(pod corev1.Pod) (string, error) {
 	command := []string{"qdrouterd", "--version"}
 	kubeExec := NewKubectlExecCommand(f, pod.Name, timeout, command...)
 	return kubeExec.Exec()
+}
+
+// WaitUntilFullInterconnectWithVersion waits until all the pods belonging to
+// the Interconnect deployment report the expected state and expected version.
+// The expected state will differe for interior versus edge roles
+func (f *Framework) WaitUntilFullInterconnectWithVersion(ctx context.Context, interconnect *v1alpha1.Interconnect, expectedSize int, expectedVersion string) error {
+	// Wait for the expected size to be reported on the Interconnect deployment
+	err := WaitForDeployment(f.KubeClient, f.Namespace, interconnect.Name, expectedSize, RetryInterval, Timeout)
+	if err != nil {
+		return err
+	}
+
+	return RetryWithContext(ctx, 10*time.Second, func() (bool, error) {
+		// Check that the Interconnect deployment of the expected size is created
+		s, err := f.InterconnectHasExpectedSize(interconnect, expectedSize)
+		if err != nil {
+			return false, nil
+		}
+		if !s {
+			return false, nil
+		}
+
+		// Check whether all pods in the cluster are reporting the expected version
+		v, err := f.InterconnectHasExpectedVersion(interconnect, expectedVersion)
+		if err != nil {
+			return false, nil
+		}
+		if !v {
+			return false, nil
+		}
+		return true, nil
+	})
 }

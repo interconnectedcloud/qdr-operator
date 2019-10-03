@@ -1,17 +1,18 @@
 package e2e
 
 import (
-	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement"
+	"context"
 	"time"
 
 	"github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework"
+	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("[basic_test] Interconnect defaultr deployment tests", func() {
+var _ = Describe("[basic_test] Interconnect default deployment tests", func() {
 	f := framework.NewFramework("basic-interior", nil)
 
 	It("Should be able to create a default interior deployment", func() {
@@ -25,9 +26,15 @@ var _ = Describe("[basic_test] Interconnect defaultr deployment tests", func() {
 })
 
 func testInteriorDefaults(f *framework.Framework) {
+	var (
+		name        = "interior-interconnect"
+		defaultSize = 1
+		version     = "1.9.0\n"
+	)
+
 	By("Creating a default interior interconnect")
 	ei, err := f.CreateInterconnect(f.Namespace, 0, func(ei *v1alpha1.Interconnect) {
-		ei.Name = "interior-interconnect"
+		ei.Name = name
 	})
 	Expect(err).NotTo(HaveOccurred())
 
@@ -37,54 +44,45 @@ func testInteriorDefaults(f *framework.Framework) {
 		Expect(err).NotTo(HaveOccurred())
 	}()
 
-	By("Creating a Deployment with 1 replicas")
-	err = framework.WaitForDeployment(f.KubeClient, f.Namespace, "interior-interconnect", 1, framework.RetryInterval, framework.Timeout)
-	Expect(err).NotTo(HaveOccurred())
-
 	By("Creating an Interconnect resource in the namespace")
-	ei, err = f.GetInterconnect("interior-interconnect")
+	ei, err = f.GetInterconnect(name)
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Verifying the deployment plan defaults")
-	Expect(ei.Name).To(Equal("interior-interconnect"))
-	Expect(ei.Spec.DeploymentPlan.Size).To(Equal(int32(1)))
+	Expect(ei.Name).To(Equal(name))
 	Expect(ei.Spec.DeploymentPlan.Role).To(Equal(v1alpha1.RouterRoleInterior))
 	Expect(ei.Spec.DeploymentPlan.Placement).To(Equal(v1alpha1.PlacementAny))
 
-	By("Creating an Interconnect resource in the namespace")
-	dep, err := f.GetDeployment("interior-interconnect")
+	By("Waiting until full interconnect with version")
+	ctx, fn := context.WithTimeout(context.Background(), framework.Timeout)
+	defer fn()
+	err = f.WaitUntilFullInterconnectWithVersion(ctx, ei, defaultSize, version)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(*dep.Spec.Replicas).To(Equal(int32(1)))
 
 	By("Creating a service for the interconnect default listeners")
-	svc, err := f.GetService("interior-interconnect")
+	svc, err := f.GetService(name)
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Verifying the owner reference for the service")
 	Expect(svc.OwnerReferences[0].APIVersion).To(Equal(framework.GVR))
-	Expect(svc.OwnerReferences[0].Name).To(Equal("interior-interconnect"))
+	Expect(svc.OwnerReferences[0].Name).To(Equal(name))
 	Expect(*svc.OwnerReferences[0].Controller).To(Equal(true))
 
 	By("Setting up default listener on qdr instances")
-	pods, err := f.ListPodsForDeployment(dep)
+	pods, err := f.PodsForInterconnect(ei)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(len(pods.Items)).To(Equal(1))
-	for _, pod := range pods.Items {
-		// TODO Better not checking the version as this would cause a failure if we test using
-		//      an different version for the interconnect image
-		version, err := f.VersionForPod(pod)
+	Expect(len(pods)).To(Equal(defaultSize))
+	for _, pod := range pods {
+		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: 0.0.0.0:5672 proto=any, role=normal", time.Second*1)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(version).To(Equal("1.9.0\n"))
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "interior-interconnect", "Configured Listener: 0.0.0.0:5672 proto=any, role=normal", time.Second*1)
+		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: 0.0.0.0:8080 proto=any, role=normal, http", time.Second*1)
 		Expect(err).NotTo(HaveOccurred())
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "interior-interconnect", "Configured Listener: 0.0.0.0:8080 proto=any, role=normal, http", time.Second*1)
-		Expect(err).NotTo(HaveOccurred())
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "interior-interconnect", "Configured Listener: :8888 proto=any, role=normal, http", time.Second*1)
+		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: :8888 proto=any, role=normal, http", time.Second*1)
 		Expect(err).NotTo(HaveOccurred())
 		if f.CertManagerPresent {
-			_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "interior-interconnect", "Configured Listener: 0.0.0.0:55671 proto=any, role=inter-router, sslProfile=inter-router", time.Second*1)
+			_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: 0.0.0.0:55671 proto=any, role=inter-router, sslProfile=inter-router", time.Second*1)
 		} else {
-			_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "interior-interconnect", "Configured Listener: 0.0.0.0:55672 proto=any, role=inter-router", time.Second*1)
+			_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: 0.0.0.0:55672 proto=any, role=inter-router", time.Second*1)
 		}
 		Expect(err).NotTo(HaveOccurred())
 		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "interior-interconnect", "Configured Listener: 0.0.0.0:45672 proto=any, role=edge", time.Second*1)
@@ -92,7 +90,7 @@ func testInteriorDefaults(f *framework.Framework) {
 	}
 
 	By("Verifying each node has 5 addresses")
-	for _, pod := range pods.Items {
+	for _, pod := range pods {
 		addrs, err := qdrmanagement.QdmanageQueryAddresses(f, pod.Name)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(len(addrs)).To(Equal(5))
@@ -110,10 +108,17 @@ func testInteriorDefaults(f *framework.Framework) {
 }
 
 func testEdgeDefaults(f *framework.Framework) {
+	var (
+		name        = "edge-interconnect"
+		role        = "edge"
+		defaultSize = 1
+		version     = "1.9.0\n"
+	)
+
 	By("Creating an edge interconnect with default size")
 	ei, err := f.CreateInterconnect(f.Namespace, 0, func(ei *v1alpha1.Interconnect) {
-		ei.Name = "edge-interconnect"
-		ei.Spec.DeploymentPlan.Role = "edge"
+		ei.Name = name
+		ei.Spec.DeploymentPlan.Role = v1alpha1.RouterRoleType(role)
 	})
 	Expect(err).NotTo(HaveOccurred())
 
@@ -123,62 +128,55 @@ func testEdgeDefaults(f *framework.Framework) {
 		Expect(err).NotTo(HaveOccurred())
 	}()
 
-	By("Creating a Deployment with 1 replicas")
-	err = framework.WaitForDeployment(f.KubeClient, f.Namespace, "edge-interconnect", 1, framework.RetryInterval, framework.Timeout)
-	Expect(err).NotTo(HaveOccurred())
-
 	By("Creating an Interconnect resource in the namespace")
-	ei, err = f.GetInterconnect("edge-interconnect")
+	ei, err = f.GetInterconnect(name)
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Verifying the deployment plan")
-	Expect(ei.Name).To(Equal("edge-interconnect"))
-	Expect(ei.Spec.DeploymentPlan.Size).To(Equal(int32(1)))
-	Expect(ei.Spec.DeploymentPlan.Role).To(Equal(v1alpha1.RouterRoleType("edge")))
+	Expect(ei.Name).To(Equal(name))
+	Expect(ei.Spec.DeploymentPlan.Role).To(Equal(v1alpha1.RouterRoleType(role)))
 	Expect(ei.Spec.DeploymentPlan.Placement).To(Equal(v1alpha1.PlacementAny))
 
-	By("Creating an Interconnect resource in the namespace")
-	dep, err := f.GetDeployment("edge-interconnect")
+	By("Waiting until full interconnect with version")
+	ctx, fn := context.WithTimeout(context.Background(), framework.Timeout)
+	defer fn()
+	err = f.WaitUntilFullInterconnectWithVersion(ctx, ei, defaultSize, version)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(*dep.Spec.Replicas).To(Equal(int32(1)))
 
 	By("Creating a service for the interconnect default listeners")
-	svc, err := f.GetService("edge-interconnect")
+	svc, err := f.GetService(name)
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Verifying the owner reference for the service")
 	Expect(svc.OwnerReferences[0].APIVersion).To(Equal(framework.GVR))
-	Expect(svc.OwnerReferences[0].Name).To(Equal("edge-interconnect"))
+	Expect(svc.OwnerReferences[0].Name).To(Equal(name))
 	Expect(*svc.OwnerReferences[0].Controller).To(Equal(true))
 
 	By("Setting up default listener on qdr instances")
-	pods, err := f.ListPodsForDeployment(dep)
+	pods, err := f.PodsForInterconnect(ei)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(len(pods.Items)).To(Equal(1))
-	for _, pod := range pods.Items {
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Router started in Edge mode", time.Second*5)
+	Expect(len(pods)).To(Equal(defaultSize))
+	for _, pod := range pods {
+		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Router started in Edge mode", time.Second*5)
 		Expect(err).NotTo(HaveOccurred())
-		version, err := f.VersionForPod(pod)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(version).To(Equal("1.9.0\n"))
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Configured Listener: 0.0.0.0:5672 proto=any, role=normal", time.Second*1)
+		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: 0.0.0.0:5672 proto=any, role=normal", time.Second*1)
 		Expect(err).NotTo(HaveOccurred())
 		if f.CertManagerPresent {
-			_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Configured Listener: 0.0.0.0:5671 proto=any, role=normal, sslProfile=default", time.Second*1)
+			_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: 0.0.0.0:5671 proto=any, role=normal, sslProfile=default", time.Second*1)
 			Expect(err).NotTo(HaveOccurred())
 		}
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Configured Listener: 0.0.0.0:8080 proto=any, role=normal, http", time.Second*1)
+		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: 0.0.0.0:8080 proto=any, role=normal, http", time.Second*1)
 		Expect(err).NotTo(HaveOccurred())
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Configured Listener: :8888 proto=any, role=normal, http", time.Second*1)
+		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: :8888 proto=any, role=normal, http", time.Second*1)
 		Expect(err).NotTo(HaveOccurred())
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Configured Listener: 0.0.0.0:55672 proto=any, role=inter-router", time.Second*1)
+		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: 0.0.0.0:55672 proto=any, role=inter-router", time.Second*1)
 		Expect(err).To(HaveOccurred())
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "edge-interconnect", "Configured Listener: 0.0.0.0:45672 proto=any, role=edge", time.Second*1)
+		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: 0.0.0.0:45672 proto=any, role=edge", time.Second*1)
 		Expect(err).To(HaveOccurred())
 	}
 
 	By("Verifying each node has 5 addresses")
-	for _, pod := range pods.Items {
+	for _, pod := range pods {
 		addrs, err := qdrmanagement.QdmanageQueryAddresses(f, pod.Name)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(len(addrs)).To(Equal(5))
