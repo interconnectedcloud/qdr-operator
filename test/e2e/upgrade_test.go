@@ -1,12 +1,11 @@
 package e2e
 
 import (
-	//"time"
-
-	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement"
+	"context"
 
 	"github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework"
+	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -22,10 +21,20 @@ var _ = Describe("[upgrade_test] Interconnect upgrade deployment tests", func() 
 })
 
 func testInteriorImageUpgrade(f *framework.Framework) {
+	var (
+		name             = "interior-interconnect"
+		image            = "quay.io/interconnectedcloud/qdrouterd"
+		initialVersion   = "1.8.0"
+		finalVersion     = "1.9.0"
+		initialVersionLF = "1.8.0\n"
+		finalVersionLF   = "1.9.0\n"
+		size             = 3
+	)
+
 	By("Creating an interior interconnect with size 3")
-	ei, err := f.CreateInterconnect(f.Namespace, 3, func(ei *v1alpha1.Interconnect) {
-		ei.Name = "interior-interconnect"
-		ei.Spec.DeploymentPlan.Image = "quay.io/interconnectedcloud/qdrouterd:1.8.0"
+	ei, err := f.CreateInterconnect(f.Namespace, int32(size), func(ei *v1alpha1.Interconnect) {
+		ei.Name = name
+		ei.Spec.DeploymentPlan.Image = image + ":" + initialVersion
 	})
 	Expect(err).NotTo(HaveOccurred())
 
@@ -35,61 +44,41 @@ func testInteriorImageUpgrade(f *framework.Framework) {
 		Expect(err).NotTo(HaveOccurred())
 	}()
 
-	By("Creating a Deployment with 3 replicas")
-	err = framework.WaitForDeployment(f.KubeClient, f.Namespace, "interior-interconnect", 3, framework.RetryInterval, framework.Timeout)
-	Expect(err).NotTo(HaveOccurred())
-
 	By("Creating an Interconnect resource in the namespace")
-	ei, err = f.GetInterconnect("interior-interconnect")
+	ei, err = f.GetInterconnect(name)
 	Expect(err).NotTo(HaveOccurred())
 
-	By("Creating a Deployment resource in the namespace")
-	dep, err := f.GetDeployment("interior-interconnect")
+	By("Waiting until full interconnect with size and initial version")
+	ctx1, fn := context.WithTimeout(context.Background(), framework.Timeout)
+	defer fn()
+	err = f.WaitUntilFullInterconnectWithVersion(ctx1, ei, size, initialVersionLF)
 	Expect(err).NotTo(HaveOccurred())
 
-	By("Verifying the Deployment contains 3 pods")
-	pods, err := f.ListPodsForDeployment(dep)
+	By("Waiting until full interconnect initial qdr entities")
+	ctx2, fn := context.WithTimeout(context.Background(), framework.Timeout)
+	defer fn()
+	err = qdrmanagement.WaitUntilFullInterconnectWithQdrEntities(ctx2, f, ei)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(len(pods.Items)).To(Equal(3))
 
-	By("Verifying the Network contains 3 nodes on each pod")
-	for _, pod := range pods.Items {
-		err := qdrmanagement.WaitForQdrNodesInPod(f, pod, 3, framework.RetryInterval, framework.Timeout)
-		Expect(err).NotTo(HaveOccurred())
-		nodes, err := qdrmanagement.QdmanageQueryNodes(f, pod.Name)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(len(nodes)).To(Equal(3))
-	}
+	By("Retrieving the Interconnect resource in the namespace")
+	ei, err = f.GetInterconnect(name)
+	Expect(err).NotTo(HaveOccurred())
 
-	By("Upgrading the qdrouterd")
-	ei.Spec.DeploymentPlan.Image = "quay.io/interconnectedcloud/qdrouterd:1.9.0"
+	By("Upgrading the qdrouterd image version")
+	ei.Spec.DeploymentPlan.Image = image + ":" + finalVersion
 	_, err = f.UpdateInterconnect(ei)
 	Expect(err).NotTo(HaveOccurred())
 
-	By("Verifying the Deployment contains 3 pods")
-	pods, err = f.ListPodsForDeployment(dep)
+	By("Waiting until full interconnect with size and final version")
+	ctx3, fn := context.WithTimeout(context.Background(), framework.Timeout)
+	defer fn()
+	err = f.WaitUntilFullInterconnectWithVersion(ctx3, ei, size, finalVersionLF)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(len(pods.Items)).To(Equal(3))
 
-	//By("Verifying the pods are running the upgrade image")
-	//pods, err = f.ListPodsForDeployment(dep)
-	//Expect(err).NotTo(HaveOccurred())
-	//Expect(len(pods.Items)).To(Equal(3))
-	//for _, pod := range pods.Items {
-	//	if pod.GetObjectMeta().GetDeletionTimestamp() == nil {
-	//		_, err = framework.LookForRegexpInLog(f.Namespace, pod.Name, "interior-interconnect", `Version:.*1\.9\.0`, time.Second*20)
-	//		Expect(err).NotTo(HaveOccurred())
-	//	}
-	//}
-
-	//By("Verifying each node has 2 inter-router connections")
-	//for _, pod := range pods.Items {
-	//    if pod.GetObjectMeta().GetDeletionTimestamp() == nil {
-	//	// Retrieving inter-router connections 2 on each of the 3 nodes
-	//	conns, err := qdrmanagement.ListInterRouterConnectionsForPod(f, pod)
-	//	Expect(err).NotTo(HaveOccurred())
-	//	Expect(len(conns)).To(Equal(2))
-	//    }
-	//}
+	By("Waiting until full interconnect with final qdr entities")
+	ctx4, fn := context.WithTimeout(context.Background(), framework.Timeout)
+	defer fn()
+	err = qdrmanagement.WaitUntilFullInterconnectWithQdrEntities(ctx4, f, ei)
+	Expect(err).NotTo(HaveOccurred())
 
 }

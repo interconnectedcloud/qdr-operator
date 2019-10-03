@@ -1,6 +1,9 @@
 package qdrmanagement
 
 import (
+	"context"
+
+	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework"
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement/entities"
 	v1 "k8s.io/api/core/v1"
@@ -26,8 +29,8 @@ func WaitForQdrNodesInPod(f *framework.Framework, pod v1.Pod, expected int, retr
 	return err
 }
 
-// ListInterRouterConnectionsForPod will get all opened inter-router connections
-func ListInterRouterConnectionsForPod(f *framework.Framework, pod v1.Pod) ([]entities.Connection, error) {
+// InterRouterConnectionsForPod will get all opened inter-router connections
+func InterRouterConnectionsForPod(f *framework.Framework, pod v1.Pod) ([]entities.Connection, error) {
 	conns, err := QdmanageQueryConnectionsFilter(f, pod.Name, func(entity interface{}) bool {
 		conn := entity.(entities.Connection)
 		if conn.Role == "inter-router" && conn.Opened {
@@ -36,4 +39,71 @@ func ListInterRouterConnectionsForPod(f *framework.Framework, pod v1.Pod) ([]ent
 		return false
 	})
 	return conns, err
+}
+
+func InterconnectHasExpectedNodes(f *framework.Framework, interconnect *v1alpha1.Interconnect) (bool, error) {
+	pods, err := f.PodsForInterconnect(interconnect)
+	if err != nil {
+		return false, err
+	}
+
+	for _, pod := range pods {
+		nodes, err := QdmanageQueryNodes(f, pod.Name)
+		if err != nil {
+			return false, err
+		}
+		if int32(len(nodes)) != interconnect.Spec.DeploymentPlan.Size {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+func InterconnectHasExpectedInterRouterConnections(f *framework.Framework, interconnect *v1alpha1.Interconnect) (bool, error) {
+	if interconnect.Spec.DeploymentPlan.Role != v1alpha1.RouterRoleInterior {
+		// edge role, nothing to see here
+		return true, nil
+	}
+
+	pods, err := f.PodsForInterconnect(interconnect)
+	if err != nil {
+		return false, err
+	}
+
+	for _, pod := range pods {
+		nodes, err := QdmanageQueryNodes(f, pod.Name)
+		if err != nil {
+			return false, err
+		}
+		if int32(len(nodes)) != interconnect.Spec.DeploymentPlan.Size-1 {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+// Wait until all the pods belonging to the Interconnect delpoyment report
+// expected node counts, irc's, etc.
+func WaitUntilFullInterconnectWithQdrEntities(ctx context.Context, f *framework.Framework, interconnect *v1alpha1.Interconnect) error {
+
+	return framework.RetryWithContext(ctx, 10*time.Second, func() (bool, error) {
+		// Check that all the qdr pods have the expected node cound
+		n, err := InterconnectHasExpectedNodes(f, interconnect)
+		if err != nil {
+			return false, nil
+		}
+		if !n {
+			return false, nil
+		}
+
+		// Check that all the qdr pods have the expected inter router connections
+		//i, err := InterconnectHasExpectedInterRouterConnections(f, interconnect)
+		//if err != nil {
+		//    return false, nil
+		//}
+		//if !i {
+		//    return false, nil
+		//}
+		return true, nil
+	})
 }
