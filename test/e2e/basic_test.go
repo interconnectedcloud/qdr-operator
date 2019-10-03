@@ -2,11 +2,12 @@ package e2e
 
 import (
 	"context"
+	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement"
+	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement/entities"
 	"time"
 
 	"github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework"
-	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -91,7 +92,7 @@ func testInteriorDefaults(f *framework.Framework) {
 
 	By("Verifying each node has 5 addresses")
 	for _, pod := range pods {
-		addrs, err := qdrmanagement.QdmanageQueryAddresses(f, pod.Name)
+		addrs, err := qdrmanagement.QdmanageQuery(f, pod.Name, entities.Address{}, nil)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(len(addrs)).To(Equal(5))
 	}
@@ -177,7 +178,7 @@ func testEdgeDefaults(f *framework.Framework) {
 
 	By("Verifying each node has 5 addresses")
 	for _, pod := range pods {
-		addrs, err := qdrmanagement.QdmanageQueryAddresses(f, pod.Name)
+		addrs, err := qdrmanagement.QdmanageQuery(f, pod.Name, entities.Address{}, nil)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(len(addrs)).To(Equal(5))
 	}

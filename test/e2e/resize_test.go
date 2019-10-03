@@ -2,10 +2,10 @@ package e2e
 
 import (
 	"context"
+	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement"
 
 	"github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework"
-	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

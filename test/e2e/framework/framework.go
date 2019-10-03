@@ -46,7 +46,8 @@ const (
 
 var (
 	RetryInterval        = time.Second * 5
-	Timeout              = time.Second * 600
+	Timeout              = time.Second * 60
+	TimeoutSuite         = time.Second * 600
 	CleanupRetryInterval = time.Second * 1
 	CleanupTimeout       = time.Second * 5
 	GVR                  = groupName + "/" + apiVersion
@@ -220,7 +221,7 @@ func (f *Framework) Setup() error {
 		return fmt.Errorf("failed to setup qdr operator: %v", err)
 	}
 	err = f.setupQdrClusterRole()
-	if err != nil {
+	if err != nil && !HasAlreadyExistsSuffix(err) {
 		return fmt.Errorf("failed to setup qdr operator: %v", err)
 	}
 	err = f.setupQdrRoleBinding()
@@ -228,11 +229,11 @@ func (f *Framework) Setup() error {
 		return fmt.Errorf("failed to setup qdr operator: %v", err)
 	}
 	err = f.setupQdrClusterRoleBinding()
-	if err != nil {
+	if err != nil && !HasAlreadyExistsSuffix(err) {
 		return fmt.Errorf("failed to setup qdr operator: %v", err)
 	}
 	err = f.setupQdrCrd()
-	if err != nil {
+	if err != nil && !HasAlreadyExistsSuffix(err) {
 		return fmt.Errorf("failed to setup qdr operator: %v", err)
 	}
 	err = f.setupQdrDeployment()
@@ -244,6 +245,12 @@ func (f *Framework) Setup() error {
 		return fmt.Errorf("Failed to wait for qdr operator: %v", err)
 	}
 	return nil
+}
+
+// HasAlreadyExistsSuffix returns true if the string representation of the error
+// ends with "already exists".
+func HasAlreadyExistsSuffix(err error) bool {
+	return strings.HasSuffix(strings.ToLower(err.Error()), "already exists")
 }
 
 func (f *Framework) setupQdrServiceAccount() error {
