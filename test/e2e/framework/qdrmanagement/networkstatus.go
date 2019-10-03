@@ -15,10 +15,10 @@ import (
 // present on the given pod till the expected amount of nodes are present
 // or an error or timeout occurs.
 func WaitForQdrNodesInPod(f *framework.Framework, pod v1.Pod, expected int, retryInterval, timeout time.Duration) error {
-	var nodes []entities.Node
 	// Retry logic to retrieve nodes
 	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
-		if nodes, err = QdmanageQueryNodes(f, pod.Name); err != nil {
+		nodes, err := QdmanageQuery(f, pod.Name, entities.Node{}, nil)
+		if err != nil {
 			return false, err
 		}
 		if len(nodes) != expected {
@@ -31,14 +31,20 @@ func WaitForQdrNodesInPod(f *framework.Framework, pod v1.Pod, expected int, retr
 
 // InterRouterConnectionsForPod will get all opened inter-router connections
 func InterRouterConnectionsForPod(f *framework.Framework, pod v1.Pod) ([]entities.Connection, error) {
-	conns, err := QdmanageQueryConnectionsFilter(f, pod.Name, func(entity interface{}) bool {
+	conns, err := QdmanageQuery(f, pod.Name, entities.Connection{}, func(entity entities.Entity) bool {
 		conn := entity.(entities.Connection)
 		if conn.Role == "inter-router" && conn.Opened {
 			return true
 		}
 		return false
 	})
-	return conns, err
+
+	// Preparing result
+	connections := make([]entities.Connection, 0)
+	for _, c := range conns {
+		connections = append(connections, c.(entities.Connection))
+	}
+	return connections, err
 }
 
 func InterconnectHasExpectedNodes(f *framework.Framework, interconnect *v1alpha1.Interconnect) (bool, error) {
@@ -48,7 +54,7 @@ func InterconnectHasExpectedNodes(f *framework.Framework, interconnect *v1alpha1
 	}
 
 	for _, pod := range pods {
-		nodes, err := QdmanageQueryNodes(f, pod.Name)
+		nodes, err := QdmanageQuery(f, pod.Name, entities.Node{}, nil)
 		if err != nil {
 			return false, err
 		}
@@ -71,7 +77,7 @@ func InterconnectHasExpectedInterRouterConnections(f *framework.Framework, inter
 	}
 
 	for _, pod := range pods {
-		nodes, err := QdmanageQueryNodes(f, pod.Name)
+		nodes, err := QdmanageQuery(f, pod.Name, entities.Node{}, nil)
 		if err != nil {
 			return false, err
 		}
