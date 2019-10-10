@@ -46,7 +46,7 @@ const (
 
 var (
 	RetryInterval        = time.Second * 5
-	Timeout              = time.Second * 60
+	Timeout              = time.Second * 120
 	TimeoutSuite         = time.Second * 600
 	CleanupRetryInterval = time.Second * 1
 	CleanupTimeout       = time.Second * 5

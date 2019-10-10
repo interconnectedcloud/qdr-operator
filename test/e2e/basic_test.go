@@ -30,7 +30,7 @@ func testInteriorDefaults(f *framework.Framework) {
 	var (
 		name        = "interior-interconnect"
 		defaultSize = 1
-		version     = "1.9.0\n"
+		version     = "1.9.0"
 	)
 
 	By("Creating a default interior interconnect")
@@ -113,7 +113,7 @@ func testEdgeDefaults(f *framework.Framework) {
 		name        = "edge-interconnect"
 		role        = "edge"
 		defaultSize = 1
-		version     = "1.9.0\n"
+		version     = "1.9.0"
 	)
 
 	By("Creating an edge interconnect with default size")

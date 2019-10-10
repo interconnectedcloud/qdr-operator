@@ -92,7 +92,7 @@ func InterconnectHasExpectedInterRouterConnections(f *framework.Framework, inter
 // expected node counts, irc's, etc.
 func WaitUntilFullInterconnectWithQdrEntities(ctx context.Context, f *framework.Framework, interconnect *v1alpha1.Interconnect) error {
 
-	return framework.RetryWithContext(ctx, 10*time.Second, func() (bool, error) {
+	return framework.RetryWithContext(ctx, framework.RetryInterval, func() (bool, error) {
 		// Check that all the qdr pods have the expected node cound
 		n, err := InterconnectHasExpectedNodes(f, interconnect)
 		if err != nil {
