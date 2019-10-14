@@ -26,8 +26,6 @@ func testInteriorImageUpgrade(f *framework.Framework) {
 		image            = "quay.io/interconnectedcloud/qdrouterd"
 		initialVersion   = "1.8.0"
 		finalVersion     = "1.9.0"
-		initialVersionLF = "1.8.0\n"
-		finalVersionLF   = "1.9.0\n"
 		size             = 3
 	)
 
@@ -51,7 +49,7 @@ func testInteriorImageUpgrade(f *framework.Framework) {
 	By("Waiting until full interconnect with size and initial version")
 	ctx1, fn := context.WithTimeout(context.Background(), framework.Timeout)
 	defer fn()
-	err = f.WaitUntilFullInterconnectWithVersion(ctx1, ei, size, initialVersionLF)
+	err = f.WaitUntilFullInterconnectWithVersion(ctx1, ei, size, initialVersion)
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Waiting until full interconnect initial qdr entities")
@@ -72,7 +70,7 @@ func testInteriorImageUpgrade(f *framework.Framework) {
 	By("Waiting until full interconnect with size and final version")
 	ctx3, fn := context.WithTimeout(context.Background(), framework.Timeout)
 	defer fn()
-	err = f.WaitUntilFullInterconnectWithVersion(ctx3, ei, size, finalVersionLF)
+	err = f.WaitUntilFullInterconnectWithVersion(ctx3, ei, size, finalVersion)
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Waiting until full interconnect with final qdr entities")

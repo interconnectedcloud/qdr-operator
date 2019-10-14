@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	timeout time.Duration = 10 * time.Second
+	timeout time.Duration = 60 * time.Second
 )
 
 var (

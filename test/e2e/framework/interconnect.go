@@ -16,9 +16,10 @@ package framework
 
 import (
 	"context"
+	"regexp"
 	"time"
 
-	v1alpha1 "github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
+	"github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/pkg/utils/selectors"
 
 	corev1 "k8s.io/api/core/v1"
@@ -99,7 +100,13 @@ func (f *Framework) InterconnectHasExpectedVersion(interconnect *v1alpha1.Interc
 		if err != nil {
 			return false, err
 		}
-		if version != expectedVersion {
+
+		// Retrieve version from returned string
+		r, _ := regexp.Compile(".*(\\d+\\.\\d+\\.\\d+).*")
+		match := r.FindStringSubmatch(version)
+		extractedVersion := match[1]
+
+		if extractedVersion != expectedVersion {
 			return false, nil
 		}
 	}
@@ -119,6 +126,7 @@ func (f *Framework) PodsForInterconnect(interconnect *v1alpha1.Interconnect) ([]
 func (f *Framework) VersionForPod(pod corev1.Pod) (string, error) {
 	command := []string{"qdrouterd", "--version"}
 	kubeExec := NewKubectlExecCommand(f, pod.Name, timeout, command...)
+
 	return kubeExec.Exec()
 }
 
@@ -132,7 +140,7 @@ func (f *Framework) WaitUntilFullInterconnectWithVersion(ctx context.Context, in
 		return err
 	}
 
-	return RetryWithContext(ctx, 10*time.Second, func() (bool, error) {
+	return RetryWithContext(ctx, RetryInterval, func() (bool, error) {
 		// Check that the Interconnect deployment of the expected size is created
 		s, err := f.InterconnectHasExpectedSize(interconnect, expectedSize)
 		if err != nil {
