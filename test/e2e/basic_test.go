@@ -187,9 +187,5 @@ func testEdgeDefaults(f *framework.Framework) {
 		By("Automatically generating credentials")
 		_, err = f.GetSecret("edge-interconnect-default-credentials")
 		Expect(err).NotTo(HaveOccurred())
-		_, err = f.GetSecret("edge-interconnect-inter-router-credentials")
-		Expect(err).NotTo(HaveOccurred())
-		_, err = f.GetSecret("edge-interconnect-inter-router-ca")
-		Expect(err).NotTo(HaveOccurred())
 	}
 }
