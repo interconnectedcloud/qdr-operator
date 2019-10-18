@@ -22,11 +22,11 @@ var _ = Describe("[upgrade_test] Interconnect upgrade deployment tests", func() 
 
 func testInteriorImageUpgrade(f *framework.Framework) {
 	var (
-		name             = "interior-interconnect"
-		image            = "quay.io/interconnectedcloud/qdrouterd"
-		initialVersion   = "1.8.0"
-		finalVersion     = "1.9.0"
-		size             = 3
+		name           = "interior-interconnect"
+		image          = "quay.io/interconnectedcloud/qdrouterd"
+		initialVersion = "1.8.0"
+		finalVersion   = "1.9.0"
+		size           = 3
 	)
 
 	By("Creating an interior interconnect with size 3")

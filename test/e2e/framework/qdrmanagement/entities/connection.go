@@ -2,6 +2,7 @@ package entities
 
 import (
 	"encoding/json"
+	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement/entities/common"
 	"strconv"
 	"strings"
 )
@@ -11,11 +12,11 @@ type Connection struct {
 	EntityCommon
 	Active          bool                   `json:"active"`
 	AdminStatus     AdminStatusType        `json:"adminStatus,string"`
-	OperStatus      OperStatusType         `json:"operStatus,string"`
+	OperStatus      ConnOperStatusType     `json:"operStatus,string"`
 	Container       string                 `json:"container"`
 	Opened          bool                   `json:"opened"`
 	Host            string                 `json:"host"`
-	Direction       DirectionType          `json:"dir,string"`
+	Direction       common.DirectionType   `json:"dir,string"`
 	Role            string                 `json:"role"`
 	IsAuthenticated bool                   `json:"isAuthenticated"`
 	IsEncrypted     bool                   `json:"isEncrypted"`
@@ -75,15 +76,15 @@ func (a AdminStatusType) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-type OperStatusType int
+type ConnOperStatusType int
 
 const (
-	OperStatusUp OperStatusType = iota
-	OperStatusClosing
+	ConnOperStatusUp ConnOperStatusType = iota
+	ConnOperStatusClosing
 )
 
-// UnmarshalJSON returns the appropriate OperStatusType for parsed string
-func (o *OperStatusType) UnmarshalJSON(b []byte) error {
+// UnmarshalJSON returns the appropriate ConnOperStatusType for parsed string
+func (o *ConnOperStatusType) UnmarshalJSON(b []byte) error {
 	var s string
 
 	if len(b) == 0 {
@@ -97,62 +98,21 @@ func (o *OperStatusType) UnmarshalJSON(b []byte) error {
 	}
 	switch strings.ToLower(s) {
 	case "up":
-		*o = OperStatusUp
+		*o = ConnOperStatusUp
 	case "closing":
-		*o = OperStatusClosing
+		*o = ConnOperStatusClosing
 	}
 	return nil
 }
 
-// MarshalJSON returns the string representation of OperStatusType
-func (o OperStatusType) MarshalJSON() ([]byte, error) {
+// MarshalJSON returns the string representation of ConnOperStatusType
+func (o ConnOperStatusType) MarshalJSON() ([]byte, error) {
 	var s string
 	switch o {
-	case OperStatusUp:
+	case ConnOperStatusUp:
 		s = "up"
-	case OperStatusClosing:
+	case ConnOperStatusClosing:
 		s = "closing"
-	}
-	return json.Marshal(s)
-}
-
-type DirectionType int
-
-const (
-	DirectionTypeIn DirectionType = iota
-	DirectionTypeOut
-)
-
-// UnmarshalJSON returns the appropriate DirectionType for parsed string
-func (d *DirectionType) UnmarshalJSON(b []byte) error {
-	var s string
-
-	if len(b) == 0 {
-		return nil
-	}
-	if b[0] != '"' {
-		b = []byte(strconv.Quote(string(b)))
-	}
-	if err := json.Unmarshal(b, &s); err != nil {
-		return err
-	}
-	switch strings.ToLower(s) {
-	case "in":
-		*d = DirectionTypeIn
-	case "out":
-		*d = DirectionTypeOut
-	}
-	return nil
-}
-
-// MarshalJSON returns the string representation of DirectionType
-func (d DirectionType) MarshalJSON() ([]byte, error) {
-	var s string
-	switch d {
-	case DirectionTypeIn:
-		s = "in"
-	case DirectionTypeOut:
-		s = "out"
 	}
 	return json.Marshal(s)
 }
