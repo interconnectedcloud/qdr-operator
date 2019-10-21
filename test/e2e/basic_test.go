@@ -2,13 +2,10 @@ package e2e
 
 import (
 	"context"
-	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement"
-	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement/entities"
-	"time"
-
 	"github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework"
-
+	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement"
+	"github.com/interconnectedcloud/qdr-operator/test/e2e/validation"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -26,15 +23,17 @@ var _ = Describe("[basic_test] Interconnect default deployment tests", func() {
 
 })
 
+// testInteriorDefaults creates a simple Interior router using a minimal configuration
+// and it asserts that all default elements and artifacts have been defined.
 func testInteriorDefaults(f *framework.Framework) {
 	var (
 		name        = "interior-interconnect"
-		defaultSize = 1
+		defaultSize = 3
 		version     = "1.9.0"
 	)
 
 	By("Creating a default interior interconnect")
-	ei, err := f.CreateInterconnect(f.Namespace, 0, func(ei *v1alpha1.Interconnect) {
+	ei, err := f.CreateInterconnect(f.Namespace, int32(defaultSize), func(ei *v1alpha1.Interconnect) {
 		ei.Name = name
 	})
 	Expect(err).NotTo(HaveOccurred())
@@ -60,6 +59,12 @@ func testInteriorDefaults(f *framework.Framework) {
 	err = f.WaitUntilFullInterconnectWithVersion(ctx, ei, defaultSize, version)
 	Expect(err).NotTo(HaveOccurred())
 
+	By("Waiting until full interconnect initial qdr entities")
+	ctx, fn = context.WithTimeout(context.Background(), framework.Timeout)
+	defer fn()
+	err = qdrmanagement.WaitUntilFullInterconnectWithQdrEntities(ctx, f, ei)
+	Expect(err).NotTo(HaveOccurred())
+
 	By("Creating a service for the interconnect default listeners")
 	svc, err := f.GetService(name)
 	Expect(err).NotTo(HaveOccurred())
@@ -73,31 +78,20 @@ func testInteriorDefaults(f *framework.Framework) {
 	pods, err := f.PodsForInterconnect(ei)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(len(pods)).To(Equal(defaultSize))
-	for _, pod := range pods {
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: 0.0.0.0:5672 proto=any, role=normal", time.Second*1)
-		Expect(err).NotTo(HaveOccurred())
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: 0.0.0.0:8080 proto=any, role=normal, http", time.Second*1)
-		Expect(err).NotTo(HaveOccurred())
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: :8888 proto=any, role=normal, http", time.Second*1)
-		Expect(err).NotTo(HaveOccurred())
-		if f.CertManagerPresent {
-			_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: 0.0.0.0:55671 proto=any, role=inter-router, sslProfile=inter-router", time.Second*1)
-		} else {
-			_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: 0.0.0.0:55672 proto=any, role=inter-router", time.Second*1)
-		}
-		Expect(err).NotTo(HaveOccurred())
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, "interior-interconnect", "Configured Listener: 0.0.0.0:45672 proto=any, role=edge", time.Second*1)
-		Expect(err).NotTo(HaveOccurred())
-	}
 
-	By("Verifying each node has 5 addresses")
-	for _, pod := range pods {
-		addrs, err := qdrmanagement.QdmanageQuery(f, pod.Name, entities.Address{}, nil)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(len(addrs)).To(Equal(5))
-	}
+	By("Verifying default listeners have been defined")
+	validation.ValidateDefaultListeners(ei, f, pods)
+
+	By("Verifying default connectors have been defined")
+	validation.ValidateDefaultConnectors(ei, f, pods)
+
+	By("Verifying default addresses have been defined")
+	validation.ValidateDefaultAddresses(ei, f, pods)
 
 	if f.CertManagerPresent {
+		By("Verifying expected sslProfiles have been defined")
+		validation.ValidateDefaultSslProfiles(ei, f, pods)
+
 		By("Automatically generating credentials")
 		_, err = f.GetSecret("interior-interconnect-default-credentials")
 		Expect(err).NotTo(HaveOccurred())
@@ -108,6 +102,8 @@ func testInteriorDefaults(f *framework.Framework) {
 	}
 }
 
+// testEdgeDefaults defines a minimal edge Interconnect instance and validates
+// that all default configuration and resources have been defined.
 func testEdgeDefaults(f *framework.Framework) {
 	var (
 		name        = "edge-interconnect"
@@ -157,35 +153,18 @@ func testEdgeDefaults(f *framework.Framework) {
 	pods, err := f.PodsForInterconnect(ei)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(len(pods)).To(Equal(defaultSize))
-	for _, pod := range pods {
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Router started in Edge mode", time.Second*5)
-		Expect(err).NotTo(HaveOccurred())
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: 0.0.0.0:5672 proto=any, role=normal", time.Second*1)
-		Expect(err).NotTo(HaveOccurred())
-		if f.CertManagerPresent {
-			_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: 0.0.0.0:5671 proto=any, role=normal, sslProfile=default", time.Second*1)
-			Expect(err).NotTo(HaveOccurred())
-		}
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: 0.0.0.0:8080 proto=any, role=normal, http", time.Second*1)
-		Expect(err).NotTo(HaveOccurred())
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: :8888 proto=any, role=normal, http", time.Second*1)
-		Expect(err).NotTo(HaveOccurred())
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: 0.0.0.0:55672 proto=any, role=inter-router", time.Second*1)
-		Expect(err).To(HaveOccurred())
-		_, err = framework.LookForStringInLog(f.Namespace, pod.Name, name, "Configured Listener: 0.0.0.0:45672 proto=any, role=edge", time.Second*1)
-		Expect(err).To(HaveOccurred())
-	}
+	validation.ValidateDefaultListeners(ei, f, pods)
 
-	By("Verifying each node has 5 addresses")
-	for _, pod := range pods {
-		addrs, err := qdrmanagement.QdmanageQuery(f, pod.Name, entities.Address{}, nil)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(len(addrs)).To(Equal(5))
-	}
+	By("Verifying default addresses have been defined")
+	validation.ValidateDefaultAddresses(ei, f, pods)
 
 	if f.CertManagerPresent {
+		By("Verifying expected sslProfiles have been defined")
+		validation.ValidateDefaultSslProfiles(ei, f, pods)
+
 		By("Automatically generating credentials")
 		_, err = f.GetSecret("edge-interconnect-default-credentials")
 		Expect(err).NotTo(HaveOccurred())
 	}
 }
+
