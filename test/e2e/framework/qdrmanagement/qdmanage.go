@@ -16,6 +16,8 @@ var (
 	queryCommand = []string{"qdmanage", "query", "--type"}
 )
 
+// QdmanageQuery executes a "qdmanager query" command on the provided pod, returning
+// a slice of entities of the provided "entity" type.
 func QdmanageQuery(f *framework.Framework, pod string, entity entities.Entity, fn func(entities.Entity) bool) ([]entities.Entity, error) {
 	// Preparing command to execute
 	command := append(queryCommand, entity.GetEntityId())

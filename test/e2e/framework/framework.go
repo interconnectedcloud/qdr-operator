@@ -67,6 +67,7 @@ type Framework struct {
 
 	CertManagerPresent    bool // if crd is detected
 	SkipNamespaceCreation bool // Whether to skip creating a namespace
+	KeepCRD               bool // Whether to preserve CRD on cleanup
 	Namespace             string
 	namespacesToDelete    []*corev1.Namespace // Some tests have more than one
 	cleanupHandle         CleanupActionHandle
@@ -197,9 +198,12 @@ func (f *Framework) Teardown() error {
 	if err != nil && !apierrors.IsNotFound(err) {
 		return fmt.Errorf("failed to delete qdr-operator cluster role binding: %v", err)
 	}
-	err = f.ExtClient.ApiextensionsV1beta1().CustomResourceDefinitions().Delete(crdName, metav1.NewDeleteOptions(1))
-	if err != nil && !apierrors.IsNotFound(err) {
-		return fmt.Errorf("failed to delete qdr-operator crd: %v", err)
+	// In cases when CRD was already present, it must be kept
+	if !f.KeepCRD {
+		err = f.ExtClient.ApiextensionsV1beta1().CustomResourceDefinitions().Delete(crdName, metav1.NewDeleteOptions(1))
+		if err != nil && !apierrors.IsNotFound(err) {
+			return fmt.Errorf("failed to delete qdr-operator crd: %v", err)
+		}
 	}
 	err = f.KubeClient.AppsV1().Deployments(f.Namespace).Delete(qdrOperatorName, metav1.NewDeleteOptions(1))
 	if err != nil && !apierrors.IsNotFound(err) {
@@ -235,6 +239,9 @@ func (f *Framework) Setup() error {
 	err = f.setupQdrCrd()
 	if err != nil && !HasAlreadyExistsSuffix(err) {
 		return fmt.Errorf("failed to setup qdr operator: %v", err)
+	} else if err != nil {
+		// In case CRD already exists, do not remove on clean up (to preserve original state)
+		f.KeepCRD = true
 	}
 	err = f.setupQdrDeployment()
 	if err != nil {
