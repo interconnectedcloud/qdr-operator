@@ -88,7 +88,7 @@ func InterconnectHasExpectedInterRouterConnections(f *framework.Framework, inter
 	return true, nil
 }
 
-// Wait until all the pods belonging to the Interconnect delpoyment report
+// Wait until all the pods belonging to the Interconnect deployment report
 // expected node counts, irc's, etc.
 func WaitUntilFullInterconnectWithQdrEntities(ctx context.Context, f *framework.Framework, interconnect *v1alpha1.Interconnect) error {
 

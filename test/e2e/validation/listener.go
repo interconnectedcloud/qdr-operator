@@ -10,6 +10,9 @@ import (
 	"k8s.io/api/core/v1"
 )
 
+// ListenerMapByPort represents a map that contains
+type ListenerMapByPort map[string]map[string]interface{}
+
 // ValidateDefaultListeners ensures that the default listeners (if no others specified)
 // have been created
 func ValidateDefaultListeners(ic *v1alpha1.Interconnect, f *framework.Framework, pods []v1.Pod) {
@@ -106,5 +109,38 @@ func ValidateDefaultListeners(ic *v1alpha1.Interconnect, f *framework.Framework,
 
 		// Validate all default interior listeners are present
 		gomega.Expect(expIntLs).To(gomega.Equal(intLsFound))
+	}
+}
+
+// ValidateSpecListener asserts that the listener models provided through the lsMap
+// are present across all pods from the given ic instance.
+func ValidateSpecListener(ic *v1alpha1.Interconnect, f *framework.Framework, lsMap ListenerMapByPort) {
+	// Retrieve fresh version of given Interconnect instance
+	icNew, err := f.GetInterconnect(ic.Name)
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
+	// Iterate through all pods and assert that listeners are available across all instances
+	for _, pod := range icNew.Status.PodNames {
+		// Same amount of listeners from lsMap are expected to be found
+		lsFound := 0
+
+		// Retrieve listeners
+		listeners, err := qdrmanagement.QdmanageQuery(f, pod, entities.Listener{}, nil)
+		gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
+		// Loop through returned listeners
+		for _, e := range listeners {
+			listener := e.(entities.Listener)
+			lsModel, found := lsMap[listener.Port]
+			if !found {
+				continue
+			}
+			// Validating listener that exists on lsMap
+			ValidateEntityValues(listener, lsModel)
+			lsFound++
+		}
+
+		// Assert that all listeners from lsMap have been found
+		gomega.Expect(lsFound).To(gomega.Equal(len(lsMap)))
 	}
 }

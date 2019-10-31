@@ -16,6 +16,8 @@ package framework
 
 import (
 	"fmt"
+	routev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
+	"k8s.io/client-go/dynamic"
 	"strings"
 	"time"
 
@@ -30,6 +32,7 @@ import (
 	apiextv1b1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	clientset "k8s.io/client-go/kubernetes"
+
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/onsi/ginkgo"
@@ -53,6 +56,10 @@ var (
 	GVR                  = groupName + "/" + apiVersion
 )
 
+type ocpClient struct {
+	RoutesClient *routev1.RouteV1Client
+}
+
 type Framework struct {
 	BaseName string
 
@@ -64,6 +71,8 @@ type Framework struct {
 	KubeClient clientset.Interface
 	ExtClient  apiextension.Interface
 	QdrClient  qdrclient.Interface
+	DynClient  dynamic.Interface
+	OcpClient  ocpClient
 
 	CertManagerPresent    bool // if crd is detected
 	SkipNamespaceCreation bool // Whether to skip creating a namespace
@@ -71,6 +80,7 @@ type Framework struct {
 	Namespace             string
 	namespacesToDelete    []*corev1.Namespace // Some tests have more than one
 	cleanupHandle         CleanupActionHandle
+	isOpenShift           *bool
 }
 
 // NewFramework creates a test framework
@@ -100,6 +110,13 @@ func (f *Framework) BeforeEach() {
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 		f.QdrClient, err = qdrclient.NewForConfig(config)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
+		f.DynClient, err = dynamic.NewForConfig(config)
+		gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
+		if f.IsOpenShift() {
+			f.OcpClient.RoutesClient, err = routev1.NewForConfig(config)
+			gomega.Expect(err).NotTo(gomega.HaveOccurred())
+		}
 	}
 
 	if !f.SkipNamespaceCreation {
@@ -490,6 +507,35 @@ func (f *Framework) setupQdrDeployment() error {
 		return fmt.Errorf("create qdr-operator deployment failed: %v", err)
 	}
 	return nil
+}
+
+func (f *Framework) IsOpenShift() bool {
+	if f.isOpenShift != nil {
+		return *f.isOpenShift
+	}
+
+	result := false
+	apiList, err := f.KubeClient.Discovery().ServerGroups()
+	if err != nil {
+		e2elog.Failf("Error in getting ServerGroups from discovery client, returning false")
+		result = false
+		f.isOpenShift = &result
+		return result
+	}
+
+	for _, v := range apiList.Groups {
+		if v.Name == "route.openshift.io" {
+			e2elog.Logf("OpenShift route detected in api groups, returning true")
+			result = true
+			f.isOpenShift = &result
+			return result
+		}
+	}
+
+	e2elog.Logf("OpenShift route not found in groups, returning false")
+	result = false
+	f.isOpenShift = &result
+	return result
 }
 
 func int32Ptr(i int32) *int32 { return &i }
