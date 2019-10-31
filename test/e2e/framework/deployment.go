@@ -16,7 +16,6 @@ package framework
 
 import (
 	"context"
-	"testing"
 	"time"
 
 	e2elog "github.com/interconnectedcloud/qdr-operator/test/e2e/framework/log"
@@ -54,10 +53,24 @@ func WaitForDeployment(kubeclient kubernetes.Interface, namespace, name string, 
 			return false, err
 		}
 
-		if int(deployment.Status.AvailableReplicas) == replicas {
+		// For debugging purposes
+		e2elog.Logf("Waiting for full availability of %s deployment (Replicas: %d/%d - Available: %d/%d - Updated: %d/%d - Ready: %d/%d - Unavailable: %d/%d)\n",
+			name,
+			deployment.Status.Replicas, replicas,
+			deployment.Status.AvailableReplicas, replicas,
+			deployment.Status.UpdatedReplicas, replicas,
+			deployment.Status.ReadyReplicas, replicas,
+			deployment.Status.UnavailableReplicas, replicas)
+
+		totalReplicas := int(deployment.Status.Replicas) == replicas
+		available := int(deployment.Status.AvailableReplicas) == replicas
+		updated := int(deployment.Status.ReadyReplicas) == replicas
+		ready := int(deployment.Status.ReadyReplicas) == replicas
+		unavailable := int(deployment.Status.UnavailableReplicas) != 0
+
+		if totalReplicas && available && updated && ready && !unavailable {
 			return true, nil
 		}
-		e2elog.Logf("Waiting for full availability of %s deployment (%d/%d)\n", name, deployment.Status.AvailableReplicas, replicas)
 		return false, nil
 	})
 	if err != nil {
@@ -95,7 +108,7 @@ func WaitForDaemonSet(kubeclient kubernetes.Interface, namespace, name string, c
 	return nil
 }
 
-func WaitForDeletion(t *testing.T, dynclient client.Client, obj runtime.Object, retryInterval, timeout time.Duration) error {
+func WaitForDeletion(dynclient client.Client, obj runtime.Object, retryInterval, timeout time.Duration) error {
 	key, err := client.ObjectKeyFromObject(obj)
 	if err != nil {
 		return err
@@ -119,5 +132,33 @@ func WaitForDeletion(t *testing.T, dynclient client.Client, obj runtime.Object, 
 		return err
 	}
 	e2elog.Logf("%s %s was deleted\n", kind, key)
+	return nil
+}
+
+func WaitForDeploymentDeleted(kubeclient kubernetes.Interface, namespace, name string, retryInterval, timeout time.Duration) error {
+	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
+		deployment, err := kubeclient.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{IncludeUninitialized: true})
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				return true, nil
+			}
+			return false, err
+		}
+
+		// For debugging purposes
+		e2elog.Logf("Waiting for deletion of %s deployment (Replicas: %d/0 - Available: %d/0 - Updated: %d/0 - Ready: %d/0 - Unavailable: %d/0)\n",
+			name,
+			deployment.Status.Replicas,
+			deployment.Status.AvailableReplicas,
+			deployment.Status.UpdatedReplicas,
+			deployment.Status.ReadyReplicas,
+			deployment.Status.UnavailableReplicas)
+
+		return false, nil
+	})
+	if err != nil {
+		return err
+	}
+	e2elog.Logf("Deployment %s no longer present", name)
 	return nil
 }

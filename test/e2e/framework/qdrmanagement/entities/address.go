@@ -10,6 +10,7 @@ import (
 type Address struct {
 	EntityCommon
 	Prefix         string           `json:"prefix"`
+	Pattern        string           `json:"pattern"`
 	Distribution   DistributionType `json:"distribution,string"`
 	Waypoint       bool             `json:"waypoint"`
 	IngressPhase   int              `json:"ingressPhase"`

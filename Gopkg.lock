@@ -447,6 +447,8 @@
     "config/clientset/versioned",
     "config/clientset/versioned/scheme",
     "config/clientset/versioned/typed/config/v1",
+    "route/clientset/versioned/scheme",
+    "route/clientset/versioned/typed/route/v1",
   ]
   pruneopts = "NT"
   revision = "f4b242dfe08529a11803996e325ab6dc127d4e1d"
@@ -1068,6 +1070,7 @@
     "github.com/openshift/api/config/v1",
     "github.com/openshift/api/route/v1",
     "github.com/openshift/client-go/config/clientset/versioned",
+    "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/pkg/leader",
     "github.com/operator-framework/operator-sdk/version",
@@ -1080,6 +1083,7 @@
     "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset",
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
+    "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured",
     "k8s.io/apimachinery/pkg/labels",
     "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/runtime/schema",
@@ -1092,6 +1096,7 @@
     "k8s.io/apimachinery/pkg/watch",
     "k8s.io/client-go/discovery",
     "k8s.io/client-go/discovery/fake",
+    "k8s.io/client-go/dynamic",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp",
     "k8s.io/client-go/rest",

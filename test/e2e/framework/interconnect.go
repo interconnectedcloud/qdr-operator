@@ -16,7 +16,9 @@ package framework
 
 import (
 	"context"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"regexp"
+	"sort"
 	"time"
 
 	"github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
@@ -128,6 +130,41 @@ func (f *Framework) VersionForPod(pod corev1.Pod) (string, error) {
 	kubeExec := NewKubectlExecCommand(f, pod.Name, timeout, command...)
 
 	return kubeExec.Exec()
+}
+
+func (f *Framework) WaitForNewInterconnectPods(interconnect *v1alpha1.Interconnect, retryInterval, timeout time.Duration) error {
+	initialPodNames := interconnect.Status.PodNames
+	sort.Strings(initialPodNames)
+
+	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
+		ic, err := f.GetInterconnect(interconnect.Name)
+		if err != nil {
+			return true, err
+		}
+
+		// Sorting and comparing current pod names
+		podNames := ic.Status.PodNames
+		sort.Strings(podNames)
+
+		// Not same amount of pods available
+		if len(podNames) != len(initialPodNames) {
+			return false, nil
+		}
+
+		// Expect no pod names to match
+		for _, newName := range podNames {
+			for _, oldName := range initialPodNames {
+				if newName == oldName {
+					return false, nil
+				}
+			}
+		}
+
+		// Same amount of pods found and no names matching
+		return true, nil
+	})
+
+	return err
 }
 
 // WaitUntilFullInterconnectWithVersion waits until all the pods belonging to

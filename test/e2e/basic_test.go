@@ -8,6 +8,7 @@ import (
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/validation"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ = Describe("[basic_test] Interconnect default deployment tests", func() {
@@ -37,12 +38,6 @@ func testInteriorDefaults(f *framework.Framework) {
 		ei.Name = name
 	})
 	Expect(err).NotTo(HaveOccurred())
-
-	// Make sure we cleanup the Interconnect resource after we're done testing.
-	defer func() {
-		err = f.DeleteInterconnect(ei)
-		Expect(err).NotTo(HaveOccurred())
-	}()
 
 	By("Creating an Interconnect resource in the namespace")
 	ei, err = f.GetInterconnect(name)
@@ -100,6 +95,77 @@ func testInteriorDefaults(f *framework.Framework) {
 		_, err = f.GetSecret("interior-interconnect-inter-router-ca")
 		Expect(err).NotTo(HaveOccurred())
 	}
+
+	// Verify service has been defined
+	By("Validating service has been defined for Interconnect instance")
+	service, err := f.KubeClient.CoreV1().Services(f.Namespace).Get(ei.Name, v1.GetOptions{})
+	Expect(err).NotTo(HaveOccurred())
+	Expect(service).NotTo(BeNil())
+
+	// ingress or routes / port <icname-[exposed port #]>
+	if !f.IsOpenShift() {
+		By("Validating Ingresses have been defined for exposed listeners")
+		ingress, err := f.KubeClient.ExtensionsV1beta1().Ingresses(f.Namespace).Get(ei.Name+"-8080", v1.GetOptions{})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(ingress).NotTo(BeNil())
+
+		// Verify exposed inter router TLS listener
+		if f.CertManagerPresent {
+			ingress, err = f.KubeClient.ExtensionsV1beta1().Ingresses(f.Namespace).Get(ei.Name+"-55671", v1.GetOptions{})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ingress).NotTo(BeNil())
+		}
+	} else {
+		By("Validating Routes have been defined for exposed listeners")
+		route, err := f.OcpClient.RoutesClient.Routes(f.Namespace).Get(ei.Name+"-8080", v1.GetOptions{})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(route).NotTo(BeNil())
+
+		// Verify exposed inter router TLS listener
+		if f.CertManagerPresent {
+			route, err := f.OcpClient.RoutesClient.Routes(f.Namespace).Get(ei.Name+"-55671", v1.GetOptions{})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(route).NotTo(BeNil())
+		}
+	}
+
+	// Delete and verify related resources were deleted
+	By("Deleting the Interconnect instance")
+	err = f.DeleteInterconnect(ei)
+	Expect(err).NotTo(HaveOccurred())
+
+	// Waiting till Interconnect is deleted
+	err = framework.WaitForDeploymentDeleted(f.KubeClient, f.Namespace, ei.Name, framework.RetryInterval, framework.Timeout)
+	Expect(err).NotTo(HaveOccurred())
+
+	// Verify service has been defined
+	By("Validating service has been deleted")
+	service, err = f.KubeClient.CoreV1().Services(f.Namespace).Get(ei.Name, v1.GetOptions{})
+	Expect(err).To(HaveOccurred())
+
+	// ingress or routes / port <icname-[exposed port #]>
+	if !f.IsOpenShift() {
+		By("Validating Ingresses have been deleted")
+		_, err := f.KubeClient.ExtensionsV1beta1().Ingresses(f.Namespace).Get(ei.Name+"-8080", v1.GetOptions{})
+		Expect(err).To(HaveOccurred())
+
+		// Verify exposed inter router TLS listener
+		if f.CertManagerPresent {
+			_, err = f.KubeClient.ExtensionsV1beta1().Ingresses(f.Namespace).Get(ei.Name+"-55671", v1.GetOptions{})
+			Expect(err).To(HaveOccurred())
+		}
+	} else {
+		By("Validating Routes have been deleted")
+		_, err := f.OcpClient.RoutesClient.Routes(f.Namespace).Get(ei.Name+"-8080", v1.GetOptions{})
+		Expect(err).To(HaveOccurred())
+
+		// Verify exposed inter router TLS listener
+		if f.CertManagerPresent {
+			_, err := f.OcpClient.RoutesClient.Routes(f.Namespace).Get(ei.Name+"-55671", v1.GetOptions{})
+			Expect(err).To(HaveOccurred())
+		}
+	}
+
 }
 
 // testEdgeDefaults defines a minimal edge Interconnect instance and validates
