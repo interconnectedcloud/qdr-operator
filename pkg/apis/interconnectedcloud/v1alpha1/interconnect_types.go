@@ -165,11 +165,11 @@ type Connector struct {
 }
 
 type AutoLink struct {
-	Address        string `json:"address"`
-	Direction      string `json:"direction"`
-	ContainerId    string `json:"containerId,omitempty"`
-	Connection     string `json:"connection,omitempty"`
-	ExternalPrefix string `json:"externalPrefix,omitempty"`
-	Phase          *int32 `json:"phase,omitempty"`
-	Fallback       bool   `json:"fallback,omitempty"`
+	Address         string `json:"address"`
+	Direction       string `json:"direction"`
+	ContainerId     string `json:"containerId,omitempty"`
+	Connection      string `json:"connection,omitempty"`
+	ExternalAddress string `json:"externalAddress,omitempty"`
+	Phase           *int32 `json:"phase,omitempty"`
+	Fallback        bool   `json:"fallback,omitempty"`
 }

@@ -394,7 +394,7 @@ items:
                               type: string
                             direction:
                               type: string
-                            externalPrefix:
+                            externalAddress:
                               type: string
                             phase:
                               format: int32

@@ -50,4 +50,3 @@ func ValidateDefaultAddresses(ic *v1alpha1.Interconnect, f *framework.Framework,
 	}
 
 }
-

@@ -108,4 +108,3 @@ func ValidateDefaultListeners(ic *v1alpha1.Interconnect, f *framework.Framework,
 		gomega.Expect(expIntLs).To(gomega.Equal(intLsFound))
 	}
 }
-
