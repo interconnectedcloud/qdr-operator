@@ -145,13 +145,13 @@ type SslProfile struct {
 }
 
 type LinkRoute struct {
-	Prefix               string `json:"prefix,omitempty"`
-	Pattern              string `json:"pattern,omitempty"`
-	Direction            string `json:"direction,omitempty"`
-	ContainerId          string `json:"containerId,omitempty"`
-	Connection           string `json:"connection,omitempty"`
-	AddExternalPrefix    string `json:"addExternalPrefix,omitempty"`
-	RemoveExternalPrefix string `json:"removeExternalPrefix,omitempty"`
+	Prefix            string `json:"prefix,omitempty"`
+	Pattern           string `json:"pattern,omitempty"`
+	Direction         string `json:"direction,omitempty"`
+	ContainerId       string `json:"containerId,omitempty"`
+	Connection        string `json:"connection,omitempty"`
+	AddExternalPrefix string `json:"addExternalPrefix,omitempty"`
+	DelExternalPrefix string `json:"delExternalPrefix,omitempty"`
 }
 
 type Connector struct {

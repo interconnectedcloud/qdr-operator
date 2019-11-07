@@ -368,7 +368,7 @@ spec:
                     type: string
                   prefix:
                     type: string
-                  removeExternalPrefix:
+                  delExternalPrefix:
                     type: string
                 type: object
               type: array
