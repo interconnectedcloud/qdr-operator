@@ -429,8 +429,8 @@ linkRoute {
     {{- if .AddExternalPrefix}}
     addExternalPrefix: {{.AddExternalPrefix}}
     {{- end}}
-    {{- if .RemoveExternalPrefix}}
-    removeExternalPrefix: {{.RemoveExternalPrefix}}
+    {{- if .DelExternalPrefix}}
+    delExternalPrefix: {{.DelExternalPrefix}}
     {{- end}}
 }
 {{- end}}
