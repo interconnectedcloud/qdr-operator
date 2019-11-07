@@ -167,4 +167,3 @@ func testEdgeDefaults(f *framework.Framework) {
 		Expect(err).NotTo(HaveOccurred())
 	}
 }
-

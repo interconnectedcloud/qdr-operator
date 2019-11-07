@@ -398,8 +398,8 @@ autoLink {
     {{- if .Connection}}
     connection: {{.Connection}}
     {{- end}}
-    {{- if .ExternalPrefix}}
-    externalPrefix: {{.ExternalPrefix}}
+    {{- if .ExternalAddress}}
+    externalAddress: {{.ExternalAddress}}
     {{- end}}
     {{- if .Phase}}
     phase: {{.Phase}}
