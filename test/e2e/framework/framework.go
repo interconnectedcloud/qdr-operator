@@ -16,7 +16,7 @@ package framework
 
 import (
 	"fmt"
-	routev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
+	routev1 "github.com/openshift/client-go/route/clientset/versioned"
 	"k8s.io/client-go/dynamic"
 	"strings"
 	"time"
@@ -57,7 +57,7 @@ var (
 )
 
 type ocpClient struct {
-	RoutesClient *routev1.RouteV1Client
+	RoutesClient *routev1.Clientset
 }
 
 type Framework struct {

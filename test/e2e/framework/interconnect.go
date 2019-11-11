@@ -16,7 +16,6 @@ package framework
 
 import (
 	"context"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"regexp"
 	"sort"
 	"time"
@@ -132,11 +131,11 @@ func (f *Framework) VersionForPod(pod corev1.Pod) (string, error) {
 	return kubeExec.Exec()
 }
 
-func (f *Framework) WaitForNewInterconnectPods(interconnect *v1alpha1.Interconnect, retryInterval, timeout time.Duration) error {
+func (f *Framework) WaitForNewInterconnectPods(ctx context.Context, interconnect *v1alpha1.Interconnect, retryInterval, timeout time.Duration) error {
 	initialPodNames := interconnect.Status.PodNames
 	sort.Strings(initialPodNames)
 
-	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
+	err := RetryWithContext(ctx, RetryInterval, func() (bool, error) {
 		ic, err := f.GetInterconnect(interconnect.Name)
 		if err != nil {
 			return true, err
