@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"context"
 	"github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework"
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement"
@@ -152,7 +153,9 @@ var _ = ginkgo.Describe("[spec_address] Address manipulation tests", func() {
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 		// Waiting for new pods
-		err = f.WaitForNewInterconnectPods(ic, framework.RetryInterval, framework.Timeout)
+		ctx, fn := context.WithTimeout(context.Background(), framework.Timeout)
+		defer fn()
+		err = f.WaitForNewInterconnectPods(ctx, ic, framework.RetryInterval, framework.Timeout)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 		// Wait till interconnect instance is ready
@@ -198,7 +201,9 @@ var _ = ginkgo.Describe("[spec_address] Address manipulation tests", func() {
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 		// Waiting for new pods
-		err = f.WaitForNewInterconnectPods(ic, framework.RetryInterval, framework.Timeout)
+		ctx, fn := context.WithTimeout(context.Background(), framework.Timeout)
+		defer fn()
+		err = f.WaitForNewInterconnectPods(ctx, ic, framework.RetryInterval, framework.Timeout)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 		// Wait till interconnect instance is ready

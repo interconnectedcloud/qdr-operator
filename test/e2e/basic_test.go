@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strings"
 )
 
 var _ = Describe("[basic_test] Interconnect default deployment tests", func() {
@@ -38,6 +39,18 @@ func testInteriorDefaults(f *framework.Framework) {
 		ei.Name = name
 	})
 	Expect(err).NotTo(HaveOccurred())
+
+	// Make sure we cleanup the Interconnect resource after we're done testing.
+	defer func() {
+		ei, err := f.GetInterconnect(ei.Name)
+		// If not found, no need to delete
+		if err != nil && strings.Contains(err.Error(), "not found") {
+			return
+		}
+		Expect(err).NotTo(HaveOccurred())
+		err = f.DeleteInterconnect(ei)
+		Expect(err).NotTo(HaveOccurred())
+	}()
 
 	By("Creating an Interconnect resource in the namespace")
 	ei, err = f.GetInterconnect(name)
@@ -117,13 +130,13 @@ func testInteriorDefaults(f *framework.Framework) {
 		}
 	} else {
 		By("Validating Routes have been defined for exposed listeners")
-		route, err := f.OcpClient.RoutesClient.Routes(f.Namespace).Get(ei.Name+"-8080", v1.GetOptions{})
+		route, err := f.OcpClient.RoutesClient.RouteV1().Routes(f.Namespace).Get(ei.Name+"-8080", v1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
 		Expect(route).NotTo(BeNil())
 
 		// Verify exposed inter router TLS listener
 		if f.CertManagerPresent {
-			route, err := f.OcpClient.RoutesClient.Routes(f.Namespace).Get(ei.Name+"-55671", v1.GetOptions{})
+			route, err := f.OcpClient.RoutesClient.RouteV1().Routes(f.Namespace).Get(ei.Name+"-55671", v1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(route).NotTo(BeNil())
 		}
@@ -156,12 +169,12 @@ func testInteriorDefaults(f *framework.Framework) {
 		}
 	} else {
 		By("Validating Routes have been deleted")
-		_, err := f.OcpClient.RoutesClient.Routes(f.Namespace).Get(ei.Name+"-8080", v1.GetOptions{})
+		_, err := f.OcpClient.RoutesClient.RouteV1().Routes(f.Namespace).Get(ei.Name+"-8080", v1.GetOptions{})
 		Expect(err).To(HaveOccurred())
 
 		// Verify exposed inter router TLS listener
 		if f.CertManagerPresent {
-			_, err := f.OcpClient.RoutesClient.Routes(f.Namespace).Get(ei.Name+"-55671", v1.GetOptions{})
+			_, err := f.OcpClient.RoutesClient.RouteV1().Routes(f.Namespace).Get(ei.Name+"-55671", v1.GetOptions{})
 			Expect(err).To(HaveOccurred())
 		}
 	}
