@@ -135,8 +135,8 @@ func WaitForDeletion(dynclient client.Client, obj runtime.Object, retryInterval,
 	return nil
 }
 
-func WaitForDeploymentDeleted(kubeclient kubernetes.Interface, namespace, name string, retryInterval, timeout time.Duration) error {
-	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
+func WaitForDeploymentDeleted(ctx context.Context, kubeclient kubernetes.Interface, namespace, name string) error {
+	err := RetryWithContext(ctx, RetryInterval, func() (bool, error) {
 		deployment, err := kubeclient.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{IncludeUninitialized: true})
 		if err != nil {
 			if apierrors.IsNotFound(err) {

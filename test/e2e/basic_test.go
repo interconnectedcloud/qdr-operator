@@ -148,7 +148,9 @@ func testInteriorDefaults(f *framework.Framework) {
 	Expect(err).NotTo(HaveOccurred())
 
 	// Waiting till Interconnect is deleted
-	err = framework.WaitForDeploymentDeleted(f.KubeClient, f.Namespace, ei.Name, framework.RetryInterval, framework.Timeout)
+	ctx, fn = context.WithTimeout(context.Background(), framework.Timeout)
+	defer fn()
+	err = framework.WaitForDeploymentDeleted(ctx, f.KubeClient, f.Namespace, ei.Name)
 	Expect(err).NotTo(HaveOccurred())
 
 	// Verify service has been defined
