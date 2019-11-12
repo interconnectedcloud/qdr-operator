@@ -155,7 +155,9 @@ var _ = ginkgo.Describe("[spec_connector] Connector manipulation tests", func() 
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 		// Waiting till Interconnect is deleted
-		err = framework.WaitForDeploymentDeleted(f.KubeClient, f.Namespace, ic.Name, framework.RetryInterval, framework.Timeout)
+		ctx, fn = context.WithTimeout(context.Background(), framework.Timeout)
+		defer fn()
+		err = framework.WaitForDeploymentDeleted(ctx, f.KubeClient, f.Namespace, ic.Name)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 		// Verify amqps-ca Issuer has been removed
