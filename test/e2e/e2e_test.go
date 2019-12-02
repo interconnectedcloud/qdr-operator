@@ -28,13 +28,10 @@ import (
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework"
 )
 
-func init() {
+func TestE2E(t *testing.T) {
 	// Register framework flags
 	framework.HandleFlags()
-
 	framework.AfterReadingAllFlags(&framework.TestContext)
-}
 
-func TestE2E(t *testing.T) {
 	RunE2ETests(t)
 }
