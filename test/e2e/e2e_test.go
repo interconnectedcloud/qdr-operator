@@ -17,6 +17,7 @@ limitations under the License.
 package e2e
 
 import (
+	"os"
 	"testing"
 
 	// Never, ever remove the line with "/ginkgo". Without it,
@@ -28,10 +29,13 @@ import (
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework"
 )
 
-func TestE2E(t *testing.T) {
+func TestMain(m *testing.M) {
 	// Register framework flags
 	framework.HandleFlags()
 	framework.AfterReadingAllFlags(&framework.TestContext)
+	os.Exit(m.Run())
+}
 
+func TestE2E(t *testing.T) {
 	RunE2ETests(t)
 }
