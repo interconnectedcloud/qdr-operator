@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 if [[ -z ${1} ]]; then
     CATALOG_NS="operator-lifecycle-manager"
