@@ -26,7 +26,6 @@ var _ = Describe("[resize_test] Interconnect resize deployment tests", func() {
 func testInteriorResize(f *framework.Framework, initialSize int, finalSize int) {
 	var (
 		name    = "interior-interconnect"
-		version = "1.9.0"
 	)
 
 	By("Creating an interior interconnect with initial size")
@@ -48,7 +47,7 @@ func testInteriorResize(f *framework.Framework, initialSize int, finalSize int) 
 	By("Waiting until full interconnect with initial size and version")
 	ctx1, fn := context.WithTimeout(context.Background(), framework.Timeout)
 	defer fn()
-	err = f.WaitUntilFullInterconnectWithVersion(ctx1, ei, initialSize, version)
+	err = f.WaitUntilFullInterconnectWithSize(ctx1, ei, initialSize)
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Waiting until full interconnect initial qdr entities")
@@ -69,7 +68,7 @@ func testInteriorResize(f *framework.Framework, initialSize int, finalSize int) 
 	By("Waiting until full interconnect with final size and version")
 	ctx3, fn := context.WithTimeout(context.Background(), framework.Timeout)
 	defer fn()
-	err = f.WaitUntilFullInterconnectWithVersion(ctx3, ei, finalSize, version)
+	err = f.WaitUntilFullInterconnectWithSize(ctx3, ei, finalSize)
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Waiting until full interconnect with final qdr entities")
