@@ -31,7 +31,6 @@ func testInteriorDefaults(f *framework.Framework) {
 	var (
 		name        = "interior-interconnect"
 		defaultSize = 3
-		version     = "1.9.0"
 	)
 
 	By("Creating a default interior interconnect")
@@ -64,7 +63,7 @@ func testInteriorDefaults(f *framework.Framework) {
 	By("Waiting until full interconnect with version")
 	ctx, fn := context.WithTimeout(context.Background(), framework.Timeout)
 	defer fn()
-	err = f.WaitUntilFullInterconnectWithVersion(ctx, ei, defaultSize, version)
+	err = f.WaitUntilFullInterconnectWithSize(ctx, ei, defaultSize)
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Waiting until full interconnect initial qdr entities")
@@ -190,7 +189,6 @@ func testEdgeDefaults(f *framework.Framework) {
 		name        = "edge-interconnect"
 		role        = "edge"
 		defaultSize = 1
-		version     = "1.9.0"
 	)
 
 	By("Creating an edge interconnect with default size")
@@ -218,7 +216,7 @@ func testEdgeDefaults(f *framework.Framework) {
 	By("Waiting until full interconnect with version")
 	ctx, fn := context.WithTimeout(context.Background(), framework.Timeout)
 	defer fn()
-	err = f.WaitUntilFullInterconnectWithVersion(ctx, ei, defaultSize, version)
+	err = f.WaitUntilFullInterconnectWithSize(ctx, ei, defaultSize)
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Creating a service for the interconnect default listeners")

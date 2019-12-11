@@ -2,6 +2,8 @@ package e2e
 
 import (
 	"context"
+	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/log"
+	"strings"
 
 	"github.com/interconnectedcloud/qdr-operator/pkg/apis/interconnectedcloud/v1alpha1"
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework"
@@ -27,13 +29,20 @@ func testInteriorImageUpgrade(f *framework.Framework) {
 		initialVersion = "1.8.0"
 		finalVersion   = "1.9.0"
 		size           = 3
+		skipVersion    = !strings.HasPrefix(framework.TestContext.QdrImage, image)
 	)
 
 	By("Creating an interior interconnect with size 3")
+	fullImage := image + ":" + initialVersion
+	// When using a custom image (with a different version from expected, when using static upstream images above)
+	if skipVersion {
+		fullImage = framework.TestContext.QdrImage
+	}
 	ei, err := f.CreateInterconnect(f.Namespace, int32(size), func(ei *v1alpha1.Interconnect) {
 		ei.Name = name
-		ei.Spec.DeploymentPlan.Image = image + ":" + initialVersion
+		ei.Spec.DeploymentPlan.Image = fullImage
 	})
+	log.Logf("Creating using image: %s", fullImage)
 	Expect(err).NotTo(HaveOccurred())
 
 	// Make sure we cleanup the Interconnect resource after we're done testing.
@@ -49,7 +58,11 @@ func testInteriorImageUpgrade(f *framework.Framework) {
 	By("Waiting until full interconnect with size and initial version")
 	ctx1, fn := context.WithTimeout(context.Background(), framework.Timeout)
 	defer fn()
-	err = f.WaitUntilFullInterconnectWithVersion(ctx1, ei, size, initialVersion)
+	if !skipVersion {
+		err = f.WaitUntilFullInterconnectWithVersion(ctx1, ei, size, initialVersion)
+	} else {
+		err = f.WaitUntilFullInterconnectWithSize(ctx1, ei, size)
+	}
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Waiting until full interconnect initial qdr entities")
@@ -63,14 +76,28 @@ func testInteriorImageUpgrade(f *framework.Framework) {
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Upgrading the qdrouterd image version")
-	ei.Spec.DeploymentPlan.Image = image + ":" + finalVersion
+	fullImage = image + ":" + finalVersion
+	// When using a custom image (with a different version from expected, when using static upstream images above)
+	// then we remove an existing tag and use the ":latest"
+	if skipVersion {
+		fullImage = framework.TestContext.QdrImage
+		if strings.Contains(fullImage, ":") {
+			fullImage = fullImage[:strings.Index(fullImage, ":")] + ":latest"
+		}
+	}
+	ei.Spec.DeploymentPlan.Image = fullImage
+	log.Logf("Upgrading using image: %s", fullImage)
 	_, err = f.UpdateInterconnect(ei)
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Waiting until full interconnect with size and final version")
 	ctx3, fn := context.WithTimeout(context.Background(), framework.Timeout)
 	defer fn()
-	err = f.WaitUntilFullInterconnectWithVersion(ctx3, ei, size, finalVersion)
+	if !skipVersion {
+		err = f.WaitUntilFullInterconnectWithVersion(ctx3, ei, size, finalVersion)
+	} else {
+		err = f.WaitUntilFullInterconnectWithSize(ctx3, ei, size)
+	}
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Waiting until full interconnect with final qdr entities")

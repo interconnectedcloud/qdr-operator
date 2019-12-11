@@ -166,9 +166,18 @@ func (f *Framework) WaitForNewInterconnectPods(ctx context.Context, interconnect
 	return err
 }
 
+
+// WaitUntilFullInterconnectWithSize waits until all the pods belonging to
+// the Interconnect deployment report the expected state and size.
+// The expected state will differs for interior versus edge roles
+func (f *Framework) WaitUntilFullInterconnectWithSize(ctx context.Context, interconnect *v1alpha1.Interconnect, expectedSize int) error {
+	return f.WaitUntilFullInterconnectWithVersion(ctx, interconnect, expectedSize, "")
+}
+
 // WaitUntilFullInterconnectWithVersion waits until all the pods belonging to
-// the Interconnect deployment report the expected state and expected version.
-// The expected state will differe for interior versus edge roles
+// the Interconnect deployment report the expected state and expected version (if one
+// has been provided).
+// The expected state will differs for interior versus edge roles
 func (f *Framework) WaitUntilFullInterconnectWithVersion(ctx context.Context, interconnect *v1alpha1.Interconnect, expectedSize int, expectedVersion string) error {
 	// Wait for the expected size to be reported on the Interconnect deployment
 	err := WaitForDeployment(f.KubeClient, f.Namespace, interconnect.Name, expectedSize, RetryInterval, Timeout)
@@ -187,12 +196,14 @@ func (f *Framework) WaitUntilFullInterconnectWithVersion(ctx context.Context, in
 		}
 
 		// Check whether all pods in the cluster are reporting the expected version
-		v, err := f.InterconnectHasExpectedVersion(interconnect, expectedVersion)
-		if err != nil {
-			return false, nil
-		}
-		if !v {
-			return false, nil
+		if expectedVersion != "" {
+			v, err := f.InterconnectHasExpectedVersion(interconnect, expectedVersion)
+			if err != nil {
+				return false, nil
+			}
+			if !v {
+				return false, nil
+			}
 		}
 		return true, nil
 	})
