@@ -1,0 +1,57 @@
+sudo: required
+dist: bionic
+language: go
+go:
+  - master
+  - 1.12.x
+
+go_import_path: github.com/interconnectedcloud/qdr-operator
+
+services:
+  - docker
+
+git:
+  depth: 1
+
+env:
+  global:
+    - KUBECONFIG=$HOME/.kube/config
+    - KUBERNETES_VERSION=$(curl -k -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)
+    - OPERATORSDK_VERSION=v0.12.0
+
+    # QDR
+    - REGISTRY=quay.io/interconnectedcloud
+    - IMAGE=qdr-operator
+    - TAG=latest
+
+before_install:
+  # Install Go Dep
+  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+  - dep ensure
+
+  # Get tools
+  - go get sigs.k8s.io/kind
+  - go get golang.org/x/lint/golint
+
+  # Setup kubectl
+  - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/linux/amd64/kubectl
+  - chmod +x kubectl
+  - sudo mv kubectl /usr/local/bin/
+
+  # Create a new Kubernetes cluster using KinD
+  - kind create cluster
+  - kubectl cluster-info
+
+  # Install Operator SDK
+  - curl -Lo operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/${OPERATORSDK_VERSION}/operator-sdk-${OPERATORSDK_VERSION}-x86_64-linux-gnu
+  - chmod +x operator-sdk
+  - sudo mv operator-sdk /usr/local/bin/
+
+  # Setup
+  - cd $GOPATH/src/github.com/interconnectedcloud/qdr-operator
+  - dep ensure -v && dep status
+
+script:
+  - cd $GOPATH/src/github.com/interconnectedcloud/qdr-operator
+  - make
+  - go test --count=1 -v ./test/e2e -covermode=atomic -coverprofile=organize.cov

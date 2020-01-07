@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 if [[ -z ${CI} ]]; then
     ./hack/go-dep.sh
