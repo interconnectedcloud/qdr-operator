@@ -32,7 +32,7 @@ import (
 const (
 	defaultHost          = "http://127.0.0.1:8080"
 	defaultOperatorImage = "quay.io/interconnectedcloud/qdr-operator"
-	defaultQdrImage      = "quay.io/interconnectedcloud/qdrouterd:1.9.0"
+	defaultQdrImage      = "quay.io/interconnectedcloud/qdrouterd:1.10.0"
 )
 
 // TestContextType contains test settings and global state.

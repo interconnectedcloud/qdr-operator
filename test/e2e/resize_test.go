@@ -25,7 +25,7 @@ var _ = Describe("[resize_test] Interconnect resize deployment tests", func() {
 
 func testInteriorResize(f *framework.Framework, initialSize int, finalSize int) {
 	var (
-		name    = "interior-interconnect"
+		name = "interior-interconnect"
 	)
 
 	By("Creating an interior interconnect with initial size")

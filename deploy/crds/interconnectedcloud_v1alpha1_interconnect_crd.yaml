@@ -101,6 +101,9 @@ spec:
                   cost:
                     type: integer
                     description: Cost metric for inter router connections
+                  linkCapacity:
+                    type: integer
+                    description: Capacity of links within a connection
                   sslProfile:
                     type: string
                     description: Name of the ssl profile to use
@@ -145,6 +148,9 @@ spec:
                   cost:
                     format: int32
                     type: integer
+                  linkCapacity:
+                    format: int32
+                    type: integer
                   host:
                     type: string
                   name:
@@ -172,6 +178,9 @@ spec:
                   cost:
                     format: int32
                     type: integer
+                  linkCapacity:
+                    format: int32
+                    type: integer
                   host:
                     type: string
                   name:
@@ -197,6 +206,9 @@ spec:
               items:
                 properties:
                   cost:
+                    format: int32
+                    type: integer
+                  linkCapacity:
                     format: int32
                     type: integer
                   host:
@@ -244,6 +256,9 @@ spec:
                   cost:
                     type: integer
                     description: Cost metric for inter router connections
+                  linkCapacity:
+                    type: integer
+                    description: Capacity of links within a connection
                   sslProfile:
                     type: string
                     description: Name of the ssl profile to use
@@ -280,6 +295,9 @@ spec:
                   cost:
                     type: integer
                     description: Cost metric for inter router connections
+                  linkCapacity:
+                    type: integer
+                    description: Capacity of links within a connection
                   sslProfile:
                     type: string
                     description: Name of the ssl profile to use

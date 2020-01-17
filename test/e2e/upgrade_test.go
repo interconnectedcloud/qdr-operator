@@ -26,8 +26,8 @@ func testInteriorImageUpgrade(f *framework.Framework) {
 	var (
 		name           = "interior-interconnect"
 		image          = "quay.io/interconnectedcloud/qdrouterd"
-		initialVersion = "1.8.0"
-		finalVersion   = "1.9.0"
+		initialVersion = "1.9.0"
+		finalVersion   = "1.10.0"
 		size           = 3
 		skipVersion    = !strings.HasPrefix(framework.TestContext.QdrImage, image)
 	)
