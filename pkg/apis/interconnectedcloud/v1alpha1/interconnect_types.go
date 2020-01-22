@@ -131,6 +131,7 @@ type Listener struct {
 	SaslMechanisms   string `json:"saslMechanisms,omitempty"`
 	AuthenticatePeer bool   `json:"authenticatePeer,omitempty"`
 	Expose           bool   `json:"expose,omitempty"`
+	LinkCapacity     int32  `json:"linkCapacity,omitempty"`
 }
 
 type SslProfile struct {
@@ -162,6 +163,7 @@ type Connector struct {
 	Cost           int32  `json:"cost,omitempty"`
 	VerifyHostname bool   `json:"verifyHostname,omitempty"`
 	SslProfile     string `json:"sslProfile,omitempty"`
+	LinkCapacity   int32  `json:"linkCapacity,omitempty"`
 }
 
 type AutoLink struct {

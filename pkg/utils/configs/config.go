@@ -299,6 +299,9 @@ listener {
     {{- if .Cost}}
     cost: {{.Cost}}
     {{- end}}
+    {{- if .LinkCapacity}}
+    linkCapacity: {{.LinkCapacity}}
+    {{- end}}
     {{- if .SaslMechanisms}}
     saslMechanisms: {{.SaslMechanisms}}
     {{- end}}
@@ -326,6 +329,9 @@ listener {
     {{- end}}
     {{- if .Cost}}
     cost: {{.Cost}}
+    {{- end}}
+    {{- if .LinkCapacity}}
+    linkCapacity: {{.LinkCapacity}}
     {{- end}}
     {{- if .SaslMechanisms}}
     saslMechanisms: {{.SaslMechanisms}}
@@ -453,6 +459,9 @@ connector {
     {{- if .Cost}}
     cost: {{.Cost}}
     {{- end}}
+    {{- if .LinkCapacity}}
+    linkCapacity: {{.LinkCapacity}}
+    {{- end}}
     {{- if .SslProfile}}
     sslProfile: {{.SslProfile}}
     {{- end}}
@@ -476,6 +485,9 @@ connector {
     {{- if .Cost}}
     cost: {{.Cost}}
     {{- end}}
+    {{- if .LinkCapacity}}
+    linkCapacity: {{.LinkCapacity}}
+    {{- end}}
     {{- if .SslProfile}}
     sslProfile: {{.SslProfile}}
     {{- end}}
@@ -498,6 +510,9 @@ connector {
     {{- end}}
     {{- if .Cost}}
     cost: {{.Cost}}
+    {{- end}}
+    {{- if .LinkCapacity}}
+    linkCapacity: {{.LinkCapacity}}
     {{- end}}
     {{- if .SslProfile}}
     sslProfile: {{.SslProfile}}

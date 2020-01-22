@@ -166,7 +166,6 @@ func (f *Framework) WaitForNewInterconnectPods(ctx context.Context, interconnect
 	return err
 }
 
-
 // WaitUntilFullInterconnectWithSize waits until all the pods belonging to
 // the Interconnect deployment report the expected state and size.
 // The expected state will differs for interior versus edge roles
