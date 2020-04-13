@@ -52,12 +52,54 @@
   revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
 
 [[projects]]
+  digest = "1:dafc9bfdb2d9816587ca63844a722b36525183e14423b1f356fd9a8a805b6230"
+  name = "github.com/blang/semver"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "ba2c2ddd89069b46a7011d4106f6868f17ee1705"
+  version = "v3.6.1"
+
+[[projects]]
+  digest = "1:c61f4f97321a37adcb5b4fd4fd61209cd553e46c99ee606c465553541b12a229"
+  name = "github.com/coreos/prometheus-operator"
+  packages = [
+    "pkg/apis/monitoring",
+    "pkg/apis/monitoring/v1",
+  ]
+  pruneopts = "NT"
+  revision = "72ec4b9b16ef11700724dc71fec77112536eed40"
+  version = "v0.26.0"
+
+[[projects]]
   digest = "1:4b8b5811da6970495e04d1f4e98bb89518cc3cfc3b3f456bdb876ed7b6c74049"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   pruneopts = "NT"
   revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
   version = "v1.1.1"
+
+[[projects]]
+  digest = "1:91fb48882bdb6479c511b1d8c07ccf83b84c8c956870fe61daf7e82fe089aa51"
+  name = "github.com/docker/distribution"
+  packages = [
+    ".",
+    "digestset",
+    "manifest",
+    "manifest/schema1",
+    "manifest/schema2",
+    "reference",
+  ]
+  pruneopts = "NT"
+  revision = "2461543d988979529609e8cb6fca9ca190dc48da"
+  version = "v2.7.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:8b3f9d0a064879dc6db71fb0861831c596b8bcd0765bd8b3e1b79f83aee4fa11"
+  name = "github.com/docker/libtrust"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "aabc10ec26b754e797f9028f4589c5b7bd90dc20"
 
 [[projects]]
   digest = "1:3f718788c59f3ec687bcc963cb6034a132327387784c8c04392abaaea9ad7498"
@@ -157,12 +199,12 @@
   version = "v0.19.0"
 
 [[projects]]
-  digest = "1:4da4ea0a664ba528965683d350f602d0f11464e6bb2e17aad0914723bc25d163"
+  branch = "master"
+  digest = "1:da2ad0356c603997317f60dfa8c571df6c60411b4359846b8b9ed735b62e913f"
   name = "github.com/go-openapi/spec"
   packages = ["."]
   pruneopts = "NT"
-  revision = "5b6cdde3200976e3ecceb2868706ee39b6aff3e4"
-  version = "v0.18.0"
+  revision = "1297e9a4ddf9325269fe013d7c1300aac3985f92"
 
 [[projects]]
   digest = "1:fe3594f7f3dfc0319553e1e3f63378339423507339cbeceda515ff3b94fa6118"
@@ -288,6 +330,14 @@
   version = "v0.5.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:0a7d7d815c6f35961742a89e9f22748cd06901b8f7acfe9bdc05d9540f064787"
+  name = "github.com/heroku/docker-registry-client"
+  packages = ["registry"]
+  pruneopts = "NT"
+  revision = "afc9e1acc3d53cf9ba26bffb6693d10ebb56a9b8"
+
+[[projects]]
   digest = "1:76efa3b55850d9caa14f8c0b3a951797f9bc2ffc283526073dcad1b06b6e02d3"
   name = "github.com/hpcloud/tail"
   packages = [
@@ -327,6 +377,14 @@
   pruneopts = "NT"
   revision = "1624edc4454b8682399def8740d46db5e4362ba4"
   version = "v1.1.5"
+
+[[projects]]
+  digest = "1:58999a98719fddbac6303cb17e8d85b945f60b72f48e3a2df6b950b97fa926f1"
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e"
+  version = "v1.0.2"
 
 [[projects]]
   branch = "master"
@@ -429,11 +487,33 @@
   version = "v1.5.0"
 
 [[projects]]
+  digest = "1:e0cc8395ea893c898ff5eb0850f4d9851c1f57c78c232304a026379a47a552d0"
+  name = "github.com/opencontainers/go-digest"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "279bed98673dd5bef374d3b6e4b09e2af76183bf"
+  version = "v1.0.0-rc1"
+
+[[projects]]
+  digest = "1:6a42064e69dda8ba8b3687f837719fb8e241986c54ad4515e55ea9ec11bf5242"
+  name = "github.com/opencontainers/image-spec"
+  packages = [
+    "specs-go",
+    "specs-go/v1",
+  ]
+  pruneopts = "NT"
+  revision = "d60099175f88c47cd379c4738d158884749ed235"
+  version = "v1.0.1"
+
+[[projects]]
   branch = "master"
   digest = "1:912ce7773e1d6d3a3fac3426f00108564c930b99e0a6f15944f7337e81edd014"
   name = "github.com/openshift/api"
   packages = [
     "config/v1",
+    "image/docker10",
+    "image/dockerpre012",
+    "image/v1",
     "route/v1",
   ]
   pruneopts = "NT"
@@ -453,6 +533,17 @@
   ]
   pruneopts = "NT"
   revision = "f4b242dfe08529a11803996e325ab6dc127d4e1d"
+
+[[projects]]
+  digest = "1:75836e1015cef434772ea97f3734a9f5c76cb875796375000066dabf90e9a467"
+  name = "github.com/operator-framework/operator-lifecycle-manager"
+  packages = [
+    "pkg/api/apis/operators",
+    "pkg/api/apis/operators/v1alpha1",
+    "pkg/lib/version",
+  ]
+  pruneopts = "NT"
+  revision = "16619cd27fa56af837c26a49ba9badc7b6566fd8"
 
 [[projects]]
   branch = "master"
@@ -544,6 +635,14 @@
   revision = "bf6a532e95b1f7a62adf0ab5050a5bb2237ad2f4"
 
 [[projects]]
+  digest = "1:4c408a90ae7102954a70c62ba72aac555fca583dceefccd516a5a4c7f4e777fb"
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "d417be0fe654de640a82370515129985b407c7e3"
+  version = "v1.5.0"
+
+[[projects]]
   digest = "1:9d8420bbf131d1618bde6530af37c3799340d3762cc47210c1d9532a4c3a2779"
   name = "github.com/spf13/pflag"
   packages = ["."]
@@ -558,6 +657,38 @@
   pruneopts = "NT"
   revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
   version = "v1.3.0"
+
+[[projects]]
+  digest = "1:baf71421bf4efb43a22c6d9212d245a111c5e06caf90fe3eb5943c8fe7d273f3"
+  name = "github.com/tidwall/gjson"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "f042915ca17de35980544c91ab2c8ceb73b682f2"
+  version = "v1.6.0"
+
+[[projects]]
+  digest = "1:20d232e544cf67770287960b1a5e8bee6a58a86fd71f77dfad60a9d903b9f2ed"
+  name = "github.com/tidwall/match"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "33827db735fff6510490d69a8622612558a557ed"
+  version = "v1.0.1"
+
+[[projects]]
+  digest = "1:93e8c1535b3e4629b708db04d04e2d64ebd6f050712c05b49856b89ead0ce473"
+  name = "github.com/tidwall/pretty"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "b2475501f89994f7ea30b3c94ba86b49079961fe"
+  version = "v1.0.1"
+
+[[projects]]
+  digest = "1:aea5c61951c33003497a1421ecc2bbd5462f83d1cd9bafc678f376cacee04bc0"
+  name = "github.com/tidwall/sjson"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "11cb24d8421de3e1bb5c5efb066a03037150568d"
+  version = "v1.1.1"
 
 [[projects]]
   digest = "1:22f696cee54865fb8e9ff91df7b633f6b8f22037a8015253c6b6a71ca82219c7"
@@ -997,8 +1128,7 @@
   version = "v0.1.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:653cd4cf804493513d5ec945e687639e5fe9a1f7adbcf2db5cd21da31a96674e"
+  digest = "1:c48a795cd7048bb1888273bc604b6e69b22f9b8089c3df65f77cc527757b515c"
   name = "k8s.io/kube-openapi"
   packages = [
     "cmd/openapi-gen/args",
@@ -1009,7 +1139,7 @@
     "pkg/util/sets",
   ]
   pruneopts = "NT"
-  revision = "ced9eb3070a5f1c548ef46e8dfe2a97c208d9f03"
+  revision = "0cf8f7e6ed1d2e3d47d02e3b6e559369af24d803"
 
 [[projects]]
   branch = "master"
@@ -1062,20 +1192,27 @@
   input-imports = [
     "github.com/RHsyseng/operator-utils/pkg/utils/openshift",
     "github.com/RHsyseng/operator-utils/pkg/validation",
+    "github.com/blang/semver",
+    "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1",
     "github.com/ghodss/yaml",
+    "github.com/heroku/docker-registry-client/registry",
     "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1",
     "github.com/onsi/ginkgo",
     "github.com/onsi/ginkgo/config",
     "github.com/onsi/ginkgo/reporters",
     "github.com/onsi/gomega",
     "github.com/openshift/api/config/v1",
+    "github.com/openshift/api/image/v1",
     "github.com/openshift/api/route/v1",
     "github.com/openshift/client-go/config/clientset/versioned",
     "github.com/openshift/client-go/route/clientset/versioned",
+    "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1",
+    "github.com/operator-framework/operator-lifecycle-manager/pkg/lib/version",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/pkg/leader",
     "github.com/operator-framework/operator-sdk/version",
     "github.com/stretchr/testify/assert",
+    "github.com/tidwall/sjson",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/extensions/v1beta1",
@@ -1091,6 +1228,7 @@
     "k8s.io/apimachinery/pkg/runtime/serializer",
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/util/intstr",
+    "k8s.io/apimachinery/pkg/util/json",
     "k8s.io/apimachinery/pkg/util/runtime",
     "k8s.io/apimachinery/pkg/util/uuid",
     "k8s.io/apimachinery/pkg/util/wait",

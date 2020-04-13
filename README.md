@@ -228,3 +228,14 @@ Ensure the Operator Lifecycle Manager is installed in the local cluster.  By def
 $ ./hack/catalog-source.sh [namespace]
 $ oc apply -f deploy/olm-catalog/qdr-operator/0.1.0/catalog-source.yaml
 ```
+
+## CSV Generation
+
+```bash
+make csv
+```
+ OR
+ w/ sha lookup/replacement against registry.redhat.io
+ ```bash
+DIGESTS=true REDHATIO_TOKEN="<username>:<password>"  QUAYIO_TOKEN="basic xxxx" make csv
+```
