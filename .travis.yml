@@ -3,7 +3,13 @@ dist: bionic
 language: go
 go:
   - master
-  - 1.12.x
+  - 1.14.x
+  - 1.13.x
+
+cache:
+  directories:
+    - $HOME/.cache/go-build
+    - $HOME/gopath/pkg/mod
 
 go_import_path: github.com/interconnectedcloud/qdr-operator
 
@@ -17,7 +23,7 @@ env:
   global:
     - KUBECONFIG=$HOME/.kube/config
     - KUBERNETES_VERSION=$(curl -k -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)
-    - OPERATORSDK_VERSION=v0.12.0
+    - OPERATORSDK_VERSION=v0.17.0
 
     # QDR
     - REGISTRY=quay.io/interconnectedcloud
@@ -27,7 +33,7 @@ env:
 before_install:
   # Install Go Dep
   - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-  - dep ensure
+  - dep ensure --vendor-only
 
   # Get tools
   - go get sigs.k8s.io/kind
@@ -50,6 +56,8 @@ before_install:
   # Setup
   - cd $GOPATH/src/github.com/interconnectedcloud/qdr-operator
   - dep ensure -v && dep status
+
+  # Install 
 
 script:
   - cd $GOPATH/src/github.com/interconnectedcloud/qdr-operator
