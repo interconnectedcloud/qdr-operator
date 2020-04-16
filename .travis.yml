@@ -5,6 +5,11 @@ go:
   - master
   - 1.13.x
 
+cache:
+  directories:
+    - $HOME/.cache/go-build
+    - $HOME/gopath/pkg/mod
+
 go_import_path: github.com/interconnectedcloud/qdr-operator
 
 services:
