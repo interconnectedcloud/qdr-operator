@@ -32,7 +32,7 @@ env:
 before_install:
   # Install Go Dep
   - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-  - dep ensure
+  - dep ensure --vendor-only
 
   # Get tools
   - go get sigs.k8s.io/kind
