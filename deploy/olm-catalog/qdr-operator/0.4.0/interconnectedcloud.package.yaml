@@ -1,0 +1,6 @@
+#! package-manifest: deploy/olm-catalog/qdr-operator/0.4.0/qdr-operator.v0.4.0.clusterserviceversion.yaml
+channels:
+- currentCSV: qdr-operator.v0.4.0
+  name: alpha
+defaultChannel: alpha
+packageName: qdr-operator

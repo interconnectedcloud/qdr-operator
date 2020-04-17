@@ -29,3 +29,8 @@ cluster-test:
 .PHONY: build
 build:
 	./hack/go-build.sh
+
+.PHONY: csv
+csv:
+	./hack/go-csv.sh
+

@@ -47,6 +47,10 @@ required = [
   name = "sigs.k8s.io/controller-runtime"
   version = "=v0.1.8"
 
+[[override]]
+  name = "github.com/operator-framework/operator-lifecycle-manager"
+  revision = "16619cd27fa56af837c26a49ba9badc7b6566fd8"
+
 [[constraint]]
   name = "github.com/operator-framework/operator-sdk"
   # The version rule is used for a specific release and the master branch for in between releases.
