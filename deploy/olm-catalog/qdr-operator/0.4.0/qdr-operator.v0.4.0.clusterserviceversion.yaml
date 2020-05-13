@@ -1,0 +1,258 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: >-
+      [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Interconnect","metadata":{"name":"amq-interconnect"},"spec":{"deploymentPlan":{"size":2,"role":"interior","placement":"Any"}}}]
+    capabilities: Basic Install
+    categories: Messaging
+  name: qdr-operator.v0.4.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - version: v1alpha1
+      kind: Interconnect
+      description: An instance of Interconnect
+      displayName: Interconnect
+      name: interconnects.interconnectedcloud.github.io
+      resources:
+      - kind: Service
+        version: v1
+      - kind: Deployment
+        version: v1
+      - kind: ServiceAccount
+        version: v1
+      - kind: interconnects
+        version: v1alpha1
+      - kind: rolebindings
+        version: v1
+      - kind: pods
+        version: v1
+      - kind: configmaps
+        version: v1
+      - kind: roles
+        version: v1
+      - kind: routes
+        version: v1
+      - kind: secrets
+        version: v1
+      specDescriptors:
+      - description: The role and placement plan for the interconnect deployment
+        displayName: DeploymentPlan
+        path: deploymentPlan
+      - description: Listeners for incoming connections to the router
+        displayName: Listeners
+        path: listeners
+      - description: Listeners for inter router mesh connections
+        displayName: InterRouterListeners
+        path: interRouterListeners
+      - description: Listeners for edge downlink connections
+        displayName: EdgeListeners
+        path: edgeListeners
+      - description: TLS/SSL configuration for connections
+        displayName: SslProfiles
+        path: sslProfiles
+      - description: Address configuration for distribution and phasing
+        displayName: Addresses
+        path: addresses
+      - description: Auto links address configuration
+        displayName: AutoLinks
+        path: autoLinks
+      - description: Link routes address configuration
+        displayName: LinkRoutes
+        path: linkRoutes
+      - description: Outbound client connections to AMQP 1.0 entity
+        displayName: Connectors
+        path: connectors
+      - description: Outbound interior router connections for mesh operation
+        displayName: InterRouterConnectors
+        path: interRouterConnectors
+      - description: Outbound edge router connections for edge uplink
+        displayName: EdgeConnectors
+        path: edgeConnectors
+      statusDescriptors:
+      - description: The current revision of the Interconnect cluster
+        displayName: Revision Number
+        path: revNumber
+      - description: The current pods
+        displayName: Pods
+        path: pods
+      - description: The current conditions
+        displayName: Conditions
+        path: conditions
+  description: |
+
+    The Qdr Operator is a lightweight [AMQP 1.0](https://www.amqp.org/) message router for building large, highly resilient messaging networks for hybrid cloud and IoT/edge deployments. Qdr transparently learns the addresses of messaging endpoints (such as clients, servers, and message brokers) and flexibly routes messages between them.
+
+    ### Core Capabilities
+
+    * High throughput, low latency, shortest path message forwarding based on Layer 7 address routing mechanisms.
+
+    * `Interior` mode deployments for any arbitrary topology of geographically-distributed and interconnected Qdrs.
+
+    * `Edge` mode deployments for extremely large scale device endpoint connectivity.
+
+    * Automatic message traffic re-routing when the network topology changes (resiliency without restrictions).
+
+    * Flexible addressing schemes and delivery semantics (anycast, multicast, closest, balanced).
+
+    * Integrated management with full support for the draft AMQP management specification.
+
+    * Full-featured security capabilities for authentication, authorization, and policy-based resource access control.
+
+    ### Operator Features
+
+    * **Flexible deployment plans** - Configurable deployment plans are available for `interior` and `edge` mode scenarios. These plans include all dependent resources.
+
+    * **Placement directives** - Directives are provided to control how the pods should be scheduled.
+
+    * **Connectivity configuration defaults** - Configuration defaults are automatically generated for listeners, connectors, and SSL/TLS setup.
+
+    * **Exposes the service** - Integrated management of OpenShift Routes for exposed listener services for client, inter-router, and edge communications.
+
+    * **Security certificate management** - Certificates are created and managed through integration with [jetstack cert-manager](https://github.com/jetstack/cert-manager).
+
+    ### Troubleshooting
+
+    After deploying Interconnect, check any of the following to verify that it is operating correctly:
+
+    * The Interconnect instance
+
+    * The Deployment (or DaemonSet) instance
+
+    * An individual pod for the Deployment (or DaemonSet)
+
+    * A Route created for exposed services
+
+    In addition, use `qdstat` commands to verify connectivity.
+
+  displayName: Qdr Operator
+  install:
+    spec:
+      deployments:
+      - name: qdr-operator
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              name: qdr-operator
+          template:
+            metadata:
+              labels:
+                name: qdr-operator
+            spec:
+              serviceAccountName: qdr-operator
+              containers:
+              - command:
+                - qdr-operator
+                env:
+                - name: WATCH_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: OPERATOR_NAME
+                  value: qdr-operator
+                image: quay.io/interconnectedcloud/qdr-operator
+                imagePullPolicy: Always
+                name: qdr-operator
+                ports:
+                - containerPort: 60000
+                  name: metrics
+                resources: {}
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          - services
+          - endpoints
+          - serviceaccounts
+          - persistentvolumeclaims
+          - events
+          - configmaps
+          - secrets
+          verbs:
+          - '*'
+        - apiGroups:
+          - "route.openshift.io"
+          resources:
+          - routes
+          - routes/custom-host
+          - routes/status
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - delete
+        - apiGroups:
+          - rbac.authorization.k8s.io
+          resources:
+          - rolebindings
+          - roles
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - delete
+        - apiGroups:
+          - ""
+          resources:
+          - namespaces
+          verbs:
+          - get
+        - apiGroups:
+          - apps
+          resources:
+          - deployments
+          - daemonsets
+          - replicasets
+          - statefulsets
+          verbs:
+          - '*'
+        - apiGroups:
+          - "certmanager.k8s.io"
+          resources:
+          - issuers
+          - certificates
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - delete
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - servicemonitors
+          verbs:
+          - get
+          - create
+        - apiGroups:
+          - interconnectedcloud.github.io
+          resources:
+          - '*'
+          verbs:
+          - '*'
+        serviceAccountName: qdr-operator
+    strategy: deployment
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: true
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  maturity: alpha
+  provider: {}
+  version: 0.4.0

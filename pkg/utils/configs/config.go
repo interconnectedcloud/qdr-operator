@@ -254,6 +254,9 @@ listener {
     {{- if .Port}}
     port: {{.Port}}
     {{- end}}
+    {{- if .LinkCapacity}}
+    linkCapacity: {{.LinkCapacity}}
+    {{- end}}
     {{- if .RouteContainer}}
     role: route-container
     {{- else }}

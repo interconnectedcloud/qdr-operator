@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 REGISTRY=quay.io/interconnectedcloud
 IMAGE=qdr-operator
-TAG=1.2.0-beta1
+TAG=1.3.0-beta1
 
 if [[ -z ${CI} ]]; then
     ./hack/go-test.sh
