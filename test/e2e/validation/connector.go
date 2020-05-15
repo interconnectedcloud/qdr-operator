@@ -71,13 +71,17 @@ func ValidateSpecConnector(ic *v1alpha1.Interconnect, f *framework.Framework, cM
 	icNew, err := f.GetInterconnect(ic.Name)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
+	// Retrieve pod list
+	pods, err := f.GetInterconnectPods(icNew)
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
 	// Iterate through all pods and assert that connectors are available across all instances
-	for _, pod := range icNew.Status.PodNames {
+	for _, pod := range pods {
 		// Same amount of connectors from cMap are expected to be found
 		cFound := 0
 
 		// Retrieve connectors
-		connectors, err := qdrmanagement.QdmanageQuery(f, pod, entities.Connector{}, nil)
+		connectors, err := qdrmanagement.QdmanageQuery(f, pod.Name, entities.Connector{}, nil)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 		// Loop through returned connectors

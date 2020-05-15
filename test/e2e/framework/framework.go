@@ -49,8 +49,8 @@ const (
 
 var (
 	RetryInterval        = time.Second * 5
-	Timeout              = time.Second * 120
-	TimeoutSuite         = time.Second * 600
+	Timeout              = time.Second * 180
+	TimeoutSuite         = time.Second * 1200
 	CleanupRetryInterval = time.Second * 1
 	CleanupTimeout       = time.Second * 5
 	GVR                  = groupName + "/" + apiVersion

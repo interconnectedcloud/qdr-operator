@@ -21,13 +21,17 @@ func ValidateSpecAutoLink(ic *v1alpha1.Interconnect, f *framework.Framework, alM
 	icNew, err := f.GetInterconnect(ic.Name)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
+	// Retrieve pod list
+	pods, err := f.GetInterconnectPods(icNew)
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
 	// Iterate through all pods and assert that auto links are available across all instances
-	for _, pod := range icNew.Status.PodNames {
+	for _, pod := range pods {
 		// Same amount of auto links from alMap are expected to be found
 		alFound := 0
 
 		// Retrieve autoLinks
-		autoLinks, err := qdrmanagement.QdmanageQuery(f, pod, entities.AutoLink{}, nil)
+		autoLinks, err := qdrmanagement.QdmanageQuery(f, pod.Name, entities.AutoLink{}, nil)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 		// Loop through returned autoLinks

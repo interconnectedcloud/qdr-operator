@@ -6,6 +6,7 @@ import (
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement"
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement/entities"
 	"github.com/onsi/gomega"
+	v1 "k8s.io/api/core/v1"
 )
 
 // LinkRouteMapByPrefixPattern represents a map that contains a map
@@ -34,13 +35,21 @@ func ValidateSpecLinkRoute(ic *v1alpha1.Interconnect, f *framework.Framework, lr
 	icNew, err := f.GetInterconnect(ic.Name)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
+	// Retrieve pod list
+	pods, err := f.GetInterconnectPods(icNew)
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
 	// Iterate through all pods and assert that linkRoutes are available across all instances
-	for _, pod := range icNew.Status.PodNames {
+	for _, pod := range pods {
+		// Wait for pod to be Running
+		_, err := f.WaitForPodStatus(pod.Name, v1.PodRunning, framework.Timeout, framework.RetryInterval)
+		gomega.Expect(err).To(gomega.BeNil())
+
 		// Same amount of linkRoutes from lrMap are expected to be found
 		lrFound := 0
 
 		// Retrieve linkRoutes
-		linkRoutes, err := qdrmanagement.QdmanageQuery(f, pod, entities.LinkRoute{}, nil)
+		linkRoutes, err := qdrmanagement.QdmanageQuery(f, pod.Name, entities.LinkRoute{}, nil)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 		// Loop through returned linkRoutes
