@@ -8,6 +8,7 @@ import (
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement/entities"
 	"github.com/onsi/gomega"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // SslProfileMapByName represents a map indexed by sslProfile Name storing
@@ -63,6 +64,7 @@ func ValidateDefaultSslProfiles(ic *v1alpha1.Interconnect, f *framework.Framewor
 // its pods, querying management API for sslProfiles. Next it ensure that all sslProfile
 // definitions fro the sslProfMap are defined on each pod.
 func ValidateSslProfileModels(ic *v1alpha1.Interconnect, f *framework.Framework, sslProfMap SslProfileMapByName) {
+	var podNames []string
 
 	// Retrieve lastest version of given Interconnect resource
 	ic, err := f.GetInterconnect(ic.Name)
@@ -70,10 +72,18 @@ func ValidateSslProfileModels(ic *v1alpha1.Interconnect, f *framework.Framework,
 
 	// Validate IC instance
 	gomega.Expect(ic).NotTo(gomega.BeNil())
-	gomega.Expect(len(ic.Status.PodNames)).To(gomega.BeNumerically(">", 0))
 
-	// Iterating through all pods
-	for _, pod := range ic.Status.PodNames {
+	pods, err := f.KubeClient.CoreV1().Pods(ic.Namespace).List(metav1.ListOptions{LabelSelector: "application=" + ic.Name + ",interconnect_cr=" + ic.Name})
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+	gomega.Expect(len(pods.Items)).To(gomega.BeNumerically(">", 0))
+
+	for _, pod := range pods.Items {
+		if pod.GetObjectMeta().GetDeletionTimestamp() == nil {
+			podNames = append(podNames, pod.Name)
+		}
+	}
+
+	for _, pod := range podNames {
 		sslProfFound := 0
 
 		sslProfiles, err := qdrmanagement.QdmanageQuery(f, pod, entities.SslProfile{}, nil)
