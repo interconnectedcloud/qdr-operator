@@ -50,29 +50,33 @@ var _ = ginkgo.Describe("[spec_listener] Listener manipulation tests", func() {
 		// Validating the two defined listeners are present
 		validation.ValidateSpecListener(ic, f, validation.ListenerMapByPort{
 			"5672": {
-				"Name": "normal-amqp",
-				"Host": "0.0.0.0",
-				"Role": common.RoleNormal,
-				"Port": "5672",
+				"Name":         "normal-amqp",
+				"Host":         "0.0.0.0",
+				"Role":         common.RoleNormal,
+				"Port":         "5672",
+				"LinkCapacity": 200,
 			},
 			"8080": {
-				"Name": "normal-http",
-				"Host": "0.0.0.0",
-				"Role": common.RoleNormal,
-				"Port": "8080",
-				"Http": true,
+				"Name":         "normal-http",
+				"Host":         "0.0.0.0",
+				"Role":         common.RoleNormal,
+				"Port":         "8080",
+				"Http":         true,
+				"LinkCapacity": 200,
 			},
 			"15672": {
-				"Name": "inter-amqp",
-				"Host": "0.0.0.0",
-				"Role": common.RoleInterRouter,
-				"Port": "15672",
+				"Name":         "inter-amqp",
+				"Host":         "0.0.0.0",
+				"Role":         common.RoleInterRouter,
+				"Port":         "15672",
+				"LinkCapacity": 200,
 			},
 			"25672": {
-				"Name": "edge-amqp",
-				"Host": "0.0.0.0",
-				"Role": common.RoleEdge,
-				"Port": "25672",
+				"Name":         "edge-amqp",
+				"Host":         "0.0.0.0",
+				"Role":         common.RoleEdge,
+				"Port":         "25672",
+				"LinkCapacity": 200,
 			},
 		})
 	})
@@ -107,25 +111,28 @@ var _ = ginkgo.Describe("[spec_listener] Listener manipulation tests", func() {
 		ginkgo.By("Validating defined listeners")
 		validation.ValidateSpecListener(ic, f, validation.ListenerMapByPort{
 			"5672": {
-				"Name": "normal-amqp",
-				"Host": "0.0.0.0",
-				"Role": common.RoleNormal,
-				"Port": "5672",
+				"Name":         "normal-amqp",
+				"Host":         "0.0.0.0",
+				"Role":         common.RoleNormal,
+				"Port":         "5672",
+				"LinkCapacity": 200,
 			},
 			"5671": {
-				"Name":       "normal-amqps",
-				"Host":       "0.0.0.0",
-				"Role":       common.RoleNormal,
-				"SslProfile": "amqps",
-				"Port":       "5671",
+				"Name":         "normal-amqps",
+				"Host":         "0.0.0.0",
+				"Role":         common.RoleNormal,
+				"SslProfile":   "amqps",
+				"Port":         "5671",
+				"LinkCapacity": 200,
 			},
 			"8443": {
-				"Name":       "normal-https",
-				"Host":       "0.0.0.0",
-				"Role":       common.RoleNormal,
-				"SslProfile": "https",
-				"Port":       "8443",
-				"Http":       true,
+				"Name":         "normal-https",
+				"Host":         "0.0.0.0",
+				"Role":         common.RoleNormal,
+				"SslProfile":   "https",
+				"Port":         "8443",
+				"Http":         true,
+				"LinkCapacity": 200,
 			},
 			"15671": {
 				"Name":           "inter-amqps",
@@ -134,13 +141,15 @@ var _ = ginkgo.Describe("[spec_listener] Listener manipulation tests", func() {
 				"SslProfile":     "amqps",
 				"SaslMechanisms": "EXTERNAL",
 				"Port":           "15671",
+				"LinkCapacity":   200,
 			},
 			"25671": {
-				"Name":       "edge-amqps",
-				"Host":       "0.0.0.0",
-				"Role":       common.RoleEdge,
-				"SslProfile": "amqps",
-				"Port":       "25671",
+				"Name":         "edge-amqps",
+				"Host":         "0.0.0.0",
+				"Role":         common.RoleEdge,
+				"SslProfile":   "amqps",
+				"Port":         "25671",
+				"LinkCapacity": 200,
 			},
 		})
 
@@ -184,33 +193,37 @@ var _ = ginkgo.Describe("[spec_listener] Listener manipulation tests", func() {
 func specListenerNoSSL(interconnect *v1alpha1.Interconnect) {
 	interconnect.Spec.Listeners = []v1alpha1.Listener{
 		{
-			Name:   "normal-amqp",
-			Host:   "0.0.0.0",
-			Port:   int32(5672),
-			Expose: true,
+			Name:         "normal-amqp",
+			Host:         "0.0.0.0",
+			Port:         int32(5672),
+			Expose:       true,
+			LinkCapacity: int32(200),
 		},
 		{
-			Name:   "normal-http",
-			Host:   "0.0.0.0",
-			Port:   int32(8080),
-			Http:   true,
-			Expose: true,
+			Name:         "normal-http",
+			Host:         "0.0.0.0",
+			Port:         int32(8080),
+			Http:         true,
+			Expose:       true,
+			LinkCapacity: int32(200),
 		},
 	}
 	interconnect.Spec.InterRouterListeners = []v1alpha1.Listener{
 		{
-			Name:   "inter-amqp",
-			Host:   "0.0.0.0",
-			Port:   int32(15672),
-			Expose: true,
+			Name:         "inter-amqp",
+			Host:         "0.0.0.0",
+			Port:         int32(15672),
+			Expose:       true,
+			LinkCapacity: int32(200),
 		},
 	}
 	interconnect.Spec.EdgeListeners = []v1alpha1.Listener{
 		{
-			Name:   "edge-amqp",
-			Host:   "0.0.0.0",
-			Port:   int32(25672),
-			Expose: true,
+			Name:         "edge-amqp",
+			Host:         "0.0.0.0",
+			Port:         int32(25672),
+			Expose:       true,
+			LinkCapacity: int32(200),
 		},
 	}
 }
@@ -218,10 +231,11 @@ func specListenerNoSSL(interconnect *v1alpha1.Interconnect) {
 func specListenerSSL(interconnect *v1alpha1.Interconnect) {
 	interconnect.Spec.Listeners = []v1alpha1.Listener{
 		{
-			Name:   "normal-amqp",
-			Host:   "0.0.0.0",
-			Port:   int32(5672),
-			Expose: true,
+			Name:         "normal-amqp",
+			Host:         "0.0.0.0",
+			Port:         int32(5672),
+			Expose:       true,
+			LinkCapacity: int32(200),
 		},
 		{
 			Name:             "normal-amqps",
@@ -230,6 +244,7 @@ func specListenerSSL(interconnect *v1alpha1.Interconnect) {
 			SslProfile:       "amqps",
 			AuthenticatePeer: true,
 			Expose:           true,
+			LinkCapacity:     int32(200),
 		},
 		{
 			Name:             "normal-https",
@@ -239,6 +254,7 @@ func specListenerSSL(interconnect *v1alpha1.Interconnect) {
 			SslProfile:       "https",
 			AuthenticatePeer: false,
 			Expose:           true,
+			LinkCapacity:     int32(200),
 		},
 	}
 	interconnect.Spec.InterRouterListeners = []v1alpha1.Listener{
@@ -250,6 +266,7 @@ func specListenerSSL(interconnect *v1alpha1.Interconnect) {
 			SaslMechanisms:   "EXTERNAL",
 			AuthenticatePeer: true,
 			Expose:           true,
+			LinkCapacity:     int32(200),
 		},
 	}
 	interconnect.Spec.EdgeListeners = []v1alpha1.Listener{
@@ -261,6 +278,7 @@ func specListenerSSL(interconnect *v1alpha1.Interconnect) {
 			SaslMechanisms:   "EXTERNAL",
 			AuthenticatePeer: true,
 			Expose:           true,
+			LinkCapacity:     int32(200),
 		},
 	}
 }

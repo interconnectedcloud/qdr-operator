@@ -9,6 +9,7 @@ import (
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/validation"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
+	v1 "k8s.io/api/core/v1"
 )
 
 var _ = ginkgo.Describe("[spec_address] Address manipulation tests", func() {
@@ -133,6 +134,10 @@ var _ = ginkgo.Describe("[spec_address] Address manipulation tests", func() {
 		ic, err = f.GetInterconnect(ic.Name)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
+		// Get pods
+		pods, err := f.GetInterconnectPodNames(ic)
+		gomega.Expect(int32(len(pods))).To(gomega.Equal(ic.Spec.DeploymentPlan.Size))
+
 		// Modify Prefix/Pattern and Priority of all addresses
 		newAddresses := []v1alpha1.Address{}
 		for _, addr := range ic.Spec.Addresses {
@@ -155,7 +160,7 @@ var _ = ginkgo.Describe("[spec_address] Address manipulation tests", func() {
 		// Waiting for new pods
 		ctx, fn := context.WithTimeout(context.Background(), framework.Timeout)
 		defer fn()
-		err = f.WaitForNewInterconnectPods(ctx, ic, framework.RetryInterval, framework.Timeout)
+		err = f.WaitForNewInterconnectPods(ctx, pods, ic, framework.RetryInterval, framework.Timeout)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 		// Wait till interconnect instance is ready
@@ -188,6 +193,10 @@ var _ = ginkgo.Describe("[spec_address] Address manipulation tests", func() {
 		ic, err = f.GetInterconnect(ic.Name)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
+		// Get pods
+		pods, err := f.GetInterconnectPodNames(ic)
+		gomega.Expect(int32(len(pods))).To(gomega.Equal(ic.Spec.DeploymentPlan.Size))
+
 		// Keeping just the first 3 addresses
 		validateAddresses(f, ic, newAddressesMap)
 
@@ -203,7 +212,7 @@ var _ = ginkgo.Describe("[spec_address] Address manipulation tests", func() {
 		// Waiting for new pods
 		ctx, fn := context.WithTimeout(context.Background(), framework.Timeout)
 		defer fn()
-		err = f.WaitForNewInterconnectPods(ctx, ic, framework.RetryInterval, framework.Timeout)
+		err = f.WaitForNewInterconnectPods(ctx, pods, ic, framework.RetryInterval, framework.Timeout)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 		// Wait till interconnect instance is ready
@@ -227,10 +236,17 @@ func validateAddresses(f *framework.Framework, ic *v1alpha1.Interconnect, addrMa
 	ic, err := f.GetInterconnect(ic.Name)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-	// Retrieve current pod names
-	podNames := ic.Status.PodNames
-	for _, pod := range podNames {
-		addresses, err := qdrmanagement.QdmanageQuery(f, pod, entities.Address{}, nil)
+	// Retrieve pod list
+	pods, err := f.GetInterconnectPods(ic)
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
+	// Iterate through pods
+	for _, pod := range pods {
+		// Wait for pod to be Running
+		_, err := f.WaitForPodStatus(pod.Name, v1.PodRunning, framework.Timeout, framework.RetryInterval)
+		gomega.Expect(err).To(gomega.BeNil())
+
+		addresses, err := qdrmanagement.QdmanageQuery(f, pod.Name, entities.Address{}, nil)
 		gomega.Expect(err).To(gomega.BeNil())
 		// Assert number of addresses match expected count
 		gomega.Expect(len(addrMap)).To(gomega.Equal(len(addresses)))

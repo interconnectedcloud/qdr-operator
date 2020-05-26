@@ -50,22 +50,25 @@ var _ = ginkgo.Describe("[spec_connector] Connector manipulation tests", func() 
 		// Validating the defined connectors are present
 		validation.ValidateSpecConnector(ic, f, validation.ConnectorMapByPort{
 			"5672": {
-				"Name": "normal-amqp",
-				"Host": "1.1.1.1",
-				"Role": common.RoleNormal,
-				"Port": "5672",
+				"Name":         "normal-amqp",
+				"Host":         "1.1.1.1",
+				"Role":         common.RoleNormal,
+				"Port":         "5672",
+				"LinkCapacity": 200,
 			},
 			"15672": {
-				"Name": "inter-amqp",
-				"Host": "1.1.1.1",
-				"Role": common.RoleInterRouter,
-				"Port": "15672",
+				"Name":         "inter-amqp",
+				"Host":         "1.1.1.1",
+				"Role":         common.RoleInterRouter,
+				"Port":         "15672",
+				"LinkCapacity": 200,
 			},
 			"25672": {
-				"Name": "edge-amqp",
-				"Host": "1.1.1.1",
-				"Role": common.RoleEdge,
-				"Port": "25672",
+				"Name":         "edge-amqp",
+				"Host":         "1.1.1.1",
+				"Role":         common.RoleEdge,
+				"Port":         "25672",
+				"LinkCapacity": 200,
 			},
 		})
 	})
@@ -100,25 +103,28 @@ var _ = ginkgo.Describe("[spec_connector] Connector manipulation tests", func() 
 		ginkgo.By("Validating defined connectors")
 		validation.ValidateSpecConnector(ic, f, validation.ConnectorMapByPort{
 			"5671": {
-				"Name":       "normal-amqps",
-				"Host":       "1.1.1.1",
-				"Role":       common.RoleNormal,
-				"SslProfile": "amqps",
-				"Port":       "5671",
+				"Name":         "normal-amqps",
+				"Host":         "1.1.1.1",
+				"Role":         common.RoleNormal,
+				"SslProfile":   "amqps",
+				"Port":         "5671",
+				"LinkCapacity": 200,
 			},
 			"15671": {
-				"Name":       "inter-amqps",
-				"Host":       "1.1.1.1",
-				"Role":       common.RoleInterRouter,
-				"SslProfile": "amqps",
-				"Port":       "15671",
+				"Name":         "inter-amqps",
+				"Host":         "1.1.1.1",
+				"Role":         common.RoleInterRouter,
+				"SslProfile":   "amqps",
+				"Port":         "15671",
+				"LinkCapacity": 200,
 			},
 			"25671": {
-				"Name":       "edge-amqps",
-				"Host":       "1.1.1.1",
-				"Role":       common.RoleEdge,
-				"SslProfile": "amqps",
-				"Port":       "25671",
+				"Name":         "edge-amqps",
+				"Host":         "1.1.1.1",
+				"Role":         common.RoleEdge,
+				"SslProfile":   "amqps",
+				"Port":         "25671",
+				"LinkCapacity": 200,
 			},
 		})
 
@@ -180,23 +186,26 @@ var _ = ginkgo.Describe("[spec_connector] Connector manipulation tests", func() 
 func specConnectorNoSSL(interconnect *v1alpha1.Interconnect) {
 	interconnect.Spec.Connectors = []v1alpha1.Connector{
 		{
-			Name: "normal-amqp",
-			Host: "1.1.1.1",
-			Port: int32(5672),
+			Name:         "normal-amqp",
+			Host:         "1.1.1.1",
+			Port:         int32(5672),
+			LinkCapacity: int32(200),
 		},
 	}
 	interconnect.Spec.InterRouterConnectors = []v1alpha1.Connector{
 		{
-			Name: "inter-amqp",
-			Host: "1.1.1.1",
-			Port: int32(15672),
+			Name:         "inter-amqp",
+			Host:         "1.1.1.1",
+			Port:         int32(15672),
+			LinkCapacity: int32(200),
 		},
 	}
 	interconnect.Spec.EdgeConnectors = []v1alpha1.Connector{
 		{
-			Name: "edge-amqp",
-			Host: "1.1.1.1",
-			Port: int32(25672),
+			Name:         "edge-amqp",
+			Host:         "1.1.1.1",
+			Port:         int32(25672),
+			LinkCapacity: int32(200),
 		},
 	}
 }
@@ -204,26 +213,29 @@ func specConnectorNoSSL(interconnect *v1alpha1.Interconnect) {
 func specConnectorSSL(interconnect *v1alpha1.Interconnect) {
 	interconnect.Spec.Connectors = []v1alpha1.Connector{
 		{
-			Name:       "normal-amqps",
-			Host:       "1.1.1.1",
-			Port:       int32(5671),
-			SslProfile: "amqps",
+			Name:         "normal-amqps",
+			Host:         "1.1.1.1",
+			Port:         int32(5671),
+			SslProfile:   "amqps",
+			LinkCapacity: int32(200),
 		},
 	}
 	interconnect.Spec.InterRouterConnectors = []v1alpha1.Connector{
 		{
-			Name:       "inter-amqps",
-			Host:       "1.1.1.1",
-			Port:       int32(15671),
-			SslProfile: "amqps",
+			Name:         "inter-amqps",
+			Host:         "1.1.1.1",
+			Port:         int32(15671),
+			SslProfile:   "amqps",
+			LinkCapacity: int32(200),
 		},
 	}
 	interconnect.Spec.EdgeConnectors = []v1alpha1.Connector{
 		{
-			Name:       "edge-amqps",
-			Host:       "1.1.1.1",
-			Port:       int32(25671),
-			SslProfile: "amqps",
+			Name:         "edge-amqps",
+			Host:         "1.1.1.1",
+			Port:         int32(25671),
+			SslProfile:   "amqps",
+			LinkCapacity: int32(200),
 		},
 	}
 }

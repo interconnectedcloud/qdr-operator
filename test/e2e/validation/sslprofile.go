@@ -8,7 +8,6 @@ import (
 	"github.com/interconnectedcloud/qdr-operator/test/e2e/framework/qdrmanagement/entities"
 	"github.com/onsi/gomega"
 	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // SslProfileMapByName represents a map indexed by sslProfile Name storing
@@ -73,11 +72,11 @@ func ValidateSslProfileModels(ic *v1alpha1.Interconnect, f *framework.Framework,
 	// Validate IC instance
 	gomega.Expect(ic).NotTo(gomega.BeNil())
 
-	pods, err := f.KubeClient.CoreV1().Pods(ic.Namespace).List(metav1.ListOptions{LabelSelector: "application=" + ic.Name + ",interconnect_cr=" + ic.Name})
+	pods, err := f.GetInterconnectPods(ic)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
-	gomega.Expect(len(pods.Items)).To(gomega.BeNumerically(">", 0))
+	gomega.Expect(len(pods)).To(gomega.BeNumerically(">", 0))
 
-	for _, pod := range pods.Items {
+	for _, pod := range pods {
 		if pod.GetObjectMeta().GetDeletionTimestamp() == nil {
 			podNames = append(podNames, pod.Name)
 		}

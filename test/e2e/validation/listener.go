@@ -119,13 +119,17 @@ func ValidateSpecListener(ic *v1alpha1.Interconnect, f *framework.Framework, lsM
 	icNew, err := f.GetInterconnect(ic.Name)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
+	// Retrieve pod list
+	pods, err := f.GetInterconnectPods(icNew)
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+
 	// Iterate through all pods and assert that listeners are available across all instances
-	for _, pod := range icNew.Status.PodNames {
+	for _, pod := range pods {
 		// Same amount of listeners from lsMap are expected to be found
 		lsFound := 0
 
 		// Retrieve listeners
-		listeners, err := qdrmanagement.QdmanageQuery(f, pod, entities.Listener{}, nil)
+		listeners, err := qdrmanagement.QdmanageQuery(f, pod.Name, entities.Listener{}, nil)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
 		// Loop through returned listeners

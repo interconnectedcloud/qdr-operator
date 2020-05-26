@@ -131,19 +131,21 @@ func (f *Framework) VersionForPod(pod corev1.Pod) (string, error) {
 	return kubeExec.Exec()
 }
 
-func (f *Framework) WaitForNewInterconnectPods(ctx context.Context, interconnect *v1alpha1.Interconnect, retryInterval, timeout time.Duration) error {
-	initialPodNames := interconnect.Status.PodNames
+func (f *Framework) WaitForNewInterconnectPods(ctx context.Context, initialPodNames []string, interconnect *v1alpha1.Interconnect, retryInterval, timeout time.Duration) error {
 	sort.Strings(initialPodNames)
 
 	err := RetryWithContext(ctx, RetryInterval, func() (bool, error) {
-		ic, err := f.GetInterconnect(interconnect.Name)
+		// Sorting and comparing current pod names
+		podNames, err := f.GetInterconnectPodNames(interconnect)
 		if err != nil {
 			return true, err
 		}
-
-		// Sorting and comparing current pod names
-		podNames := ic.Status.PodNames
 		sort.Strings(podNames)
+
+		// Wait till expected number of replicas are available
+		if int32(len(podNames)) != interconnect.Spec.DeploymentPlan.Size {
+			return false, nil
+		}
 
 		// Not same amount of pods available
 		if len(podNames) != len(initialPodNames) {
