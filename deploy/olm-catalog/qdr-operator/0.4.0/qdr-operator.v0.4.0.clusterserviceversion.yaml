@@ -19,24 +19,34 @@ spec:
       name: interconnects.interconnectedcloud.github.io
       resources:
       - kind: Service
+        name: ""
         version: v1
       - kind: Deployment
+        name: ""
         version: v1
       - kind: ServiceAccount
+        name: ""
         version: v1
       - kind: interconnects
+        name: ""
         version: v1alpha1
       - kind: rolebindings
+        name: ""
         version: v1
       - kind: pods
+        name: ""
         version: v1
       - kind: configmaps
+        name: ""
         version: v1
       - kind: roles
+        name: ""
         version: v1
       - kind: routes
+        name: ""
         version: v1
       - kind: secrets
+        name: ""
         version: v1
       specDescriptors:
       - description: The role and placement plan for the interconnect deployment
