@@ -23,7 +23,7 @@ env:
   global:
     - KUBECONFIG=$HOME/.kube/config
     - KUBERNETES_VERSION=$(curl -k -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)
-    - OPERATORSDK_VERSION=v0.17.0
+    - OPERATORSDK_VERSION=v0.19.2
 
     # QDR
     - REGISTRY=quay.io/interconnectedcloud
@@ -52,10 +52,6 @@ before_install:
   - curl -Lo operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/${OPERATORSDK_VERSION}/operator-sdk-${OPERATORSDK_VERSION}-x86_64-linux-gnu
   - chmod +x operator-sdk
   - sudo mv operator-sdk /usr/local/bin/
-
-  # Setup
-  - cd $GOPATH/src/github.com/interconnectedcloud/qdr-operator
-  - dep ensure -v && dep status
 
   # Install 
 

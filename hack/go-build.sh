@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-REGISTRY=quay.io/interconnectedcloud
-IMAGE=qdr-operator
-TAG=1.3.0-beta1
+
+source ./hack/go-mod-env.sh
 
 if [[ -z ${CI} ]]; then
     ./hack/go-test.sh
