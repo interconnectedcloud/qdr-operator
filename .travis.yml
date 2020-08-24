@@ -22,7 +22,7 @@ git:
 env:
   global:
     - KUBECONFIG=$HOME/.kube/config
-    - KUBERNETES_VERSION=$(curl -k -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)
+    - KUBERNETES_VERSION=v1.18.2
     - OPERATORSDK_VERSION=v0.19.2
 
     # QDR
