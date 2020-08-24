@@ -31,10 +31,6 @@ env:
     - TAG=latest
 
 before_install:
-  # Install Go Dep
-  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-  - dep ensure --vendor-only
-
   # Get tools
   - go get sigs.k8s.io/kind
   - go get golang.org/x/lint/golint
