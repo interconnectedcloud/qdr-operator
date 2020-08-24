@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ./hack/go-mod-env.sh
+source ./hack/go-mod.sh
 
 if [[ -z ${CI} ]]; then
     ./hack/go-test.sh
