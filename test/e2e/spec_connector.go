@@ -15,7 +15,7 @@ import (
 var _ = ginkgo.Describe("[spec_connector] Connector manipulation tests", func() {
 
 	var (
-		icName = "spec-connector"
+		icName = "connector"
 		size   = 3
 	)
 

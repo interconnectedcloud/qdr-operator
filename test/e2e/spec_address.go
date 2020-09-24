@@ -14,7 +14,7 @@ import (
 
 var _ = ginkgo.Describe("[spec_address] Address manipulation tests", func() {
 	var (
-		icName          = "spec-address"
+		icName          = "address"
 		size            = 3
 		newAddressesMap = map[string]map[string]interface{}{
 			"multicastprefix": {

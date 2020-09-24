@@ -13,7 +13,7 @@ import (
 var _ = ginkgo.Describe("[spec_links] Link Route and Auto Link manipulation tests", func() {
 
 	var (
-		icName = "spec-links"
+		icName = "links"
 		size   = 3
 	)
 

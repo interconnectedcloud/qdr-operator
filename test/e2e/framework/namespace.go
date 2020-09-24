@@ -77,7 +77,7 @@ func (f *Framework) AddNamespacesToDelete(namespaces ...*corev1.Namespace) {
 func generateNamespace(client clientset.Interface, baseName string, labels map[string]string) *corev1.Namespace {
 	namespaceObj := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: fmt.Sprintf("e2e-tests-%v-", baseName),
+			GenerateName: fmt.Sprintf("e2e-%v-", baseName),
 			Labels:       labels,
 		},
 	}

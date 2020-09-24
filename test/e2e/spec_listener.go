@@ -15,7 +15,7 @@ import (
 var _ = ginkgo.Describe("[spec_listener] Listener manipulation tests", func() {
 
 	var (
-		icName = "spec-listener"
+		icName = "listener"
 		size   = 3
 	)
 
