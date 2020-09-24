@@ -13,7 +13,7 @@ import (
 )
 
 var _ = Describe("[basic_test] Interconnect default deployment tests", func() {
-	f := framework.NewFramework("basic-interior", nil)
+	f := framework.NewFramework("basic", nil)
 
 	It("Should be able to create a default interior deployment", func() {
 		testInteriorDefaults(f)

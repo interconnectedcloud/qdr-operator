@@ -12,7 +12,7 @@ import (
 )
 
 var _ = Describe("[resize_test] Interconnect resize deployment tests", func() {
-	f := framework.NewFramework("basic-interior", nil)
+	f := framework.NewFramework("resize", nil)
 
 	It("Should be able to resize an interior deployment from 3 to 5", func() {
 		testInteriorResize(f, 3, 5)

@@ -14,7 +14,7 @@ import (
 )
 
 var _ = Describe("[upgrade_test] Interconnect upgrade deployment tests", func() {
-	f := framework.NewFramework("basic-interior", nil)
+	f := framework.NewFramework("upgrade", nil)
 
 	It("Should be able to upgrade the qdrouterd image for an interior deployment", func() {
 		testInteriorImageUpgrade(f)
@@ -26,8 +26,8 @@ func testInteriorImageUpgrade(f *framework.Framework) {
 	var (
 		name           = "interior-interconnect"
 		image          = "quay.io/interconnectedcloud/qdrouterd"
-		initialVersion = "1.10.0"
-		finalVersion   = "1.12.0"
+		initialVersion = "1.12.0"
+		finalVersion   = "1.13.0"
 		size           = 3
 		skipVersion    = !strings.HasPrefix(framework.TestContext.QdrImage, image)
 	)
