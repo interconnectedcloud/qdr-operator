@@ -76,7 +76,7 @@ metadata:
 spec:
   # Add fields here
   deploymentPlan:
-    image: quay.io/interconnectedcloud/qdrouterd:1.9.0
+    image: quay.io/interconnectedcloud/qdrouterd:1.13.0
     role: interior
     size: 3
     placement: Any
