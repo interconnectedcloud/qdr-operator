@@ -6,7 +6,8 @@ metadata:
       [{"apiVersion":"interconnectedcloud.github.io/v1alpha1","kind":"Interconnect","metadata":{"name":"amq-interconnect"},"spec":{"deploymentPlan":{"size":2,"role":"interior","placement":"Any"}}}]
     capabilities: Basic Install
     categories: Messaging
-  name: qdr-operator.v0.1.0
+    containerImage: quay.io/interconnectedcloud/qdr-operator:latest
+  name: qdr-operator.0.1.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -38,40 +39,19 @@ spec:
         version: v1
       - kind: secrets
         version: v1
+      - kind: customresourcedefinitions
+        version: v1beta1
       specDescriptors:
       - description: The role and placement plan for the interconnect deployment
-        displayName: DeploymentPlan
-        path: deploymentPlan
-      - description: Listeners for incoming connections to the router
-        displayName: Listeners
-        path: listeners
-      - description: Listeners for inter router mesh connections
-        displayName: InterRouterListeners
-        path: interRouterListeners
-      - description: Listeners for edge downlink connections
-        displayName: EdgeListeners
-        path: edgeListeners
-      - description: TLS/SSL configuration for connections
-        displayName: SslProfiles
-        path: sslProfiles
-      - description: Address configuration for distribution and phasing
-        displayName: Addresses
-        path: addresses
-      - description: Auto links address configuration
-        displayName: AutoLinks
-        path: autoLinks
-      - description: Link routes address configuration
-        displayName: LinkRoutes
-        path: linkRoutes
-      - description: Outbound client connections to AMQP 1.0 entity
-        displayName: Connectors
-        path: connectors
-      - description: Outbound interior router connections for mesh operation
-        displayName: InterRouterConnectors
-        path: interRouterConnectors
-      - description: Outbound edge router connections for edge uplink
-        displayName: EdgeConnectors
-        path: edgeConnectors
+        displayName: Deployment Placement
+        path: deploymentPlan.placement
+        x-descriptors:
+          - "urn:alm:descriptor:com.tectonic.ui:label"
+      - description: The role and placement plan for the interconnect deployment
+        displayName: Deployment Role
+        path: deploymentPlan.role
+        x-descriptors:
+          - "urn:alm:descriptor:com.tectonic.ui:label"
       statusDescriptors:
       - description: The current revision of the Interconnect cluster
         displayName: Revision Number
@@ -79,9 +59,13 @@ spec:
       - description: The current pods
         displayName: Pods
         path: pods
+        x-descriptors:
+          - "urn:alm:descriptor:com.tectonic.ui:podStatuses"
       - description: The current conditions
         displayName: Conditions
         path: conditions
+        x-descriptors:
+          - "urn:alm:descriptor:io.kubernetes.conditions"
   description: |
 
     The Qdr Operator is a lightweight [AMQP 1.0](https://www.amqp.org/) message router for building large, highly resilient messaging networks for hybrid cloud and IoT/edge deployments. Qdr transparently learns the addresses of messaging endpoints (such as clients, servers, and message brokers) and flexibly routes messages between them.
@@ -131,6 +115,24 @@ spec:
   displayName: Qdr Operator
   install:
     spec:
+      clusterPermissions:
+        - rules:
+          - apiGroups:
+              - "apiextensions.k8s.io"
+            resources:
+              - customresourcedefinitions
+            verbs:
+              - get
+              - list
+          - apiGroups:
+              - "config.openshift.io"
+            resources:
+              - dnses
+            verbs:
+              - get
+              - list
+              - watch
+          serviceAccountName: qdr-operator
       deployments:
       - name: qdr-operator
         spec:
@@ -151,7 +153,7 @@ spec:
                 - name: WATCH_NAMESPACE
                   valueFrom:
                     fieldRef:
-                      fieldPath: metadata.namespace
+                      fieldPath: metadata.annotations['olm.targetNamespaces']
                 - name: POD_NAME
                   valueFrom:
                     fieldRef:
@@ -242,6 +244,16 @@ spec:
           - '*'
           verbs:
           - '*'
+        - apiGroups:
+          - "extensions"
+          resources:
+          - ingresses
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - delete
         serviceAccountName: qdr-operator
     strategy: deployment
   installModes:

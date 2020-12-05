@@ -2,6 +2,7 @@ package interconnect
 
 import (
 	"context"
+	"github.com/RHsyseng/operator-utils/pkg/olm"
 	"reflect"
 	"strconv"
 	"strings"
@@ -97,6 +98,14 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	// Watch for changes to secondary resource Deployment and requeue the owner Interconnect
 	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1alpha1.Interconnect{},
+	})
+	if err != nil {
+		return err
+	}
+
+	err = c.Watch(&source.Kind{Type: &appsv1.DaemonSet{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &v1alpha1.Interconnect{},
 	})
@@ -472,7 +481,6 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 				TransitionTime: metav1.Now(),
 			}
 			instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
-			instance.Status.PodNames = instance.Status.PodNames[:0]
 			r.client.Status().Update(context.TODO(), instance)
 			return reconcile.Result{Requeue: true}, nil
 		} else if !deployments.CheckDeployedContainer(&depFound.Spec.Template, instance) {
@@ -492,7 +500,6 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 				TransitionTime: metav1.Now(),
 			}
 			instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
-			instance.Status.PodNames = instance.Status.PodNames[:0]
 			r.client.Status().Update(context.TODO(), instance)
 			return reconcile.Result{Requeue: true}, nil
 		}
@@ -533,7 +540,6 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 				TransitionTime: metav1.Now(),
 			}
 			instance.Status.Conditions = addCondition(instance.Status.Conditions, condition)
-			instance.Status.PodNames = instance.Status.PodNames[:0]
 			r.client.Status().Update(context.TODO(), instance)
 			return reconcile.Result{Requeue: true}, nil
 		}
@@ -663,23 +669,15 @@ func (r *ReconcileInterconnect) Reconcile(request reconcile.Request) (reconcile.
 			reqLogger.Error(err, "Failed to get ConfigMap for sasl config")
 			return reconcile.Result{}, err
 		}
-
 	}
 
 	// List the pods for this deployment
-	podList := &corev1.PodList{}
-	labelSelector := selectors.ResourcesByInterconnectName(instance.Name)
-	listOps := &client.ListOptions{Namespace: instance.Namespace, LabelSelector: labelSelector}
-	err = r.client.List(context.TODO(), listOps, podList)
-	if err != nil {
-		reqLogger.Error(err, "Failed to list pods")
-		return reconcile.Result{}, err
-	}
-	podNames := getPodNames(podList.Items)
+	reqLogger.Info("Collecting Pod Status")
+	dStatus := getPodStatus(r, instance)
+	// Update status.Deployments if needed
+	if !reflect.DeepEqual(dStatus, instance.Status.PodStatus) {
 
-	// Update status.PodNames if needed
-	if !reflect.DeepEqual(podNames, instance.Status.PodNames) {
-		instance.Status.PodNames = podNames
+		instance.Status.PodStatus = dStatus
 		err := r.client.Status().Update(context.TODO(), instance)
 		if err != nil {
 			reqLogger.Error(err, "Failed to update pod names")
@@ -710,13 +708,29 @@ func ensureCAIssuer(r *ReconcileInterconnect, instance *v1alpha1.Interconnect, n
 	return nil
 }
 
-// getPodNames returns the pod names of the array of pods passed in
-func getPodNames(pods []corev1.Pod) []string {
-	var podNames []string
-	for _, pod := range pods {
-		if pod.GetObjectMeta().GetDeletionTimestamp() == nil {
-			podNames = append(podNames, pod.Name)
+func getPodStatus(r *ReconcileInterconnect, instance *v1alpha1.Interconnect) olm.DeploymentStatus {
+	// List the pods for this deployment
+	var status olm.DeploymentStatus
+
+	if instance.Spec.DeploymentPlan.Placement == v1alpha1.PlacementEvery {
+		dsFound := &appsv1.DaemonSet{}
+		err := r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, dsFound)
+		if err == nil {
+			status = olm.GetSingleDaemonSetStatus(*dsFound)
+		} else if err != nil {
+			log.Error(err, "failed to collect daemonset pod status")
 		}
+	} else if instance.Spec.DeploymentPlan.Placement == v1alpha1.PlacementAny ||
+		instance.Spec.DeploymentPlan.Placement == v1alpha1.PlacementAntiAffinity {
+		depFound := &appsv1.Deployment{}
+		err := r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, depFound)
+		if err == nil {
+			status = olm.GetSingleDeploymentStatus(*depFound)
+		} else if err != nil {
+			log.Error(err, "failed to collect deployment pod status")
+		}
+	} else {
+		log.Info("Unknown placement, unable to determine the pod status", "", instance.Spec.DeploymentPlan.Placement)
 	}
-	return podNames
+	return status
 }

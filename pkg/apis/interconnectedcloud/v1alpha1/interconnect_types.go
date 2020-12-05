@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"github.com/RHsyseng/operator-utils/pkg/olm"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -48,9 +49,9 @@ type InterconnectCondition struct {
 
 // InterconnectStatus defines the observed state of Interconnect
 type InterconnectStatus struct {
-	Phase     PhaseType `json:"phase,omitempty"`
-	RevNumber string    `json:"revNumber,omitempty"`
-	PodNames  []string  `json:"pods"`
+	Phase     PhaseType            `json:"phase,omitempty"`
+	RevNumber string               `json:"revNumber,omitempty"`
+	PodStatus olm.DeploymentStatus `json:"pods"`
 
 	// Conditions keeps most recent interconnect conditions
 	Conditions []InterconnectCondition `json:"conditions"`

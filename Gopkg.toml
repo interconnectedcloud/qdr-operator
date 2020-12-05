@@ -12,7 +12,7 @@ required = [
 
 [[constraint]]
   name = "github.com/RHsyseng/operator-utils"
-  revision = "9b235fef216357d7620259eadb9af40a43391819"
+  revision = "232650febd728455482b3c780c79a9ac0be62b50"
 
 [[override]]
   name = "k8s.io/code-generator"
