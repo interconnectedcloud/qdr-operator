@@ -16,10 +16,11 @@ package framework
 
 import (
 	"fmt"
-	routev1 "github.com/openshift/client-go/route/clientset/versioned"
-	"k8s.io/client-go/dynamic"
 	"strings"
 	"time"
+
+	routev1 "github.com/openshift/client-go/route/clientset/versioned"
+	"k8s.io/client-go/dynamic"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -29,7 +30,6 @@ import (
 
 	qdrclient "github.com/interconnectedcloud/qdr-operator/pkg/client/clientset/versioned"
 	e2elog "github.com/interconnectedcloud/qdr-operator/test/e2e/framework/log"
-	apiextv1b1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	clientset "k8s.io/client-go/kubernetes"
 
@@ -423,27 +423,7 @@ func (f *Framework) setupQdrClusterRoleBinding() error {
 }
 
 func (f *Framework) setupQdrCrd() error {
-	crd := &apiextv1b1.CustomResourceDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: crdName,
-		},
-		Spec: apiextv1b1.CustomResourceDefinitionSpec{
-			Group: "interconnectedcloud.github.io",
-			Names: apiextv1b1.CustomResourceDefinitionNames{
-				Kind:     "Interconnect",
-				ListKind: "InterconnectList",
-				Plural:   "interconnects",
-				Singular: "interconnect",
-			},
-			Scope:   "Namespaced",
-			Version: "v1alpha1",
-		},
-	}
-	_, err := f.ExtClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd)
-	if err != nil {
-		return fmt.Errorf("create qdr-operator crd failed: %v", err)
-	}
-	return nil
+	return CreateResourcesFromYAML(f.KubeClient, f.DynClient, f.Namespace, "https://raw.githubusercontent.com/interconnectedcloud/qdr-operator/master/deploy/crds/interconnectedcloud_v1alpha1_interconnect_crd.yaml")
 }
 
 func (f *Framework) setupQdrDeployment() error {
