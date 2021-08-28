@@ -1,18 +1,27 @@
+export REGISTRY=quay.io/interconnectedcloud
+export IMAGE=qdr-operator
+export TAG=1.4.0-beta1
+export DOCKER=docker
+
 
 .PHONY: all
 all: build
 
-.PHONY: dep
-dep:
-	./hack/go-dep.sh
+.PHONY: mod
+mod:
+	./scripts/go-mod.sh
 
 .PHONY: format
 format:
 	./hack/go-fmt.sh
 
+.PHONY: go-generate
+go-generate: mod
+	./hack/go-gen.sh
+
 .PHONY: sdk-generate
-sdk-generate: dep
-	operator-sdk generate k8s
+sdk-generate: mod
+	./hack/go-gen.sh
 
 .PHONY: vet
 vet:
@@ -29,3 +38,12 @@ cluster-test:
 .PHONY: build
 build:
 	./hack/go-build.sh
+
+.PHONY: docker-push
+docker-push:
+	${DOCKER} push ${REGISTRY}/${IMAGE}:${TAG}
+
+.PHONY: clean
+clean:
+	rm -rf build/_output
+	rm -rf vendor
